@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -8,8 +8,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+// Set the saved theme before the first paint, so a dark page never flashes light.
+try {
+  if (localStorage.getItem('truenorth-theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+} catch { /* Storage can be blocked; the default theme is used. */ }
+</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
+const themed = (name) => `color-mix(in srgb, var(${name}) calc(<alpha-value> * 100%), transparent)`;
 tailwind.config = {
   theme: {
     extend: {
@@ -19,93 +26,189 @@ tailwind.config = {
         mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
       colors: {
+        white: themed('--bg-card'),
         sand: {
-          50: '#F8F6F0',
-          100: '#F1EDE3',
-          200: '#E2DDD2',
-          300: '#CFC8B8',
+          50: themed('--bg-canvas'),
+          100: themed('--bg-well'),
+          200: themed('--border-subtle'),
+          300: themed('--border-strong'),
         },
         forest: {
-          700: '#1F4E3E',
-          800: '#163A2E',
+          700: themed('--accent-hover'),
+          800: themed('--accent-primary'),
           900: '#0F2920',
         },
         ink: {
-          900: '#1A1917',
-          600: '#5C5850',
-          400: '#8A8479',
-        }
-      }
+          900: themed('--text-primary'),
+          600: themed('--text-secondary'),
+          400: themed('--text-muted'),
+        },
+        amber: {
+          50: themed('--notice-bg'),
+          300: themed('--notice-border'),
+          700: themed('--notice-strong'),
+          800: themed('--notice-text'),
+          900: themed('--notice-deep'),
+        },
+        slate: {
+          600: themed('--slate-text'),
+        },
+      },
+      textColor: {
+        forest: { 800: themed('--accent-text') },
+        sand: { 50: themed('--accent-contrast') },
+      },
     }
   }
 };
 </script>
 <style>
-:root { color-scheme: light; }
+:root {
+  color-scheme: light;
+  --bg-canvas: #F8F6F0;
+  --bg-card: #FFFFFF;
+  --bg-well: #F1EDE3;
+  --border-subtle: #E2DDD2;
+  --text-primary: #1A1917;
+  --text-secondary: #5C5850;
+  --text-muted: #8A8479;
+  --accent-primary: #163A2E;
+  --accent-hover: #1F4E3E;
+  --accent-contrast: #F8F6F0;
+  --accent-warm: #D97706;
+  --accent-text: #163A2E;
+  --border-strong: #CFC8B8;
+  --border-hover: #B5AD9B;
+  --border-row: #EDE9DF;
+  --row-hover: #FAF8F4;
+  --tint-hover: rgba(26, 25, 23, 0.04);
+  --shadow-card: rgba(26, 25, 23, 0.04);
+  --shadow-tab: rgba(26, 25, 23, 0.08);
+  --focus-ring: rgba(22, 58, 46, 0.12);
+  --flash-bg: #FFFBEB;
+  --flash-ring: #F59E0B;
+  --notice-bg: #FFFBEB;
+  --notice-border: #FCD34D;
+  --notice-strong: #B45309;
+  --notice-text: #92400E;
+  --notice-deep: #78350F;
+  --slate-text: #475569;
+  --pill-emerald-text: #163A2E;
+  --pill-emerald-bg: #DCFCE7;
+  --pill-emerald-border: #86EFAC;
+  --pill-amber-text: #92400E;
+  --pill-amber-bg: #FEF3C7;
+  --pill-amber-border: #FCD34D;
+  --pill-slate-text: #334155;
+  --pill-slate-bg: #F1F5F9;
+  --pill-slate-border: #CBD5E1;
+}
+@media screen {
+  html[data-theme="dark"] {
+    color-scheme: dark;
+    --bg-canvas: #0B1210;
+    --bg-card: #111C19;
+    --bg-well: #0E1715;
+    --border-subtle: #1E302B;
+    --text-primary: #F2EFE9;
+    --text-secondary: #A3B3AE;
+    --text-muted: #7C8C87;
+    --accent-primary: #235C47;
+    --accent-hover: #2C7359;
+    --accent-contrast: #F2EFE9;
+    --accent-warm: #D4A359;
+    --accent-text: #86D9B8;
+    --border-strong: #4F6F65;
+    --border-hover: #6B8C81;
+    --border-row: #1A2A26;
+    --row-hover: #16241F;
+    --tint-hover: rgba(242, 239, 233, 0.07);
+    --shadow-card: rgba(0, 0, 0, 0.3);
+    --shadow-tab: rgba(0, 0, 0, 0.4);
+    --focus-ring: rgba(134, 217, 184, 0.2);
+    --flash-bg: #261F11;
+    --flash-ring: #D4A359;
+    --notice-bg: #2A2112;
+    --notice-border: #7D6230;
+    --notice-strong: #E2B672;
+    --notice-text: #E8C48A;
+    --notice-deep: #F0D5A8;
+    --slate-text: #B4C2CE;
+    --pill-emerald-text: #B5F0D6;
+    --pill-emerald-bg: #12352A;
+    --pill-emerald-border: #2C7359;
+    --pill-amber-text: #F5D9A8;
+    --pill-amber-bg: #3A2A12;
+    --pill-amber-border: #8A6A33;
+    --pill-slate-text: #CBD5E1;
+    --pill-slate-bg: #1C2A30;
+    --pill-slate-border: #3F545C;
+  }
+}
 body {
-  background: #F8F6F0;
-  color: #1A1917;
+  background: var(--bg-canvas);
+  color: var(--text-primary);
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
 }
 
 .card {
-  background: #FFFFFF;
-  border: 1px solid #E2DDD2;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(26, 25, 23, 0.04);
+  box-shadow: 0 1px 3px var(--shadow-card);
 }
 
 .field {
   width: 100%;
-  background: #F8F6F0;
-  border: 1px solid #CFC8B8;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   padding: 9px 12px;
   font-size: 13.5px;
-  color: #1A1917;
+  color: var(--text-primary);
   outline: none;
   transition: border-color .15s, box-shadow .15s, background .15s;
 }
 .field:focus {
-  background: #FFFFFF;
-  border-color: #163A2E;
-  box-shadow: 0 0 0 3px rgba(22, 58, 46, 0.12);
+  background: var(--bg-card);
+  border-color: var(--accent-text);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
-.field::placeholder { color: #8A8479; }
+.field::placeholder { color: var(--text-muted); }
 
 .btn-primary {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   padding: 10px 18px; border-radius: 8px; font-size: 13.5px; font-weight: 600;
-  color: #F8F6F0; background: #163A2E; border: 1px solid #163A2E;
+  color: var(--accent-contrast); background: var(--accent-primary); border: 1px solid var(--accent-primary);
   transition: background .15s, transform .1s;
 }
-.btn-primary:hover { background: #1F4E3E; }
+.btn-primary:hover { background: var(--accent-hover); }
 .btn-primary:active { transform: translateY(1px); }
 .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 
 .btn-secondary {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
-  color: #1A1917; background: #FFFFFF; border: 1px solid #CFC8B8;
+  color: var(--text-primary); background: var(--bg-card); border: 1px solid var(--border-strong);
   transition: background .15s, border-color .15s;
 }
-.btn-secondary:hover { background: #F1EDE3; border-color: #B5AD9B; }
-.btn-secondary:disabled { color: #8A8479; background: #F8F6F0; cursor: not-allowed; }
+.btn-secondary:hover { background: var(--bg-well); border-color: var(--border-hover); }
+.btn-secondary:disabled { color: var(--text-muted); background: var(--bg-canvas); cursor: not-allowed; }
 
 .nav-link {
   padding: 6px 13px; border-radius: 7px; font-size: 13px; font-weight: 500;
-  color: #5C5850; transition: all .15s;
+  color: var(--text-secondary); transition: all .15s;
 }
-.nav-link:hover { color: #1A1917; background: rgba(26, 25, 23, 0.04); }
-.nav-link.active { color: #163A2E; background: #FFFFFF; border: 1px solid #E2DDD2; font-weight: 600; }
+.nav-link:hover { color: var(--text-primary); background: var(--tint-hover); }
+.nav-link.active { color: var(--accent-text); background: var(--bg-card); border: 1px solid var(--border-subtle); font-weight: 600; }
 
 .tab {
   flex: 1; padding: 7px 10px; border-radius: 7px; font-size: 13px; font-weight: 500;
-  color: #5C5850; transition: all .15s;
+  color: var(--text-secondary); transition: all .15s;
 }
 .tab[aria-selected="true"] {
-  background: #FFFFFF; color: #163A2E; font-weight: 600;
-  box-shadow: 0 1px 2px rgba(26, 25, 23, 0.08);
+  background: var(--bg-card); color: var(--accent-text); font-weight: 600;
+  box-shadow: 0 1px 2px var(--shadow-tab);
 }
 
 .pill {
@@ -113,44 +216,44 @@ body {
   font-size: 11px; font-weight: 600; letter-spacing: .02em;
   white-space: nowrap; font-family: "JetBrains Mono", ui-monospace, monospace;
 }
-.pill-emerald { color: #163A2E; background: #DCFCE7; border: 1px solid #86EFAC; }
-.pill-amber { color: #92400E; background: #FEF3C7; border: 1px solid #FCD34D; }
-.pill-slate { color: #334155; background: #F1F5F9; border: 1px solid #CBD5E1; }
+.pill-emerald { color: var(--pill-emerald-text); background: var(--pill-emerald-bg); border: 1px solid var(--pill-emerald-border); }
+.pill-amber { color: var(--pill-amber-text); background: var(--pill-amber-bg); border: 1px solid var(--pill-amber-border); }
+.pill-slate { color: var(--pill-slate-text); background: var(--pill-slate-bg); border: 1px solid var(--pill-slate-border); }
 
 .chip {
   display: inline-block; margin: 4px 4px 0 0; padding: 2px 8px; border-radius: 5px;
   font-size: 11px; line-height: 1.5; font-family: "JetBrains Mono", ui-monospace, monospace;
-  color: #5C5850; background: #F8F6F0; border: 1px solid #E2DDD2;
+  color: var(--text-secondary); background: var(--bg-canvas); border: 1px solid var(--border-subtle);
 }
 
-.table-wrap { overflow-x: auto; border: 1px solid #E2DDD2; border-radius: 8px; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--border-subtle); border-radius: 8px; }
 table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 th {
   padding: 8px 11px; text-align: left; font-size: 11px; font-weight: 600;
-  color: #5C5850; white-space: nowrap; background: #F1EDE3;
-  border-bottom: 1px solid #E2DDD2;
+  color: var(--text-secondary); white-space: nowrap; background: var(--bg-well);
+  border-bottom: 1px solid var(--border-subtle);
 }
-td { padding: 8px 11px; border-top: 1px solid #EDE9DF; vertical-align: top; color: #1A1917; }
-tr:hover td { background: #FAF8F4; }
+td { padding: 8px 11px; border-top: 1px solid var(--border-row); vertical-align: top; color: var(--text-primary); }
+tr:hover td { background: var(--row-hover); }
 
-details > summary { cursor: pointer; font-size: 12.5px; font-weight: 500; color: #5C5850; }
-details > summary:hover { color: #1A1917; }
+details > summary { cursor: pointer; font-size: 12.5px; font-weight: 500; color: var(--text-secondary); }
+details > summary:hover { color: var(--text-primary); }
 #activity { scrollbar-width: thin; }
 
 /* Pip Runway */
 .node {
   flex: none; padding: 6px 11px; border-radius: 7px; font-size: 11px; font-weight: 600;
-  color: #1A1917; font-family: "JetBrains Mono", ui-monospace, monospace;
-  background: #F8F6F0; border: 1px solid #CFC8B8; transition: border-color .2s, background .2s;
+  color: var(--text-primary); font-family: "JetBrains Mono", ui-monospace, monospace;
+  background: var(--bg-canvas); border: 1px solid var(--border-strong); transition: border-color .2s, background .2s;
 }
 .node.is-active {
-  border-color: #163A2E;
-  background: #FFFFFF;
+  border-color: var(--accent-text);
+  background: var(--bg-card);
 }
 .track { position: relative; flex: 1; height: 74px; margin: 0 28px; }
 .track::before {
   content: ""; position: absolute; left: -28px; right: -28px; bottom: 15px;
-  border-top: 1px dashed #B5AD9B;
+  border-top: 1px dashed var(--border-hover);
 }
 #pip {
   position: absolute; bottom: 16px; left: 0; width: 46px; height: 46px; margin-left: -23px;
@@ -219,14 +322,26 @@ details > summary:hover { color: #1A1917; }
 
 /* Question card -> the CV rows named in its evidence */
 .question-link { cursor: pointer; transition: border-color .15s; }
-.question-link:hover { border-color: #D97706; }
-.question-link:focus-visible { outline: 2px solid #D97706; outline-offset: 2px; }
+.question-link:hover { border-color: var(--accent-warm); }
+.question-link:focus-visible { outline: 2px solid var(--accent-warm); outline-offset: 2px; }
 tr.row-flash td, tr.row-flash:hover td {
-  background: #FFFBEB;
-  box-shadow: inset 0 2px 0 #F59E0B, inset 0 -2px 0 #F59E0B;
+  background: var(--flash-bg);
+  box-shadow: inset 0 2px 0 var(--flash-ring), inset 0 -2px 0 var(--flash-ring);
 }
-tr.row-flash td:first-child { box-shadow: inset 2px 0 0 #F59E0B, inset 0 2px 0 #F59E0B, inset 0 -2px 0 #F59E0B; }
-tr.row-flash td:last-child { box-shadow: inset -2px 0 0 #F59E0B, inset 0 2px 0 #F59E0B, inset 0 -2px 0 #F59E0B; }
+tr.row-flash td:first-child { box-shadow: inset 2px 0 0 var(--flash-ring), inset 0 2px 0 var(--flash-ring), inset 0 -2px 0 var(--flash-ring); }
+tr.row-flash td:last-child { box-shadow: inset -2px 0 0 var(--flash-ring), inset 0 2px 0 var(--flash-ring), inset 0 -2px 0 var(--flash-ring); }
+
+/* Light / Dark pill */
+.theme-toggle {
+  display: inline-flex; padding: 2px; border-radius: 999px; font-size: 11.5px; font-weight: 500;
+  color: var(--text-secondary); background: var(--bg-well); border: 1px solid var(--border-strong);
+}
+.theme-toggle:focus-visible { outline: 2px solid var(--accent-warm); outline-offset: 2px; }
+.theme-toggle span { padding: 4px 10px; border-radius: 999px; transition: background .15s, color .15s; }
+html[data-theme="light"] .theme-toggle [data-option="light"],
+html[data-theme="dark"] .theme-toggle [data-option="dark"] {
+  color: var(--accent-text); background: var(--bg-card); font-weight: 600; box-shadow: 0 1px 2px var(--shadow-tab);
+}
 
 @media print {
   @page { margin: 12mm; }
@@ -271,6 +386,9 @@ tr.row-flash td:last-child { box-shadow: inset -2px 0 0 #F59E0B, inset 0 2px 0 #
 
     <div class="flex items-center gap-2.5">
       <a href="https://github.com/Aaryan-2906/TrueNorth" target="_blank" rel="noopener" class="btn-secondary text-xs">GitHub ↗</a>
+      <button id="themeToggle" type="button" class="theme-toggle" role="switch" aria-checked="false" aria-label="Dark theme">
+        <span data-option="light">Light</span><span data-option="dark">Dark</span>
+      </button>
       <a href="#/studio" class="btn-primary !py-2 !px-3.5 !text-xs">Open Audit Studio →</a>
     </div>
   </div>
@@ -641,7 +759,7 @@ function updateCarousel(idx) {
   $('carouselCounter').textContent = `${state.carouselIdx + 1} / ${cards.length}`;
   cards.forEach((card, i) => {
     const active = i === state.carouselIdx;
-    card.style.borderColor = active ? '#163A2E' : '#E2DDD2';
+    card.style.borderColor = active ? 'var(--accent-text)' : 'var(--border-subtle)';
     card.style.boxShadow = active ? '0 8px 24px -8px rgba(22, 58, 46, 0.16)' : '0 1px 3px rgba(26, 25, 23, 0.04)';
   });
 }
@@ -1255,8 +1373,8 @@ $('cvChoose').addEventListener('click', () => $('cvFile').click());
 $('cvFile').addEventListener('change', () => chooseCvFile($('cvFile').files[0]));
 $('cvClear').addEventListener('click', () => { setCvFile(null); showCvHint(''); $('cvChoose').focus(); });
 ['dragenter', 'dragover'].forEach((type) => $('cvDrop').addEventListener(type, () => {
-  $('cvDrop').style.borderColor = '#163A2E';
-  $('cvDrop').style.background = '#FFFFFF';
+  $('cvDrop').style.borderColor = 'var(--accent-text)';
+  $('cvDrop').style.background = 'var(--bg-card)';
 }));
 ['dragleave', 'drop'].forEach((type) => $('cvDrop').addEventListener(type, () => {
   $('cvDrop').style.borderColor = '';
@@ -1411,8 +1529,8 @@ $('bidFiles').addEventListener('change', () => {
   $('bidFiles').value = '';
 });
 ['dragenter', 'dragover'].forEach((type) => $('bidDrop').addEventListener(type, () => {
-  $('bidDrop').style.borderColor = '#163A2E';
-  $('bidDrop').style.background = '#FFFFFF';
+  $('bidDrop').style.borderColor = 'var(--accent-text)';
+  $('bidDrop').style.background = 'var(--bg-card)';
 }));
 ['dragleave', 'drop'].forEach((type) => $('bidDrop').addEventListener(type, () => {
   $('bidDrop').style.borderColor = '';
@@ -1465,6 +1583,19 @@ $('readTender').addEventListener('click', () => {
   hint.classList.toggle('hidden', Boolean(text.trim()));
   hint.textContent = text.trim() ? '' : 'Paste the tender text first.';
   if (text.trim()) startRun('/api/read-tender', { text, fresh: $('freshBid').checked });
+});
+
+function applyTheme(theme, remember) {
+  document.documentElement.dataset.theme = theme;
+  $('themeToggle').setAttribute('aria-checked', String(theme === 'dark'));
+  if (!remember) return;
+  try {
+    localStorage.setItem('truenorth-theme', theme);
+  } catch { /* Storage can be blocked; the choice then lasts for this page only. */ }
+}
+applyTheme(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light', false);
+$('themeToggle').addEventListener('click', () => {
+  applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark', true);
 });
 
 buildPip();

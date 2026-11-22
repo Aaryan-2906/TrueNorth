@@ -256,6 +256,21 @@
   2. It builds a temporary bid and sends it through the same checks as a saved bid.
   3. The page shows the same live stages, results, report link and PDF button.
 
+## Light / Dark theme
+- **Built:** page colours now come from CSS custom properties on `<html data-theme="light|dark">`, with the requested palette. A Light / Dark pill sits next to GitHub, and the choice is remembered in `localStorage` (default light). Pills, chips, tables, inputs, runway nodes, the Activity bar and the row highlight all have dark colours. Pip's colours are unchanged.
+- **Files:** `static/index.html`, `PROGRESS.md`.
+- **Test results:** `uv run pytest -q` gives 353 passed. In headless Edge, 38 of 38 theme checks passed: every element's light colours match the previous page on all three pages and audit results, all dark text meets 4.5:1, the saved choice survives a reload, and blocked storage causes no error. A 9-page PDF printed from dark is pixel-identical to the one printed from light. The earlier 25 print and highlight checks also passed. No Crustdata credits were spent.
+- **Decisions:**
+  1. Dark values are inside `@media screen`, so print always uses the light palette.
+  2. A small script in `<head>` applies the saved theme before first paint, so a dark page does not flash light.
+  3. Extra variables were added for what the 11 requested colours do not cover. The main one is `--accent-text`, because `#235C47` is too dark to read as text on the dark cards.
+- **Known gaps:** the requested light `--text-muted` (`#8A8479`) measures 3.4:1 to 3.7:1 on the light backgrounds, below the 4.5:1 guideline for small text. It was kept as specified and matches the earlier design. Pip's "cannot check" mark also keeps its colour in dark.
+- **How it works:**
+  1. Every colour on the page points to a named variable.
+  2. The toggle changes one attribute on `<html>`, which switches the whole set of variables.
+  3. Print ignores the dark set, so reports stay white.
+
 ## Suggestions (ideas noted but not built)
+- Darken the light theme's muted text (for example to `#6F6A60`) so small labels meet the 4.5:1 contrast guideline.
 - Check whether each job's sector matches the tender's wording ("in Highway Projects"), since total years currently count all jobs.
 - SPEC §4 collapses same-employer, same-date jobs even when titles differ, which could hide a title a CV row should match. Consider keeping both titles.
