@@ -71,7 +71,7 @@ uv run python -m app.cli audit --fresh
 # One expert from the demo bid (X1, X2, X3 or X4), printed to the terminal.
 uv run python -m app.cli expert X2
 
-# One unseen CV (.md or .txt). With no position, it runs in Career Check mode.
+# One unseen CV (.pdf, .docx, .txt or .md). With no position, it runs in Career Check mode.
 uv run python -m app.cli check-cv path\to\any_cv.md
 uv run python -m app.cli check-cv path\to\any_cv.md --position team_leader
 
@@ -94,7 +94,7 @@ To use the web app, start the server and open http://localhost:8000:
 uv run uvicorn app.server:app --port 8000
 ```
 
-The web app can check one pasted CV, audit a bid, and read a pasted tender for approval. It needs internet for its Tailwind and font CDNs.
+The web app can check one CV (pasted, or a .pdf, .docx, .txt or .md file up to 5 MB), audit a bid, and read a pasted tender for approval. Scanned PDFs are not supported yet because there is no OCR. It needs internet for its Tailwind and font CDNs.
 
 Position keys are in `data/tender.json`: `team_leader`, `resident_engineer`, `bridge_engineer`, `pavement_specialist`, `quality_material_expert`, `road_safety_expert`.
 
@@ -131,6 +131,7 @@ data/bid/bid.json + data/tender.json + data/bid/cvs/<id>.md
   -> app/questions.py   fixed templates turn findings into committee questions
   -> app/report.py      out/report.md and out/report.html
 
+app/cv_files.py         PDF and Word files to plain text, before the normal CV pipeline
 app/parse_tender.py     tender text to proposed positions; a person approves them before use
 app/cli.py              the commands above
 app/server.py           FastAPI server that streams each real stage and external call
@@ -153,7 +154,7 @@ irreversible happens anywhere; no message is ever sent.
 audit of the demo bid costs **1.2 credits** (1 person enrich + 0.2 company identify); repeat runs reuse the cache and
 cost 0. The web app shows each real call (live or cached, credits, time) in its Activity panel.
 
-**Tests (238 passing):** 17 hand-built expert cases and 5 firm cases written before the event and never edited;
+**Tests (270 passing):** 17 hand-built expert cases and 5 firm cases written before the event and never edited;
 29 real CV date strings plus extra formats; robustness tests (timeout mid-run resumes without re-billing cached calls,
 401/402/403/429, malformed bids, empty CVs, a recipe instead of a CV, LLM refusal/invalid JSON); parser tests on six
 CVs; tender parsing matched the PDF on all six positions in four fresh readings. A live audit matched the cached audit
@@ -193,6 +194,9 @@ No open-source code was copied into this repository. It uses these libraries as 
 | Pydantic | Data validation | MIT |
 | python-dotenv | Loading `.env` | BSD-3-Clause |
 | Anthropic Python SDK | Claude API calls | Apache-2.0 |
+| pypdf | Reading PDF CVs | BSD-3-Clause |
+| python-docx | Reading Word CVs | MIT |
+| python-multipart | Receiving file uploads | Apache-2.0 |
 | pytest | Tests | MIT |
 | Tailwind CSS (CDN) | Page styling | MIT |
 | Fraunces (Google Fonts) | Heading font | SIL OFL 1.1 |

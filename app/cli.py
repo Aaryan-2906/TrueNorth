@@ -10,7 +10,7 @@ from typing import Any, Callable
 
 from pydantic import ValidationError
 
-from app import checker, config, crustdata, firm, normalise, parse_cv, parse_tender, report
+from app import checker, config, crustdata, cv_files, firm, normalise, parse_cv, parse_tender, report
 from app.models import Claims, CvRow, ExpertResult, Lookup
 
 DATA_DIR = config.ROOT_DIR / "data"
@@ -477,10 +477,13 @@ def run_check_cv(path_text: str, position_key: str | None, profile_url: str | No
     """Check one unseen CV file from the command line."""
     path = Path(path_text)
     try:
-        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        if path.suffix.lower() in {".pdf", ".docx"}:
+            text = cv_files.extract_text(path.name, path.read_bytes())
+        else:
+            text = path.read_text(encoding="utf-8-sig", errors="replace")
         run = check_one_cv(text, path.stem, position_key, profile_url, fresh)
     except CV_READ_ERRORS as exc:
-        print(f"CV could not be read ({path}): {_cv_problem(exc)}.", file=sys.stderr)
+        print(f"CV could not be read ({path}): {_cv_problem(exc).rstrip('.')}.", file=sys.stderr)
         return 1
     if run.lookup_error:
         print(f"Crustdata lookup failed: {run.lookup_error}", file=sys.stderr)
@@ -553,8 +556,8 @@ def main(argv: list[str] | None = None) -> int:
     read_tender = commands.add_parser("read-tender", help="propose positions from a tender's text, for approval")
     read_tender.add_argument("path")
     read_tender.add_argument("--fresh", action="store_true", help="skip reading the cache")
-    check_cv =commands.add_parser("check-cv", help="check one CV file (.md or .txt)")
-    check_cv.add_argument("path")
+    check_cv = commands.add_parser("check-cv", help="check one CV file (.pdf, .docx, .txt or .md)")
+    check_cv.add_argument("path", help="a .pdf, .docx, .txt or .md file")
     check_cv.add_argument("--position", help="key in data/tender.json; omit for Career Check mode")
     check_cv.add_argument("--profile-url", help="profile to compare against (1 paid credit)")
     check_cv.add_argument("--fresh", action="store_true", help="skip reading the cache")

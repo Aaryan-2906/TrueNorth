@@ -194,6 +194,23 @@
 - **Known gaps:** the World Bank and MoRTH claims on the page and in the README were not re-checked against their sources. The NHAI debarment quote was found in the PDF. When a tender excerpt has only the marking tables, a source sentence can be a bare table fragment such as "12 years -7": it is verbatim, but less readable than the Enclosure-B sentence.
 - **How it works:** the page now updates the credits total only when a result carries one, and a finished run with no expert status leaves Pip calm instead of implying a result.
 
+## CV file upload
+- **Built:** `/api/check-cv` now also accepts a multipart `.pdf`, `.docx`, `.txt` or `.md` file up to 5 MB, and the JSON `cv_text` path still works. CLI `check-cv` reads `.pdf` and `.docx`. The page has a drag-and-drop / Choose file zone with file name, size and Clear.
+- **Files:** `app/cv_files.py`, `app/server.py`, `app/cli.py`, `static/index.html`, `tests/test_cv_files.py`, `README.md`, `demo/DEMO_SCRIPT.md`, `pyproject.toml`, `uv.lock`.
+- **Test results:** `uv run pytest -q` gives 270 passed. Generated PDF, DOCX and DOCX-with-table files parse to the same claims as the text. Real PDF and Word-table copies of CV X3, read by the live model, matched the hand-written claims on all 12 rows. In headless Edge, 22 of 22 upload checks and 45 of 45 earlier flow checks passed. No Crustdata credits were spent.
+- **Decisions:**
+  1. Extraction happens before the pipeline, so parsing, dates and checks are unchanged.
+  2. `python-multipart` was added because FastAPI needs it to receive file uploads. It is in the README licence table.
+  3. Uploads from another website's origin are refused, because any site can post a form to localhost and could otherwise spend credits.
+  4. A PDF with fewer than 20 readable characters gets the scanned-image message. Password-protected, damaged, oversized and wrong-type files get their own clear messages and spend nothing.
+  5. Word cells split into several paragraphs stay on one row, and a merged cell appears once in its row.
+  6. Uploads are checked under the id `pasted_cv`, so a file name (often a person's name) does not appear in results.
+- **Known gaps:** no OCR. Word headers, footers and text boxes are not read, so a CV date placed only in a footer is treated as undated. PDFs with multi-column layouts may extract in an awkward order. The test PDFs are simple generated files, not exports from Word or a CV builder. Bid audits still read `.md` CVs only.
+- **How it works:**
+  1. `cv_files.py` turns the uploaded file into plain text, with Word table rows written as cells joined by " | ".
+  2. That text goes through the same `check_one_cv` function as pasted text.
+  3. The page sends the chosen file instead of the textarea, and shows the server's message if the file cannot be read.
+
 ## Suggestions (ideas noted but not built)
 - Check whether each job's sector matches the tender's wording ("in Highway Projects"), since total years currently count all jobs.
 - SPEC §4 collapses same-employer, same-date jobs even when titles differ, which could hide a title a CV row should match. Consider keeping both titles.

@@ -12,16 +12,22 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterator
 
-from fastapi import FastAPI
-from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
-from pydantic import BaseModel, Field
+from urllib.parse import urlsplit
 
-from app import cli, config, crustdata, parse_cv, parse_tender, report
+from fastapi import FastAPI, Request
+from fastapi.concurrency import run_in_threadpool
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
+from pydantic import BaseModel, Field, ValidationError
+from starlette.datastructures import UploadFile
+
+from app import cli, config, crustdata, cv_files, parse_cv, parse_tender, report
 from app.models import FirmResult
 
 STATIC_DIR = config.ROOT_DIR / "static"
 MAX_CV_CHARACTERS = 200_000
 MAX_TENDER_CHARACTERS = 1_000_000
+MAX_FORM_OVERHEAD_BYTES = 64 * 1024
 PASTED_CV_ID = "pasted_cv"
 SERVICE_NAMES = {
     "/person/enrich": "Crustdata /person/enrich",
@@ -232,8 +238,56 @@ def _is_bid_file(path: Path) -> bool:
     return isinstance(data, dict) and "firm" in data and "experts" in data
 
 
+def _is_cross_site(request: Request) -> bool:
+    """Any website can post a form to localhost, so uploads must come from this page."""
+    origin = request.headers.get("origin")
+    return bool(origin) and urlsplit(origin).netloc != request.headers.get("host")
+
+
+async def _read_upload(request: Request) -> CheckCvRequest | Response:
+    if _is_cross_site(request):
+        return JSONResponse({"error": "Uploads are only accepted from this page."}, status_code=403)
+    length = request.headers.get("content-length", "")
+    if not length.isdigit():
+        return JSONResponse({"error": "The upload did not state its size."}, status_code=411)
+    if int(length) > cv_files.MAX_FILE_BYTES + MAX_FORM_OVERHEAD_BYTES:
+        return JSONResponse({"error": "This file is larger than the 5 MB limit."}, status_code=413)
+    async with request.form(max_files=1, max_fields=8) as form:
+        upload = form.get("file")
+        if not isinstance(upload, UploadFile):
+            return JSONResponse({"error": "No CV file was received."}, status_code=422)
+        data = await upload.read(cv_files.MAX_FILE_BYTES + 1)
+        if len(data) > cv_files.MAX_FILE_BYTES:
+            return JSONResponse({"error": "This file is larger than the 5 MB limit."}, status_code=413)
+        try:
+            text = await run_in_threadpool(cv_files.extract_text, upload.filename or "", data)
+        except cv_files.CvFileError as exc:
+            return JSONResponse({"error": str(exc)}, status_code=422)
+        return CheckCvRequest(
+            cv_text=text,
+            profile_url=str(form.get("profile_url") or "") or None,
+            position=str(form.get("position") or "") or None,
+            fresh=form.get("fresh") == "true",
+        )
+
+
 @app.post("/api/check-cv")
-def check_cv(request: CheckCvRequest) -> Response:
+async def check_cv(http_request: Request) -> Response:
+    """Accepts JSON with cv_text, or a multipart form with a CV file."""
+    content_type = http_request.headers.get("content-type", "").lower()
+    if content_type.startswith("multipart/form-data"):
+        parsed = await _read_upload(http_request)
+        if isinstance(parsed, Response):
+            return parsed
+        request = parsed
+    elif content_type.startswith("application/json"):
+        try:
+            request = CheckCvRequest.model_validate_json(await http_request.body())
+        except ValidationError as exc:
+            raise RequestValidationError(exc.errors(include_url=False, include_context=False)) from exc
+    else:
+        return JSONResponse({"error": "Send JSON with cv_text, or a multipart form with a file."}, status_code=415)
+
     def job(progress: cli.Progress) -> dict[str, Any]:
         run = cli.check_one_cv(
             request.cv_text,
