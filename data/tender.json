@@ -16,6 +16,7 @@
         "project manager",
         "superintending engineer"
       ],
+      "sector_keywords": ["highway", "road", "nh", "nhai", "bridge", "pavement", "civil", "infra", "construction", "expressway"],
       "postgraduate": "preferential",
       "postgraduate_marks": 3,
       "equivalent_grades": true,
@@ -54,6 +55,7 @@
         "project manager",
         "executive engineer"
       ],
+      "sector_keywords": ["highway", "road", "nh", "nhai", "bridge", "pavement", "civil", "infra", "construction", "expressway"],
       "postgraduate": "preferential",
       "postgraduate_marks": 4,
       "equivalent_grades": true,
@@ -91,6 +93,7 @@
         "project manager (bridges)",
         "executive engineer"
       ],
+      "sector_keywords": ["highway", "road", "nh", "nhai", "bridge", "pavement", "civil", "infra", "construction", "expressway"],
       "postgraduate": "preferential",
       "postgraduate_marks": 4,
       "equivalent_grades": false,
@@ -130,6 +133,7 @@
         "highway engineer",
         "executive engineer"
       ],
+      "sector_keywords": ["highway", "road", "nh", "nhai", "bridge", "pavement", "civil", "infra", "construction", "expressway"],
       "postgraduate": "preferential",
       "postgraduate_marks": 4,
       "equivalent_grades": false,
@@ -170,6 +174,7 @@
         "geo-technical expert",
         "executive engineer"
       ],
+      "sector_keywords": ["highway", "road", "nh", "nhai", "bridge", "pavement", "civil", "infra", "construction", "expressway"],
       "postgraduate": "preferential",
       "postgraduate_marks": 4,
       "equivalent_grades": false,
@@ -206,6 +211,7 @@
         "road safety expert",
         "executive engineer"
       ],
+      "sector_keywords": ["highway", "road", "nh", "nhai", "bridge", "pavement", "civil", "infra", "construction", "expressway"],
       "postgraduate": "preferential",
       "postgraduate_marks": 4,
       "equivalent_grades": true,

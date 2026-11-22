@@ -367,6 +367,14 @@ html[data-theme="dark"] .theme-toggle [data-option="dark"] {
   #results summary, #results h4 { break-after: avoid; }
   tr.row-flash td { background: #fff !important; box-shadow: none !important; }
 }
+
+/* Infinite case carousel: scrolls continuously, pauses on hover/focus */
+.marquee { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent); mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent); padding: 6px 0 10px; }
+.marquee-track { display: flex; gap: 16px; width: max-content; animation: tn-marquee 60s linear infinite; }
+.marquee:hover .marquee-track, .marquee:focus-within .marquee-track { animation-play-state: paused; }
+.marquee-track .struggle-card { flex: 0 0 360px; }
+@keyframes tn-marquee { from { transform: translateX(0); } to { transform: translateX(calc(-50% - 8px)); } }
+@media (prefers-reduced-motion: reduce) { .marquee { overflow-x: auto; } .marquee-track { animation: none; } }
 </style>
 </head>
 <body class="min-h-screen pb-36 antialiased">
@@ -436,7 +444,7 @@ html[data-theme="dark"] .theme-toggle [data-option="dark"] {
       </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3" id="strugglesGrid">
+    <div class="marquee" id="strugglesViewport"><div class="marquee-track" id="strugglesGrid">
       <!-- Card 1: World Bank March 2026 -->
       <article class="struggle-card card flex flex-col justify-between p-6 transition" data-index="0">
         <div>
@@ -538,13 +546,14 @@ html[data-theme="dark"] .theme-toggle [data-option="dark"] {
         </div>
       </article>
     </div>
+    </div>
   </section>
 
   <!-- Factual Engineering & Trust Bar -->
   <section class="mt-14 border-t border-sand-200 pt-8 pb-6">
     <div class="card flex flex-col items-start justify-between gap-4 bg-sand-100/70 px-6 py-5 sm:flex-row sm:items-center">
       <p class="font-mono text-xs leading-relaxed text-ink-600">
-        <strong class="font-semibold text-ink-900">376 tests</strong> ·
+        <strong class="font-semibold text-ink-900">398 tests</strong> ·
         <strong class="font-semibold text-ink-900">17 golden cases</strong> written before the build ·
         tender rules checked against the <a href="https://infracon.nic.in/WriteReadData/consultantprojectsAE/586_File1163110934.pdf" target="_blank" rel="noopener" class="underline hover:text-forest-800">NHAI PDF</a> ·
         built with Crustdata + Claude ·
@@ -814,27 +823,24 @@ function updateCarousel(idx) {
   $('carouselCounter').textContent = `${state.carouselIdx + 1} / ${cards.length}`;
   cards.forEach((card, i) => {
     const active = i === state.carouselIdx;
-    card.style.borderColor = active ? 'var(--accent-text)' : 'var(--border-subtle)';
-    card.style.boxShadow = active ? '0 8px 24px -8px rgba(22, 58, 46, 0.16)' : '0 1px 3px rgba(26, 25, 23, 0.04)';
-    card.style.opacity = active ? '1' : '0.5';
-    card.style.transform = active ? 'translateY(-2px)' : 'none';
+    card.style.borderColor = 'var(--border-subtle)';
+    card.style.opacity = '1';
     card.style.transition = 'opacity .25s, transform .25s, border-color .25s, box-shadow .25s';
-    card.style.cursor = active ? 'default' : 'pointer';
   });
 }
 $('carouselPrev').addEventListener('click', () => updateCarousel(state.carouselIdx - 1));
 $('carouselNext').addEventListener('click', () => updateCarousel(state.carouselIdx + 1));
-document.querySelectorAll('.struggle-card').forEach((card, i) => card.addEventListener('click', (e) => { if (!e.target.closest('a')) updateCarousel(i); }));
-(function autoRotateCarousel() {
-  const grid = $('strugglesGrid');
-  if (!grid || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  let paused = false;
-  ['mouseenter', 'focusin'].forEach((ev) => grid.addEventListener(ev, () => { paused = true; }));
-  ['mouseleave', 'focusout'].forEach((ev) => grid.addEventListener(ev, () => { paused = false; }));
-  setInterval(() => {
-    if (paused || document.hidden || $('page-home').classList.contains('hidden')) return;
-    updateCarousel(state.carouselIdx + 1);
-  }, 4500);
+(function setupMarquee() {
+  const track = $('strugglesGrid');
+  if (!track) return;
+  const controls = $('carouselPrev') && $('carouselPrev').parentElement;
+  if (controls) controls.classList.add('hidden');
+  [...track.children].forEach((card) => {
+    const copy = card.cloneNode(true);
+    copy.setAttribute('aria-hidden', 'true');
+    copy.querySelectorAll('a').forEach((a) => a.setAttribute('tabindex', '-1'));
+    track.appendChild(copy);
+  });
 })();
 
 const pill = (status) => `<span class="pill ${STATUS_STYLE[status] || 'pill-slate'}">${esc(status)}</span>`;
@@ -1383,8 +1389,9 @@ function renderFinder(result) {
       <p class="mt-1 text-sm font-medium text-ink-900">Documented ${person.total_years.toFixed(1)} yrs total <span class="text-ink-400">·</span> ${person.similar_years.toFixed(1)} yrs in similar roles</p>
       <h4 class="mb-1 mt-3 text-xs font-semibold uppercase tracking-wider text-ink-600">Matching titles</h4>
       <div>${chips(person.evidence.map((job) => `${job.title}, ${job.period}`))}</div>
+      ${person.sector_evidence ? `<p class="mt-3 text-[13px] text-ink-600"><span class="font-medium text-ink-900">Sector evidence:</span> ${esc(person.sector_evidence.title)}, ${esc(person.sector_evidence.employer)}, ${esc(person.sector_evidence.period)} <span class="font-mono text-[11px]">(matched "${esc(person.sector_evidence.keyword)}")</span></p>` : ''}
     </article>`).join('');
-  const empty = `<div class="card p-4 text-sm text-ink-600">None of the ${result.searched} records returned met this position's minimums. This says nothing about people outside this search.</div>`;
+  const empty = `<div class="card p-4 text-sm text-ink-600">None of the ${result.searched} records returned met this position's minimums and sector check. This says nothing about people outside this search.</div>`;
   $('results').innerHTML = `
     <div class="space-y-4">
       <div class="card border-amber-300 bg-amber-50 p-3.5 text-[13px] text-amber-900">

@@ -284,7 +284,22 @@
   2. Deterministic code counts each person's documented months and drops anyone below the tender minimums.
   3. The page shows initials, years and matching titles, and the committee decides what they mean.
 
+## Find experts: sector filter
+- **Built:** each position in `data/tender.json` now has `sector_keywords`. Find experts keeps only candidates with at least one job whose title or employer contains a sector keyword, and shows that job as a "Sector evidence" line.
+- **Files:** `data/tender.json`, `app/finder.py`, `static/index.html`, `tests/test_finder_sector.py`, `README.md`, `demo/DEMO_SCRIPT.md`.
+- **Test results:** `uv run pytest -q` gives 398 passed with mocked data. Re-reading the cached `team_leader` search with the network blocked: 3 of the 5 records met the year minimums and **0 of the 5 remain** after the sector check. No new paid call was made, and `credits.csv` is unchanged.
+- **Decisions:**
+  1. Keywords match at the start of a word, and two-letter "nh" must be a whole word, so "Manhattan", "Broadcom" and "NHS" do not count. On the cached 5, plain substring matching also leaves 0.
+  2. The search request is unchanged, so the filter runs after the paid search and the cached reply stays valid.
+  3. The sector evidence line shows that job's employer, because the keyword may be in the employer's name.
+- **Known gaps:** a search still pays for all returned records before this filter runs, so a typical first page may yield few or no candidates. "infra" also matches IT infrastructure roles. An approved tender has no sector keywords, but Find experts reads only `data/tender.json`.
+- **How it works:**
+  1. The search and years check run as before.
+  2. Each remaining person's jobs are scanned for a sector word in the title or employer.
+  3. People with no such job are dropped, and the matching job is shown as evidence.
+
 ## Suggestions (ideas noted but not built)
+- Put the sector words into the paid search filter, so credits are spent on relevant records rather than filtered out afterwards.
 - Narrow Find experts to highway and construction work (for example by employer industry) before showing it as more than a preview.
 - Darken the light theme's muted text (for example to `#6F6A60`) so small labels meet the 4.5:1 contrast guideline.
 - Check whether each job's sector matches the tender's wording ("in Highway Projects"), since total years currently count all jobs.

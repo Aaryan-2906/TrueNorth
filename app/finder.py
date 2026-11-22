@@ -24,8 +24,8 @@ SEARCH_FIELDS = [
 ]
 LABEL = "Candidates whose public record appears to meet the tender's rules. This is not a recommendation; the committee decides."
 TITLE_NOTE = (
-    "Titles are matched as text, so a role in another sector (for example a sales Team Leader) can appear. "
-    "Public records can be incomplete or out of date."
+    "Titles and sector words are matched as text, so a role in another sector (for example IT infrastructure) can "
+    "still appear. Public records can be incomplete or out of date."
 )
 _HONORIFICS = {"dr", "mr", "mrs", "ms", "er", "prof", "shri", "smt"}
 _UNEXPECTED_REPLY = f"{SEARCH_PATH}: the reply had an unexpected shape."
@@ -37,6 +37,8 @@ class Candidate:
     total_months: int
     similar_months: int
     similar_jobs: list[Job]
+    sector_job: Job | None = None
+    sector_keyword: str | None = None
 
 
 @dataclass
@@ -84,6 +86,25 @@ def _is_dated(job: Job) -> bool:
     return job.start is not None and (job.end is not None or job.is_current)
 
 
+def _sector_word(text: str, keywords: list[str]) -> str | None:
+    """The first keyword found at the start of a word. Two-letter keywords such as NH must be a whole word."""
+    for keyword in keywords:
+        ending = r"\b" if len(keyword) <= 2 else ""
+        if re.search(rf"\b{re.escape(keyword)}{ending}", text, re.IGNORECASE):
+            return keyword
+    return None
+
+
+def sector_evidence(jobs: list[Job], similar_jobs: list[Job], keywords: list[str]) -> tuple[Job, str] | None:
+    """One job whose title or employer has a sector keyword, preferring a similar-capacity role."""
+    others = [job for job in jobs if job not in similar_jobs]
+    for job in similar_jobs + others:
+        keyword = _sector_word(job.title, keywords) or _sector_word(job.employer, keywords)
+        if keyword:
+            return job, keyword
+    return None
+
+
 def assess(profile: Profile, position: dict[str, Any], today: tuple[int, int]) -> Candidate | None:
     """Documented months for one profile, or None if it falls short of a tender minimum."""
     total = normalise.union_months(profile.jobs, today)
@@ -96,7 +117,13 @@ def assess(profile: Profile, position: dict[str, Any], today: tuple[int, int]) -
         return None
     if not similar_jobs:  # With no minimum stated, a match still needs a dated similar role to show.
         return None
-    return Candidate(profile, total, similar, similar_jobs)
+    keywords = position.get("sector_keywords") or []
+    if not keywords:
+        return Candidate(profile, total, similar, similar_jobs)
+    found = sector_evidence(profile.jobs, similar_jobs, keywords)
+    if found is None:
+        return None
+    return Candidate(profile, total, similar, similar_jobs, found[0], found[1])
 
 
 def find_candidates(
@@ -142,14 +169,26 @@ def find_candidates(
     return FinderRun(position_key, position, region, len(people), total if isinstance(total, int) else None, candidates)
 
 
+def _sector_view(item: Candidate) -> dict[str, str] | None:
+    job = item.sector_job
+    if job is None:
+        return None
+    return {
+        "title": job.title,
+        "employer": job.employer,
+        "period": checker.job_period(job),
+        "keyword": item.sector_keyword,
+    }
+
+
 def result_view(run: FinderRun) -> dict[str, Any]:
-    """What the page shows. Profile URLs and employers are not sent to it."""
+    """What the page shows. No profile URLs; an employer appears only on the sector evidence line."""
     kept, searched = len(run.candidates), run.searched
     noun = "record" if searched == 1 else "records"
     return {
         "ok": True,
         "kind": "finder",
-        "headline": f"{kept} of {searched} public {noun} searched appear to meet the tender's minimums",
+        "headline": f"{kept} of {searched} public {noun} searched appear to meet the tender's minimums and sector check",
         "overall": None,
         "label": LABEL,
         "note": TITLE_NOTE,
@@ -169,6 +208,7 @@ def result_view(run: FinderRun) -> dict[str, Any]:
                 "total_years": round(item.total_months / 12, 1),
                 "similar_years": round(item.similar_months / 12, 1),
                 "evidence": [{"title": job.title, "period": checker.job_period(job)} for job in item.similar_jobs],
+                "sector_evidence": _sector_view(item),
             }
             for item in run.candidates
         ],
