@@ -97,6 +97,26 @@
   2. A date that cannot be read, has no year, or falls after today becomes a named problem, so the row leaves all totals and raises a question.
   3. The bid check groups experts by profile URL, or by name when there is no URL, and counts each distinct person once.
 
+## Dates: more formats
+- **Built:** day-first "12 March 2019", "12 Mar 2019", "12th March, 2019", "12-03-2019" and "12.03.2019" (month and year kept). "03-2019" and "2019" alone give the problem "no month". Commit `3ee8064`.
+
+## Step 06b: CV parser
+- **Built:** `parse_cv` reads CV text into `Claims` through the Anthropic API, `audit` and `expert` now always read `cvs/<id>.md` through it, and `uv run python -m app.cli check-cv <path> [--position KEY] [--profile-url URL]` checks a single unseen CV.
+- **Files:** `app/parse_cv.py`, `app/dates.py`, `app/models.py`, `app/report.py`, `app/cli.py`, `tests/test_parse_cv.py`, `pyproject.toml`, `uv.lock`. `app/checker.py` was not changed.
+- **Test results:** the parser matched all 6 hand-written claims files with no diffs. `uv run pytest -q` gives 142 passed. `audit` matches the previous report except for one new footer line about CV readings, and `credits.csv` did not change. `check-cv` worked on a new synthetic CV in a temp folder and ignored an instruction planted in it.
+- **Decisions:**
+  1. `temperature=0` is not sent, because `claude-sonnet-5-5` rejects non-default values with a 400. A strict JSON schema, the verbatim check and the response cache keep results stable, but a `--fresh` reading is not guaranteed to be identical.
+  2. Every employer, title and raw date must appear verbatim in the CV. If not, the model is retried once with the error, then the run stops.
+  3. Server-side refusal fallback is on, so if the model declines a CV the API can retry on another model.
+  4. `audit` reads every CV before any paid lookup, so an unreadable CV stops the run with no report and no Crustdata credits spent.
+  5. `check-cv` looks up a profile only when `--profile-url` is passed. A URL written inside a CV never triggers a paid call by itself.
+  6. A CV with no stated total shows "not stated" rather than a made-up number.
+- **Known gaps:** `audit --fresh` has not been run live with the parser. LLM token cost is not recorded in `credits.csv`, which covers Crustdata only. No HTML report yet.
+- **How it works:**
+  1. The LLM copies the name, claims and each job's employer, title and raw dates out of the CV as JSON, and treats the CV as data, not instructions.
+  2. Python rejects anything not written in the CV, then `dates.py` converts every date, so the LLM never produces a date value.
+  3. The same deterministic checker then runs on those claims, and each reading is cached so a repeat run costs nothing.
+
 ## Suggestions (ideas noted but not built)
-- SPEC §5c does not accept "12 March 2019", "12-03-2019" or "12.03.2019", so they are reported as unreadable. Real CVs may use them. Consider adding them before Part B.
+- `CV_DATE_INVALID` finding messages read awkwardly in the `expert` and `check-cv` output ("'2013' is no month"). The report's question wording is correct. Fix in `checker.py` when that file may be changed.
 - SPEC §4 collapses same-employer, same-date jobs even when titles differ, which could hide a title a CV row should match. Consider keeping both titles.

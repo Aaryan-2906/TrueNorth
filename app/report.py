@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from app import config, crustdata, firm
+from app import config, crustdata, firm, parse_cv
 from app.checker import cite_job
 from app.models import Claims, CvRow, ExpertResult, FirmResult, Job, Lookup
 from app.questions import Question, build_questions
@@ -45,6 +45,10 @@ def row_dates(row: CvRow) -> str:
     start = row.start_raw or row.start or "no start date"
     end = row.end_raw or row.end or "no end date"
     return f"{start} to {end}"
+
+
+def claimed_text(claims: Claims) -> str:
+    return f"{claims.claimed_total_years:.1f} years" if claims.claimed_total_stated else "not stated"
 
 
 def row_outcome(index: int, result: ExpertResult) -> str:
@@ -222,13 +226,13 @@ def _expert_lines(entry: ExpertEntry) -> list[str]:
         "",
         f"- **Status:** {result.status}",
         f"- **Proposed position:** {position}",
-        f"- **Years:** documented {_years_text(result.documented_total_months)} vs claimed {claims.claimed_total_years:.1f} years",
+        f"- **Years:** documented {_years_text(result.documented_total_months)} vs claimed {claimed_text(claims)}",
     ]
     if result.documented_similar_months is not None:
         claimed = claims.claimed_similar_years
-        claimed_text = "not stated" if claimed is None else f"{claimed:.1f} years"
+        similar_claimed = "not stated" if claimed is None else f"{claimed:.1f} years"
         lines.append(
-            f"- **Similar role:** documented {_years_text(result.documented_similar_months)} vs claimed {claimed_text}"
+            f"- **Similar role:** documented {_years_text(result.documented_similar_months)} vs claimed {similar_claimed}"
         )
     lines.append(f"- **Lookup:** {entry.origin}")
     if claims.cv_date is None and any(row.end == "present" for row in claims.rows):
@@ -286,6 +290,11 @@ def _footer_lines(ledger_start: int, errors: list[str], timestamp: str) -> list[
     for item in stats["lookups"]:
         source = "live" if item["source"] == "live" else "from cache"
         lines.append(f"  - {item['path']}: {source}, fetched {item['fetched_at']}")
+    readings = parse_cv.run_stats()
+    lines.append(
+        f"- CV readings this run: {readings['live']} by the LLM, {readings['from_cache']} from cache. "
+        "The LLM only copies text from the CV. Dates are converted and all checks are run by deterministic code."
+    )
     if errors:
         lines.append("- Lookups that failed in this run, shown as not compared:")
         lines += [f"  - {error}" for error in errors]

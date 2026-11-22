@@ -85,6 +85,7 @@ class Claims(BaseModel):
     name: str
     proposed_position: str | None = None  # key in tender.json positions; None in Career Check mode
     claimed_total_years: float
+    claimed_total_stated: bool = True  # False if the CV states no total (claimed_total_years is then 0)
     claimed_similar_years: float | None  # None if the CV doesn't state it
     cv_date: YearMonth | None = None  # date written on the CV; "present" means this date
     profile_url: str | None = None  # if the CV includes one (bid.json may override)

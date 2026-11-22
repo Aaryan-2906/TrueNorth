@@ -22,6 +22,7 @@ _DAY_MONTH_YEAR = re.compile(r"(\d{1,2})([/.-])(\d{1,2})\2(\d{4})")
 _DAY_MONTH_NAME_YEAR = re.compile(r"(\d{1,2})(?:st|nd|rd|th)?[\s-]+([a-z]+)[\s.,-]*(\d{4})")
 _MONTH_SLASH_YEAR = re.compile(r"(\d{1,2})/(\d{4})")
 _NO_MONTH = re.compile(r"(?:\d{1,2}-)?\d{4}")
+_DURATION = re.compile(r"(.+?)\s+(?:to|till|until|-|–|—)\s+(.+)", re.IGNORECASE)
 _EARLIEST_YEAR = 1900
 
 
@@ -90,6 +91,26 @@ def parse_cv_date(raw: Any, today: tuple[int, int]) -> ParsedDate:
     if match and match.group(1) in _MONTHS:
         return Problem("no year")
     return Problem("unreadable")
+
+
+def parse_duration(
+    raw: str | None, today: tuple[int, int]
+) -> tuple[YearMonth | None, YearMonth | Literal["present"] | None]:
+    """Parse "<start> to <end>" from a Duration line. An unclear side stays None."""
+    if not raw:
+        return None, None
+    text = re.sub(r"^\s*duration\s*:?\s*", "", raw, flags=re.IGNORECASE).strip()
+    match = _DURATION.fullmatch(text)
+    if match is None:
+        return None, None
+    end_text = match.group(2).strip()
+    if end_text.lower().rstrip(".") in {"date", "now"}:
+        end_text = "present"
+    start, end = parse_cv_date(match.group(1), today), parse_cv_date(end_text, today)
+    return (
+        start if isinstance(start, YearMonth) else None,
+        None if isinstance(end, Problem) else end,
+    )
 
 
 def fill_row_dates(
