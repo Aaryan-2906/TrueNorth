@@ -387,7 +387,7 @@ tr.row-flash td:last-child { box-shadow: inset -2px 0 0 #F59E0B, inset 0 2px 0 #
   <section class="mt-14 border-t border-sand-200 pt-8 pb-6">
     <div class="card flex flex-col items-start justify-between gap-4 bg-sand-100/70 px-6 py-5 sm:flex-row sm:items-center">
       <p class="font-mono text-xs leading-relaxed text-ink-600">
-        <strong class="font-semibold text-ink-900">330 tests</strong> ·
+        <strong class="font-semibold text-ink-900">353 tests</strong> ·
         <strong class="font-semibold text-ink-900">17 golden cases</strong> written before the build ·
         tender rules checked against the <a href="https://infracon.nic.in/WriteReadData/consultantprojectsAE/586_File1163110934.pdf" target="_blank" rel="noopener" class="underline hover:text-forest-800">NHAI PDF</a> ·
         built with Crustdata + Claude ·
@@ -454,16 +454,40 @@ tr.row-flash td:last-child { box-shadow: inset -2px 0 0 #F59E0B, inset 0 2px 0 #
         <button id="runCv" class="btn-primary w-full" type="submit">Check this CV</button>
       </form>
 
-      <form id="panelBid" class="hidden space-y-3" role="tabpanel" aria-labelledby="tabBid">
-        <div>
+      <form id="panelBid" class="hidden space-y-3" role="tabpanel" aria-labelledby="tabBid" novalidate>
+        <div class="flex gap-1 rounded-lg border border-sand-200 bg-sand-50 p-1" role="tablist" aria-label="Bid source">
+          <button id="bidModeSaved" type="button" class="tab" role="tab" aria-selected="true" aria-controls="bidSaved">Saved bid</button>
+          <button id="bidModeUpload" type="button" class="tab" role="tab" aria-selected="false" aria-controls="bidUpload">Upload CVs</button>
+        </div>
+        <div id="bidSaved" role="tabpanel" aria-labelledby="bidModeSaved">
           <label class="mb-1.5 block text-xs font-medium text-ink-600" for="bidSelect">Bid</label>
           <select id="bidSelect" class="field"></select>
         </div>
+        <div id="bidUpload" class="hidden space-y-3" role="tabpanel" aria-labelledby="bidModeUpload">
+          <div>
+            <label class="mb-1.5 block text-xs font-medium text-ink-600" for="firmName">Firm name</label>
+            <input id="firmName" class="field" type="text" maxlength="200" autocomplete="off" placeholder="Name of the bidding firm">
+          </div>
+          <div>
+            <label class="mb-1.5 block text-xs font-medium text-ink-600" for="firmDomain">Firm domain (optional)</label>
+            <input id="firmDomain" class="field" type="text" autocomplete="off" placeholder="example.com">
+          </div>
+          <div id="bidDrop" class="rounded-lg border border-dashed border-sand-300 bg-sand-50 px-3 py-3 text-center transition">
+            <input id="bidFiles" type="file" multiple accept=".pdf,.docx,.txt,.md" class="sr-only" tabindex="-1" aria-label="CV files">
+            <p class="text-xs text-ink-600">Drop 1 to 6 CVs here, or</p>
+            <button id="bidChoose" type="button" class="btn-secondary mt-1.5 !py-1.5 text-xs">Choose files</button>
+            <p class="mt-1.5 text-[11px] text-ink-400">PDF, Word (.docx), .txt or .md, up to 5 MB each</p>
+          </div>
+          <p id="bidFileCount" class="hidden font-mono text-[11px] text-ink-600"></p>
+          <ul id="bidFileList" class="space-y-2"></ul>
+        </div>
+        <p id="bidHint" class="hidden text-xs font-medium text-amber-800" role="alert"></p>
         <label class="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-sand-200 bg-sand-50 px-3 py-2 text-xs text-ink-900">
           <span>Fresh<span class="block text-[11px] text-ink-600">Skip the cache and make new paid calls</span></span>
           <input id="freshBid" type="checkbox" class="h-4 w-4 accent-forest-800">
         </label>
 
+        <div id="bidTender" class="space-y-3">
         <!-- Tender Box -->
         <details id="tenderBox" class="rounded-lg border border-sand-200 bg-sand-50/60 px-3 py-2">
           <summary>Read a tender (optional)</summary>
@@ -479,6 +503,7 @@ tr.row-flash td:last-child { box-shadow: inset -2px 0 0 #F59E0B, inset 0 2px 0 #
           <span>Use approved tender<span id="useTenderInfo" class="block text-[11px] text-ink-600"></span></span>
           <input id="useTender" type="checkbox" class="h-4 w-4 accent-forest-800">
         </label>
+        </div>
 
         <button id="runBid" class="btn-primary w-full" type="submit">Audit this bid</button>
       </form>
@@ -961,7 +986,7 @@ function showRunning() {
 function setRunning(running) {
   state.running = running;
   $('runCv').disabled = running;
-  $('runBid').disabled = running;
+  $('runBid').disabled = running || (state.bidMode !== 'upload' && !$('bidSelect').value);
   // Also disable readTender when running
   const rt = $('readTender');
   if (rt) rt.disabled = running;
@@ -1267,8 +1292,165 @@ $('panelCv').addEventListener('submit', (event) => {
     fresh: $('freshCv').checked,
   });
 });
+// Audit a bid: a saved bid file, or firm details with 1-6 uploaded CVs.
+const MAX_BID_FILES = 6;
+state.bidMode = 'saved';
+state.bidFiles = [];
+
+function showBidHint(message) {
+  $('bidHint').textContent = message;
+  $('bidHint').classList.toggle('hidden', !message);
+}
+
+function selectBidMode(mode) {
+  state.bidMode = mode;
+  const upload = mode === 'upload';
+  $('bidModeSaved').setAttribute('aria-selected', String(!upload));
+  $('bidModeUpload').setAttribute('aria-selected', String(upload));
+  $('bidSaved').classList.toggle('hidden', upload);
+  $('bidUpload').classList.toggle('hidden', !upload);
+  $('bidTender').classList.toggle('hidden', upload);
+  $('runBid').textContent = upload ? 'Audit uploaded CVs' : 'Audit this bid';
+  $('runBid').disabled = state.running || (!upload && !$('bidSelect').value);
+  showBidHint('');
+}
+
+function bidSelect(label, options) {
+  const select = document.createElement('select');
+  select.className = 'field !py-1.5 text-xs';
+  select.setAttribute('aria-label', label);
+  options.forEach(([value, text]) => select.add(new Option(text, value)));
+  return select;
+}
+
+function updateBidFiles() {
+  const count = state.bidFiles.length;
+  $('bidFileCount').textContent = `${count} of ${MAX_BID_FILES} CVs`;
+  $('bidFileCount').classList.toggle('hidden', !count);
+  $('bidChoose').disabled = count >= MAX_BID_FILES;
+}
+
+function addBidFileRow(file) {
+  const row = document.createElement('li');
+  row.className = 'space-y-1.5 rounded-lg border border-sand-200 bg-sand-50 p-2.5';
+
+  const top = document.createElement('div');
+  top.className = 'flex items-center justify-between gap-2';
+  const about = document.createElement('div');
+  about.className = 'min-w-0';
+  const name = document.createElement('p');
+  name.className = 'truncate text-xs font-medium text-ink-900';
+  name.textContent = file.name;
+  name.title = file.name;
+  const size = document.createElement('p');
+  size.className = 'font-mono text-[11px] text-ink-600';
+  size.textContent = formatBytes(file.size);
+  about.append(name, size);
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.className = 'btn-secondary shrink-0 !px-2.5 !py-1 text-xs';
+  remove.textContent = 'Remove';
+  remove.setAttribute('aria-label', `Remove ${file.name}`);
+  top.append(about, remove);
+
+  const url = document.createElement('input');
+  url.type = 'url';
+  url.className = 'field !py-1.5 text-xs';
+  url.placeholder = 'LinkedIn URL (optional)';
+  url.autocomplete = 'off';
+  url.setAttribute('aria-label', `LinkedIn URL for ${file.name}`);
+
+  const selects = document.createElement('div');
+  selects.className = 'grid grid-cols-2 gap-1.5';
+  const positions = [...$('position').options].map((option) => [option.value, option.textContent]);
+  const position = bidSelect(`Position for ${file.name}`, positions);
+  const employment = bidSelect(`Employment for ${file.name}`, [['full_time', 'Full-time'], ['associate', 'Associate']]);
+  selects.append(position, employment);
+
+  row.append(top, url, selects);
+  $('bidFileList').appendChild(row);
+  const entry = { file, url, position, employment };
+  state.bidFiles.push(entry);
+  remove.addEventListener('click', () => {
+    state.bidFiles = state.bidFiles.filter((item) => item !== entry);
+    row.remove();
+    showBidHint('');
+    updateBidFiles();
+    $('bidChoose').focus();
+  });
+}
+
+function addBidFiles(files) {
+  const problems = [];
+  for (const file of files) {
+    const lower = file.name.toLowerCase();
+    const repeated = state.bidFiles.some(({ file: known }) => (
+      known.name === file.name && known.size === file.size && known.lastModified === file.lastModified
+    ));
+    if (!CV_FILE_TYPES.some((type) => lower.endsWith(type))) {
+      problems.push(`${file.name}: please choose a .pdf, .docx, .txt or .md file.`);
+    } else if (file.size > CV_FILE_LIMIT) {
+      problems.push(`${file.name}: larger than the 5 MB limit.`);
+    } else if (repeated) {
+      problems.push(`${file.name}: already added.`);
+    } else if (state.bidFiles.length >= MAX_BID_FILES) {
+      problems.push(`${file.name}: not added, the limit is ${MAX_BID_FILES} CVs.`);
+    } else {
+      addBidFileRow(file);
+    }
+  }
+  showBidHint(problems.join(' '));
+  updateBidFiles();
+}
+
+$('bidModeSaved').addEventListener('click', () => selectBidMode('saved'));
+$('bidModeUpload').addEventListener('click', () => selectBidMode('upload'));
+$('bidChoose').addEventListener('click', () => $('bidFiles').click());
+$('bidFiles').addEventListener('change', () => {
+  addBidFiles([...$('bidFiles').files]);
+  $('bidFiles').value = '';
+});
+['dragenter', 'dragover'].forEach((type) => $('bidDrop').addEventListener(type, () => {
+  $('bidDrop').style.borderColor = '#163A2E';
+  $('bidDrop').style.background = '#FFFFFF';
+}));
+['dragleave', 'drop'].forEach((type) => $('bidDrop').addEventListener(type, () => {
+  $('bidDrop').style.borderColor = '';
+  $('bidDrop').style.background = '';
+}));
+$('bidDrop').addEventListener('drop', (event) => addBidFiles([...event.dataTransfer.files]));
+
+function startUploadedAudit() {
+  const firmName = $('firmName').value.trim();
+  if (!firmName) {
+    showBidHint('Please enter the firm name.');
+    $('firmName').focus();
+    return;
+  }
+  if (!state.bidFiles.length) {
+    showBidHint('Please add at least one CV file.');
+    return;
+  }
+  showBidHint('');
+  const form = new FormData();
+  form.append('firm_name', firmName);
+  form.append('firm_domain', $('firmDomain').value.trim());
+  form.append('fresh', String($('freshBid').checked));
+  state.bidFiles.forEach(({ file, url, position, employment }) => {
+    form.append('file', file);
+    form.append('profile_url', url.value.trim());
+    form.append('position', position.value);
+    form.append('employment', employment.value);
+  });
+  startRun('/api/audit-upload', form);
+}
+
 $('panelBid').addEventListener('submit', (event) => {
   event.preventDefault();
+  if (state.bidMode === 'upload') {
+    startUploadedAudit();
+    return;
+  }
   if ($('bidSelect').value) {
     startRun('/api/audit', {
       bid: $('bidSelect').value,

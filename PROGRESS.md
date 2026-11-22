@@ -240,6 +240,22 @@
   2. Closed sections are opened before printing and closed again afterwards.
   3. A question card stores the row numbers from its own evidence and highlights those rows in its own expert's table.
 
+## Audit from uploaded CVs
+- **Built:** `POST /api/audit-upload` takes a firm name, optional domain, and 1-6 CV files, each with an optional profile URL, position and employment. It builds the bid in memory, runs the existing audit (rules reader first, Claude fallback), and streams the same events and result shape as `/api/audit`. "Audit a bid" now has a Saved bid / Upload CVs switch with firm fields, a multi-file drop zone, and a row per file with Remove.
+- **Files:** `app/server.py`, `app/cli.py`, `static/index.html`, `tests/test_audit_upload.py`, `README.md`, `demo/DEMO_SCRIPT.md`.
+- **Test results:** `uv run pytest -q` gives 353 passed. New tests use generated CVs with no profile URLs and a mocked firm lookup, and cover the 6-file limit, wrong file types, size limit, cross-site refusal, bad fields and an unchanged `data/` folder. In headless Edge, 40 of 40 checks passed against the real app with the firm lookup mocked and all outside calls blocked. No Crustdata credits were spent.
+- **Decisions:**
+  1. Experts are labelled C1 to C6, because file names often contain a person's name. Displayed names come from the CVs.
+  2. A wrong type, oversized file or bad field refuses the whole upload before anything runs. A damaged or scanned file becomes that expert's "cannot check" entry, and the others continue.
+  3. Employment defaults to full-time when left out, so the firm's headcount check still considers that person.
+  4. Profile URLs must look like a LinkedIn profile, so a mistyped value cannot spend a paid lookup.
+  5. Upload mode uses the standard tender positions. Approved-tender controls stay in Saved bid mode.
+- **Known gaps:** uploaded files are never written to `data/`, but the run's report is written to `out/` as for any audit, a Claude fallback reading is cached in `cache/`, and large uploads may briefly use a system temp file while the form is parsed. A real firm lookup through this endpoint spends Crustdata credits; the tests and Edge run mocked it. Claude fallback through this endpoint was not run live in this step.
+- **How it works:**
+  1. The server checks the form and turns each file into text, keeping it in memory.
+  2. It builds a temporary bid and sends it through the same checks as a saved bid.
+  3. The page shows the same live stages, results, report link and PDF button.
+
 ## Suggestions (ideas noted but not built)
 - Check whether each job's sector matches the tender's wording ("in Highway Projects"), since total years currently count all jobs.
 - SPEC §4 collapses same-employer, same-date jobs even when titles differ, which could hide a title a CV row should match. Consider keeping both titles.

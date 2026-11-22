@@ -94,7 +94,7 @@ To use the web app, start the server and open http://localhost:8000:
 uv run uvicorn app.server:app --port 8000
 ```
 
-The web app can check one CV (pasted, or a .pdf, .docx, .txt or .md file up to 5 MB), audit a bid, and read a pasted tender for approval. Scanned PDFs are not supported yet because there is no OCR. It needs internet for its Tailwind and font CDNs.
+The web app can check one CV (pasted, or a .pdf, .docx, .txt or .md file up to 5 MB), audit a saved bid or 1-6 uploaded CVs, and read a pasted tender for approval. Scanned PDFs are not supported yet because there is no OCR. It needs internet for its Tailwind and font CDNs.
 
 Position keys are in `data/tender.json`: `team_leader`, `resident_engineer`, `bridge_engineer`, `pavement_specialist`, `quality_material_expert`, `road_safety_expert`.
 
@@ -177,7 +177,7 @@ irreversible happens anywhere; no message is ever sent.
 audit of the demo bid costs **1.2 credits** (1 person enrich + 0.2 company identify); repeat runs reuse the cache and
 cost 0. The web app shows each real call (live or cached, credits, time) in its Activity panel.
 
-**Tests (330 passing):** 17 hand-built expert cases and 5 firm cases written before the event and never edited;
+**Tests (353 passing):** 17 hand-built expert cases and 5 firm cases written before the event and never edited;
 29 real CV date strings plus extra formats; robustness tests (timeout mid-run resumes without re-billing cached calls,
 401/402/403/429, malformed bids, empty CVs, a recipe instead of a CV, LLM refusal/invalid JSON); parser tests on six
 CVs; tender parsing matched the PDF on all six positions in four fresh readings. A live audit matched the cached audit

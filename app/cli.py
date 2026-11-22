@@ -53,6 +53,17 @@ class CvRun:
     lookup_error: str | None = None
 
 
+@dataclass
+class UploadedCv:
+    """One uploaded CV held in memory. problem is set when its text could not be extracted."""
+
+    text: str | None
+    problem: str | None
+    profile_url: str | None
+    position: str | None
+    employment: str
+
+
 class InputError(RuntimeError):
     """An input file is malformed. The message names the file and the problem."""
 
@@ -195,11 +206,18 @@ def _position(expert: dict[str, Any], tender: dict[str, Any]) -> dict[str, Any] 
     return tender["positions"][key] if key is not None else None
 
 
-def _read_cv(expert: dict[str, Any], fresh: bool | None, progress: Progress = _silent) -> Claims:
-    """Read the expert's CV text through the parser. The bid's name is the one displayed."""
+def _cv_label(expert: dict[str, Any]) -> str:
+    return expert.get("cv_label") or _display(BID_DIR / expert["cv"])
+
+
+def _read_cv(
+    expert: dict[str, Any], fresh: bool | None, progress: Progress = _silent, text: str | None = None
+) -> Claims:
+    """Read the expert's CV through the parser. Uploads pass their text; the bid's name is the one displayed."""
     expert_id = expert["id"]
-    progress("reading_cv", expert_id, f"Reading {expert_id}'s CV ({_display(BID_DIR / expert['cv'])})")
-    text = (BID_DIR / expert["cv"]).read_text(encoding="utf-8")
+    progress("reading_cv", expert_id, f"Reading {expert_id}'s CV ({_cv_label(expert)})")
+    if text is None:
+        text = (BID_DIR / expert["cv"]).read_text(encoding="utf-8")
     claims = parse_cv.parse_cv(
         text,
         expert_id,
@@ -233,8 +251,7 @@ def _unread_entry(
         claimed_similar_years=None,
         rows=[],
     )
-    file = _display(BID_DIR / expert["cv"])
-    result = checker.cv_not_read_result(expert["id"], file, problem)
+    result = checker.cv_not_read_result(expert["id"], _cv_label(expert), problem)
     return report.ExpertEntry(
         expert, claims, Lookup(status="not_found"), result, "not looked up (CV could not be read)", position
     )
@@ -399,7 +416,6 @@ def audit_bid(
     tender = _load_approved_tender(tender_path) if tender_path else _load_tender()
     bid = _load_bid(tender, bid_path)
     ledger_start = report.ledger_row_count()
-    errors: list[str] = []
 
     # Read every CV first, so no paid lookup is made for an expert whose CV cannot be read.
     claims_by_id: dict[str, Claims] = {}
@@ -410,6 +426,20 @@ def audit_bid(
         except CV_READ_ERRORS as exc:
             cv_problems[expert["id"]] = _cv_problem(exc)
 
+    return _finish_audit(bid, tender, claims_by_id, cv_problems, ledger_start, fresh, progress)
+
+
+def _finish_audit(
+    bid: dict[str, Any],
+    tender: dict[str, Any],
+    claims_by_id: dict[str, Claims],
+    cv_problems: dict[str, str],
+    ledger_start: int,
+    fresh: bool | None,
+    progress: Progress,
+) -> AuditRun:
+    """Everything after the CVs are read: lookups, checks and the report."""
+    errors: list[str] = []
     entries = _audit_experts(bid, tender, claims_by_id, cv_problems, fresh, errors, progress)
     firm_result, full_time = _audit_firm(bid, fresh, errors, progress)
 
@@ -418,6 +448,43 @@ def audit_bid(
     text = report.render_report(bid, tender, entries, firm_result, full_time, ledger_start, errors, timestamp)
     path = report.write_report(text)
     return AuditRun(bid, entries, firm_result, full_time, ledger_start, path, errors, cv_problems, tender.get("tender_id"))
+
+
+def audit_uploaded(
+    firm_details: dict[str, str | None],
+    uploads: list[UploadedCv],
+    fresh: bool | None,
+    progress: Progress = _silent,
+) -> AuditRun:
+    """Audit a bid built in memory from uploaded CVs. Nothing is written to data/."""
+    tender = _load_tender()
+    experts = [
+        {
+            "id": f"C{number}",
+            "name": "",
+            "proposed_position": upload.position,
+            "profile_url": upload.profile_url,
+            "employment_with_bidder": upload.employment,
+            "cv_label": f"uploaded CV {number}",
+        }
+        for number, upload in enumerate(uploads, 1)
+    ]
+    bid = {"firm": firm_details, "experts": experts, "_note": "Built from uploaded CVs for this run."}
+    ledger_start = report.ledger_row_count()
+
+    claims_by_id: dict[str, Claims] = {}
+    cv_problems: dict[str, str] = {}
+    for number, (expert, upload) in enumerate(zip(experts, uploads), 1):
+        try:
+            if upload.problem is not None:
+                raise parse_cv.CvParseError(upload.problem)
+            claims = _read_cv(expert, fresh, progress, upload.text)
+            expert["name"] = claims.name  # The duplicate-person check compares these names.
+            claims_by_id[expert["id"]] = claims
+        except CV_READ_ERRORS as exc:
+            expert["name"] = f"Uploaded CV {number}"
+            cv_problems[expert["id"]] = _cv_problem(exc).rstrip(".")
+    return _finish_audit(bid, tender, claims_by_id, cv_problems, ledger_start, fresh, progress)
 
 
 def run_audit(fresh: bool | None, tender_path: Path | None = None) -> int:

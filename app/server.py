@@ -6,8 +6,10 @@ Run: uv run uvicorn app.server:app --port 8000
 import json
 import logging
 import queue
+import re
 import threading
 import uuid
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterator
@@ -20,6 +22,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field, ValidationError
 from starlette.datastructures import UploadFile
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app import cli, config, crustdata, cv_files, parse_cv, parse_tender, report
 from app.models import FirmResult
@@ -29,6 +32,11 @@ MAX_CV_CHARACTERS = 200_000
 MAX_TENDER_CHARACTERS = 1_000_000
 MAX_FORM_OVERHEAD_BYTES = 64 * 1024
 PASTED_CV_ID = "pasted_cv"
+MAX_BID_FILES = 6
+MAX_FIRM_NAME_CHARACTERS = 200
+UPLOAD_EMPLOYMENT = {"full_time", "associate"}
+_DOMAIN = re.compile(r"[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+")
+_LINKEDIN_PROFILE = re.compile(r"https?://(?:[a-z]{2,3}\.)?linkedin\.com/in/[^/\s?#]+/?", re.IGNORECASE)
 SERVICE_NAMES = {
     "/person/enrich": "Crustdata /person/enrich",
     "/company/identify": "Crustdata /company/identify",
@@ -55,6 +63,13 @@ class AuditRequest(BaseModel):
     bid: str = "data/bid/bid.json"
     fresh: bool = False
     use_approved_tender: bool = False
+
+
+@dataclass
+class BidUpload:
+    firm: dict[str, str | None]
+    uploads: list[cli.UploadedCv]
+    fresh: bool
 
 
 class ReadTenderRequest(BaseModel):
@@ -309,6 +324,119 @@ def audit(request: AuditRequest) -> Response:
         path = _resolve_bid(request.bid)
         tender_path = parse_tender.APPROVED_PATH if request.use_approved_tender else None
         return _audit_result(cli.audit_bid(True if request.fresh else None, progress, path, tender_path))
+
+    return _stream(job)
+
+
+def _clean_domain(raw: str) -> str | None:
+    """A bare domain from what a person typed, or None if it is not one."""
+    text = re.sub(r"^https?://", "", raw.strip().lower()).split("/")[0]
+    text = text.removeprefix("www.")
+    return text if _DOMAIN.fullmatch(text) else None
+
+
+def _upload_error(message: str, status: int = 422) -> Response:
+    return JSONResponse({"error": message}, status_code=status)
+
+
+def _form_values(form: Any, name: str, count: int) -> list[str] | None:
+    """One value per file, in file order. A field left out entirely means blank for every file."""
+    values = form.getlist(name)
+    if not values:
+        return [""] * count
+    if len(values) != count or not all(isinstance(value, str) for value in values):
+        return None
+    return [value.strip() for value in values]
+
+
+async def _read_bid_files(form: Any) -> list[tuple[str, bytes]] | Response:
+    uploads = form.getlist("file")
+    if not uploads or not all(isinstance(upload, UploadFile) for upload in uploads):
+        return _upload_error("Please add at least one CV file.")
+    for number, upload in enumerate(uploads, 1):
+        if Path(upload.filename or "").suffix.lower() not in cv_files.ALLOWED_SUFFIXES:
+            return _upload_error(f"File {number}: please upload a .pdf, .docx, .txt or .md file.")
+    files = []
+    for number, upload in enumerate(uploads, 1):
+        data = await upload.read(cv_files.MAX_FILE_BYTES + 1)
+        if len(data) > cv_files.MAX_FILE_BYTES:
+            return _upload_error(f"File {number} is larger than the 5 MB limit.", 413)
+        files.append((upload.filename or "", data))
+    return files
+
+
+def _extract_upload(filename: str, data: bytes) -> tuple[str | None, str | None]:
+    """(text, None), or (None, problem) so one unreadable CV does not stop the rest of the bid."""
+    try:
+        return cv_files.extract_text(filename, data), None
+    except cv_files.CvFileError as exc:
+        return None, str(exc)
+
+
+async def _parse_bid_form(form: Any) -> BidUpload | Response:
+    firm_name = form.get("firm_name")
+    firm_name = firm_name.strip() if isinstance(firm_name, str) else ""
+    if not firm_name:
+        return _upload_error("Please enter the firm name.")
+    if len(firm_name) > MAX_FIRM_NAME_CHARACTERS:
+        return _upload_error("The firm name is too long.")
+    raw_domain = form.get("firm_domain")
+    raw_domain = raw_domain.strip() if isinstance(raw_domain, str) else ""
+    domain = _clean_domain(raw_domain) if raw_domain else None
+    if raw_domain and domain is None:
+        return _upload_error("The firm domain does not look like a domain, for example example.com.")
+
+    files = await _read_bid_files(form)
+    if isinstance(files, Response):
+        return files
+    count = len(files)
+    urls, positions, employments = (_form_values(form, name, count) for name in ("profile_url", "position", "employment"))
+    if urls is None or positions is None or employments is None:
+        return _upload_error("Each file needs its own profile URL, position and employment fields.")
+    try:
+        known_positions = cli._load_tender()["positions"]
+    except cli.InputError as exc:
+        return _upload_error(str(exc), 500)
+    for number, (url, position, employment) in enumerate(zip(urls, positions, employments), 1):
+        if url and not _LINKEDIN_PROFILE.fullmatch(url):
+            return _upload_error(f"File {number}: the profile URL must look like https://www.linkedin.com/in/name.")
+        if position and position not in known_positions:
+            return _upload_error(f"File {number}: unknown position.")
+        if employment and employment not in UPLOAD_EMPLOYMENT:
+            return _upload_error(f"File {number}: employment must be full-time or associate.")
+
+    uploads = []
+    for (filename, data), url, position, employment in zip(files, urls, positions, employments):
+        text, problem = await run_in_threadpool(_extract_upload, filename, data)
+        uploads.append(cli.UploadedCv(text, problem, url or None, position or None, employment or "full_time"))
+    return BidUpload({"name": firm_name, "domain": domain}, uploads, form.get("fresh") == "true")
+
+
+@app.post("/api/audit-upload")
+async def audit_upload(http_request: Request) -> Response:
+    """Audit firm details and 1-6 CV files. The bid exists only in memory, for this run."""
+    if _is_cross_site(http_request):
+        return _upload_error("Uploads are only accepted from this page.", 403)
+    if not http_request.headers.get("content-type", "").lower().startswith("multipart/form-data"):
+        return _upload_error("Send a multipart form with the firm details and CV files.", 415)
+    length = http_request.headers.get("content-length", "")
+    if not length.isdigit():
+        return _upload_error("The upload did not state its size.", 411)
+    if int(length) > MAX_BID_FILES * cv_files.MAX_FILE_BYTES + MAX_FORM_OVERHEAD_BYTES:
+        return _upload_error(f"This upload is larger than {MAX_BID_FILES} files of 5 MB.", 413)
+    try:
+        async with http_request.form(max_files=MAX_BID_FILES, max_fields=4 + 3 * MAX_BID_FILES) as form:
+            parsed = await _parse_bid_form(form)
+    except StarletteHTTPException as exc:
+        if "files" in str(exc.detail).lower():
+            return _upload_error(f"Please upload at most {MAX_BID_FILES} CV files.")
+        return _upload_error("The upload form could not be read.", 400)
+    if isinstance(parsed, Response):
+        return parsed
+
+    def job(progress: cli.Progress) -> dict[str, Any]:
+        run = cli.audit_uploaded(parsed.firm, parsed.uploads, True if parsed.fresh else None, progress)
+        return _audit_result(run)
 
     return _stream(job)
 
