@@ -1,0 +1,122 @@
+{
+ "_note": "Real date strings seen in NHAI-style and private CVs (Nov 2026). TODAY=2026-11. 'PROBLEM:<kind>' means dates.py must return a problem of that kind, not a date. Kinds: no year, after today, end before start, unreadable.",
+ "today": "2026-11",
+ "cases": [
+  {
+   "raw": "Dec. 92",
+   "expected": "1992-12"
+  },
+  {
+   "raw": "Mar. 94",
+   "expected": "1994-03"
+  },
+  {
+   "raw": "Sep'14",
+   "expected": "2014-09"
+  },
+  {
+   "raw": "Jan'16",
+   "expected": "2016-01"
+  },
+  {
+   "raw": "Feb'16",
+   "expected": "2016-02"
+  },
+  {
+   "raw": "April 2011",
+   "expected": "2011-04"
+  },
+  {
+   "raw": "January2012",
+   "expected": "2012-01"
+  },
+  {
+   "raw": "September2005",
+   "expected": "2005-09"
+  },
+  {
+   "raw": "Nov 99",
+   "expected": "1999-11"
+  },
+  {
+   "raw": "July 2001",
+   "expected": "2001-07"
+  },
+  {
+   "raw": "Apr. 98",
+   "expected": "1998-04"
+  },
+  {
+   "raw": "Oct.99",
+   "expected": "1999-10"
+  },
+  {
+   "raw": "Jan 96",
+   "expected": "1996-01"
+  },
+  {
+   "raw": "Mar.85",
+   "expected": "1985-03"
+  },
+  {
+   "raw": "April\"11",
+   "expected": "2011-04"
+  },
+  {
+   "raw": "May 2024",
+   "expected": "2024-05"
+  },
+  {
+   "raw": "Sept 2018",
+   "expected": "2018-09"
+  },
+  {
+   "raw": "June-2019",
+   "expected": "2019-06"
+  },
+  {
+   "raw": "26/10/2017",
+   "expected": "2017-10"
+  },
+  {
+   "raw": "03/06/2019",
+   "expected": "2019-06"
+  },
+  {
+   "raw": "06/2003",
+   "expected": "2003-06"
+  },
+  {
+   "raw": "Till now",
+   "expected": "present"
+  },
+  {
+   "raw": "Till Date",
+   "expected": "present"
+  },
+  {
+   "raw": "Present",
+   "expected": "present"
+  },
+  {
+   "raw": "to date",
+   "expected": "present"
+  },
+  {
+   "raw": "09/12/2097",
+   "expected": "PROBLEM:after today"
+  },
+  {
+   "raw": "April",
+   "expected": "PROBLEM:no year"
+  },
+  {
+   "raw": "",
+   "expected": "PROBLEM:unreadable"
+  },
+  {
+   "raw": "13/13/2020",
+   "expected": "PROBLEM:unreadable"
+  }
+ ]
+}

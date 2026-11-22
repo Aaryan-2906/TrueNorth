@@ -1,0 +1,48 @@
+{
+  "_source": "NHAI RFP (April 2018): Consultancy Services for Authority's Engineer, Belekeri Port to Kumta-Sirsi Road (SH-69), Karnataka, Package I, Bharatmala Pariyojana Phase I. https://infracon.nic.in/WriteReadData/consultantprojectsAE/586_File1163110934.pdf",
+  "_verify": "TODO BEFORE SUNDAY: open the PDF, find Appendix-EC (CV evaluation criteria) and the key-personnel enclosure, and confirm every number below. These were extracted automatically and the minimum-requirements enclosure (Enclosure-B of the ToR) was not checked. Fix any number that differs and note the page.",
+  "_interpretation": "similar_title_keywords is OUR reading of 'Team Leader or similar capacity'. The committee decides what counts; the report says so.",
+  "tender_id": "NHAI-AE-SH69-PKG1-2018",
+  "procuring_agency": "National Highways Authority of India",
+  "positions": {
+    "team_leader": {
+      "name": "Team Leader cum Senior Highway Engineer",
+      "min_total_years": 12,
+      "min_similar_years": 5,
+      "similar_title_keywords": [
+        "team leader",
+        "project director"
+      ],
+      "requires_postgraduate": true
+    },
+    "resident_engineer": {
+      "name": "Resident cum Highway Engineer",
+      "min_total_years": 10,
+      "min_similar_years": 5,
+      "similar_title_keywords": [
+        "resident engineer"
+      ],
+      "requires_postgraduate": true
+    },
+    "bridge_engineer": {
+      "name": "Bridge/Structural Engineer",
+      "min_total_years": 10,
+      "min_similar_years": 5,
+      "similar_title_keywords": [
+        "bridge",
+        "structural"
+      ],
+      "requires_postgraduate": true
+    },
+    "quality_material_expert": {
+      "name": "Senior Quality cum Material Expert",
+      "min_total_years": 10,
+      "min_similar_years": 5,
+      "similar_title_keywords": [
+        "material",
+        "quality"
+      ],
+      "requires_postgraduate": true
+    }
+  }
+}

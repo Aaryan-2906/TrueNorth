@@ -1,0 +1,92 @@
+{
+ "_note": "SYNTHETIC firm cases. records mimic /company/identify basic_info. full_time_count = experts the bid lists as full_time.",
+ "cases": [
+  {
+   "id": "F01",
+   "description": "One record, headcount fine",
+   "records": [
+    {
+     "crustdata_company_id": 101,
+     "name": "Bidder Consult Pvt Ltd",
+     "employee_count_range": "201-500"
+    }
+   ],
+   "full_time_count": 6,
+   "expected": {
+    "status": "CONSISTENT",
+    "codes": []
+   }
+  },
+  {
+   "id": "F02",
+   "description": "Two records, possibly the same firm; use the larger range and say so",
+   "records": [
+    {
+     "crustdata_company_id": 101,
+     "name": "Bidder Consult Pvt Ltd",
+     "employee_count_range": "201-500"
+    },
+    {
+     "crustdata_company_id": 202,
+     "name": "Bidder Consult Group Private Limited",
+     "employee_count_range": "myself only"
+    }
+   ],
+   "full_time_count": 6,
+   "expected": {
+    "status": "CONSISTENT",
+    "codes": [
+     "FIRM_MULTIPLE_RECORDS"
+    ]
+   }
+  },
+  {
+   "id": "F03",
+   "description": "Firm not found: cannot check",
+   "records": [],
+   "full_time_count": 6,
+   "expected": {
+    "status": "CANNOT_CHECK",
+    "codes": [
+     "FIRM_NOT_FOUND"
+    ]
+   }
+  },
+  {
+   "id": "F04",
+   "description": "Firm lists 2-10 staff but bid claims 12 full-time key experts",
+   "records": [
+    {
+     "crustdata_company_id": 303,
+     "name": "Bidder Consult",
+     "employee_count_range": "2-10"
+    }
+   ],
+   "full_time_count": 12,
+   "expected": {
+    "status": "QUESTIONS",
+    "codes": [
+     "FIRM_HEADCOUNT_LOW"
+    ]
+   }
+  },
+  {
+   "id": "F05",
+   "description": "Range missing for every record",
+   "records": [
+    {
+     "crustdata_company_id": 404,
+     "name": "Bidder Consult",
+     "employee_count_range": null
+    }
+   ],
+   "full_time_count": 6,
+   "expected": {
+    "status": "CONSISTENT",
+    "codes": [
+     "FIRM_HEADCOUNT_UNKNOWN"
+    ]
+   }
+  }
+ ]
+}

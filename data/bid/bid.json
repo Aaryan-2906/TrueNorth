@@ -1,0 +1,14 @@
+{
+  "_note": "FILL IN BEFORE SUNDAY with your consenting volunteers. A constructed demo bid: label it as such in the video. Keep expert ids short (X1, X2...).",
+  "firm": {
+    "name": "REPLACE: a real firm name your volunteers' profiles can be checked against, or the firm of volunteer X1",
+    "domain": "REPLACE or null",
+    "note": "The firm check only reads public company data (identify). Do not imply the firm did anything wrong."
+  },
+  "experts": [
+    {"id": "X1", "name": "REPLACE", "proposed_position": "team_leader", "profile_url": "https://www.linkedin.com/in/REPLACE", "employment_with_bidder": "full_time", "cv": "cvs/X1.md", "claims": "claims/X1.json", "seeded_changes": "none (truthful CV)"},
+    {"id": "X2", "name": "REPLACE", "proposed_position": "resident_engineer", "profile_url": "https://www.linkedin.com/in/REPLACE", "employment_with_bidder": "full_time", "cv": "cvs/X2.md", "claims": "claims/X2.json", "seeded_changes": "e.g. start date of 2nd job moved 2 years earlier; claimed total +4 years"},
+    {"id": "X3", "name": "REPLACE", "proposed_position": "team_leader", "profile_url": "https://www.linkedin.com/in/REPLACE", "employment_with_bidder": "full_time", "cv": "cvs/X3.md", "claims": "claims/X3.json", "seeded_changes": "e.g. title upgraded to Team Leader on a past job"},
+    {"id": "X4", "name": "Test Expert (no profile)", "proposed_position": "bridge_engineer", "profile_url": null, "employment_with_bidder": "associate", "cv": "cvs/X4.md", "claims": "claims/X4.json", "seeded_changes": "deliberately has no profile URL: shows NO_PROFILE_FOUND = cannot check"}
+  ]
+}

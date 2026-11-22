@@ -1,0 +1,16 @@
+{
+  "_note": "Expected parser output for cvs/SAMPLE_modern_resume.md. Tests: 'Sept' month spelling, 'over 6 years' -> 6, profile_url extracted from the CV, Mu Construction appears twice (two separate rows, do not merge), no Duration lines.",
+  "expert_id": "SAMPLE_M",
+  "name": "Expert M",
+  "proposed_position": "resident_engineer",
+  "claimed_total_years": 6,
+  "claimed_similar_years": null,
+  "cv_date": null,
+  "profile_url": "https://www.linkedin.com/in/example-expert-m",
+  "rows": [
+    {"employer": "Lambda Construction Co. Pvt. Ltd.", "title": "Highway Engineer", "start_raw": "May 2023", "end_raw": "Present", "duration_raw": null, "start": "2023-05", "end": "present", "date_problem": null},
+    {"employer": "Mu Construction Ltd.", "title": "Senior Site Engineer", "start_raw": "Aug 2021", "end_raw": "Apr 2023", "duration_raw": null, "start": "2021-08", "end": "2023-04", "date_problem": null},
+    {"employer": "Nu Infra Projects Ltd.", "title": "Site Engineer", "start_raw": "Mar 2019", "end_raw": "Aug 2021", "duration_raw": null, "start": "2019-03", "end": "2021-08", "date_problem": null},
+    {"employer": "Mu Construction Ltd.", "title": "Graduate Trainee Engineer", "start_raw": "Sept 2018", "end_raw": "Mar 2019", "duration_raw": null, "start": "2018-09", "end": "2019-03", "date_problem": null}
+  ]
+}

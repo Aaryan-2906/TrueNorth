@@ -1,0 +1,22 @@
+{
+  "_note": "Expected parser output for cvs/SAMPLE_real_format.md. Tests: 'Till Date' -> present, 'May 2024' -> 2024-05, 'about 12 years' -> 12, similar-role years not stated -> null, only ONE employment row (do not invent earlier jobs). Raw date strings must be copied verbatim; start/end come from dates.py.",
+  "expert_id": "SAMPLE",
+  "name": "Expert S",
+  "proposed_position": "resident_engineer",
+  "claimed_total_years": 12,
+  "claimed_similar_years": null,
+  "rows": [
+    {
+      "employer": "Example Infratech Pvt Ltd",
+      "title": "Project Coordinator cum Project Manager",
+      "start_raw": "May 2024",
+      "end_raw": "Till Date",
+      "duration_raw": null,
+      "start": "2024-05",
+      "end": "present",
+      "date_problem": null
+    }
+  ],
+  "cv_date": null,
+  "profile_url": null
+}

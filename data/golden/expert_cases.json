@@ -1,0 +1,1074 @@
+{
+ "_note": "SYNTHETIC test cases hand-built before the event (declare at submission). Names are placeholders. TODAY=2026-11. 'codes' is the exact set of all codes that must fire (expert-level and row-level, including info codes). CV rows here are already parsed (start/end/date_problem); date parsing is tested separately in date_strings.json.",
+ "today": "2026-11",
+ "cases": [
+  {
+   "id": "E01",
+   "description": "Clean expert: CV matches profile, meets all minimums",
+   "bidder_name": "Bidder Consult Pvt Ltd",
+   "position": "team_leader",
+   "employment_with_bidder": "full_time",
+   "lookup": {
+    "status": "found",
+    "candidate_count": 1,
+    "profile": {
+     "person_id": null,
+     "name": "(synthetic)",
+     "profile_url": null,
+     "jobs": [
+      {
+       "employer": "Bidder Consult Pvt. Ltd.",
+       "title": "Team Leader",
+       "start": "2019-01",
+       "end": null,
+       "is_current": true
+      },
+      {
+       "employer": "Y Infra Ltd",
+       "title": "Resident Engineer",
+       "start": "2013-06",
+       "end": "2018-12",
+       "is_current": false
+      },
+      {
+       "employer": "Z Constructions",
+       "title": "Highway Engineer",
+       "start": "2009-07",
+       "end": "2013-05",
+       "is_current": false
+      }
+     ],
+     "education": [
+      {
+       "school": "Example Institute",
+       "degree": "M.Tech",
+       "field_of_study": "Transportation Engineering"
+      }
+     ]
+    }
+   },
+   "claims": {
+    "proposed_position": "team_leader",
+    "claimed_total_years": 17,
+    "claimed_similar_years": 7,
+    "rows": [
+     {
+      "employer": "Bidder Consult Pvt Ltd",
+      "title": "Team Leader",
+      "start": "2019-01",
+      "end": "present"
+     },
+     {
+      "employer": "Y Infra Ltd",
+      "title": "Resident Engineer",
+      "start": "2013-06",
+      "end": "2018-12"
+     },
+     {
+      "employer": "Z Constructions",
+      "title": "Highway Engineer",
+      "start": "2009-07",
+      "end": "2013-05"
+     }
+    ]
+   },
+   "expected": {
+    "status": "CONSISTENT",
+    "codes": [],
+    "documented_total_months": 209,
+    "documented_similar_months": 95
+   }
+  },
+  {
+   "id": "E02",
+   "description": "Inflated years and title; one CV employer not on profile",
+   "bidder_name": "Bidder Consult Pvt Ltd",
+   "position": "team_leader",
+   "employment_with_bidder": "full_time",
+   "lookup": {
+    "status": "found",
+    "candidate_count": 1,
+    "profile": {
+     "person_id": null,
+     "name": "(synthetic)",
+     "profile_url": null,
+     "jobs": [
+      {
+       "employer": "Bidder Consult",
+       "title": "Team Leader",
+       "start": "2022-03",
+       "end": null,
+       "is_current": true
+      },
+      {
+       "employer": "P Infra Pvt Ltd",
+       "title": "Senior Highway Engineer",
+       "start": "2016-01",
+       "end": "2022-02",
+       "is_current": false
+      }
+     ],
+     "education": [
+      {
+       "school": "Example Institute",
+       "degree": "M.Tech",
+       "field_of_study": "Transportation Engineering"
+      }
+     ]
+    }
+   },
+   "claims": {
+    "proposed_position": "team_leader",
+    "claimed_total_years": 15,
+    "claimed_similar_years": 10,
+    "rows": [
+     {
+      "employer": "Bidder Consult Pvt Ltd",
+      "title": "Team Leader",
+      "start": "2022-03",
+      "end": "present"
+     },
+     {
+      "employer": "P Infra",
+      "title": "Team Leader",
+      "start": "2016-01",
+      "end": "2022-02"
+     },
+     {
+      "employer": "Q Engineers",
+      "title": "Highway Engineer",
+      "start": "2011-06",
+      "end": "2015-12"
+     }
+    ]
+   },
+   "expected": {
+    "status": "QUESTIONS",
+    "codes": [
+     "CLAIM_EXCEEDS_RECORD",
+     "ROW_NOT_ON_PROFILE",
+     "ROW_TITLE_DIFFERS",
+     "SIMILAR_ROLE_UNPROVEN",
+     "YEARS_SHORTFALL"
+    ],
+    "documented_total_months": 131,
+    "documented_similar_months": 57
+   }
+  },
+  {
+   "id": "E03",
+   "description": "Bid says full-time employee; profile shows current job at another firm (availability)",
+   "bidder_name": "Bidder Consult Pvt Ltd",
+   "position": "resident_engineer",
+   "employment_with_bidder": "full_time",
+   "lookup": {
+    "status": "found",
+    "candidate_count": 1,
+    "profile": {
+     "person_id": null,
+     "name": "(synthetic)",
+     "profile_url": null,
+     "jobs": [
+      {
+       "employer": "Other Consultants Ltd",
+       "title": "Resident Engineer",
+       "start": "2021-04",
+       "end": null,
+       "is_current": true
+      },
+      {
+       "employer": "R Infra",
+       "title": "Highway Engineer",
+       "start": "2012-01",
+       "end": "2021-03",
+       "is_current": false
+      }
+     ],
+     "education": [
+      {
+       "school": "Example Institute",
+       "degree": "M.E.",
+       "field_of_study": "Civil (Highway)"
+      }
+     ]
+    }
+   },
+   "claims": {
+    "proposed_position": "resident_engineer",
+    "claimed_total_years": 14,
+    "claimed_similar_years": 5,
+    "rows": [
+     {
+      "employer": "Other Consultants Ltd",
+      "title": "Resident Engineer",
+      "start": "2021-04",
+      "end": "present"
+     },
+     {
+      "employer": "R Infra",
+      "title": "Highway Engineer",
+      "start": "2012-01",
+      "end": "2021-03"
+     }
+    ]
+   },
+   "expected": {
+    "status": "QUESTIONS",
+    "codes": [
+     "CURRENT_ROLE_ELSEWHERE",
+     "EXPERT_NOT_AT_FIRM"
+    ],
+    "documented_total_months": 179,
+    "documented_similar_months": 68
+   }
+  },
+  {
+   "id": "E04",
+   "description": "Three concurrent current Team Leader roles at three firms",
+   "bidder_name": "Bidder Consult Pvt Ltd",
+   "position": "team_leader",
+   "employment_with_bidder": "full_time",
+   "lookup": {
+    "status": "found",
+    "candidate_count": 1,
+    "profile": {
+     "person_id": null,
+     "name": "(synthetic)",
+     "profile_url": null,
+     "jobs": [
+      {
+       "employer": "Bidder Consult Pvt Ltd",
+       "title": "Team Leader",
+       "start": "2020-01",
+       "end": null,
+       "is_current": true
+      },
+      {
+       "employer": "A2 Highways LLP",
+       "title": "Team Leader",
+       "start": "2023-05",
+       "end": null,
+       "is_current": true
+      },
+      {
+       "employer": "B2 Engineering Services",
+       "title": "Team Leader",
+       "start": "2024-02",
+       "end": null,
+       "is_current": true
+      },
+      {
+       "employer": "Y2 Roads",
+       "title": "Highway Engineer",
+       "start": "2008-01",
+       "end": "2019-12",
+       "is_current": false
+      }
+     ],
+     "education": [
+      {
+       "school": "Example Institute",
+       "degree": "M.Tech",
+       "field_of_study": "Transportation Engineering"
+      }
+     ]
+    }
+   },
+   "claims": {
+    "proposed_position": "team_leader",
+    "claimed_total_years": 18,
+    "claimed_similar_years": 6,
+    "rows": [
+     {
+      "employer": "Bidder Consult Pvt Ltd",
+      "title": "Team Leader",
+      "start": "2020-01",
+      "end": "present"
+     },
+     {
+      "employer": "Y2 Roads",
+      "title": "Highway Engineer",
+      "start": "2008-01",
+      "end": "2019-12"
+     }
+    ]
+   },
+   "expected": {
+    "status": "QUESTIONS",
+    "codes": [
+     "CURRENT_ROLE_ELSEWHERE",
+     "OVERLAPPING_CURRENT_ROLES"
+    ],
+    "documented_total_months": 227,
+    "documented_similar_months": 83
+   }
+  },
+  {
+   "id": "E05",
+   "description": "Most profile jobs have no dates: cannot check, never 'false'",
+   "bidder_name": "Bidder Consult Pvt Ltd",
+   "position": "team_leader",
+   "employment_with_bidder": "full_time",
+   "lookup": {
+    "status": "found",
+    "candidate_count": 1,
+    "profile": {
+     "person_id": null,
+     "name": "(synthetic)",
+     "profile_url": null,
+     "jobs": [
+      {
+       "employer": "Bidder Consult",
+       "title": "Team Leader",
+       "start": null,
+       "end": null,
+       "is_current": true
+      },
+      {
+       "employer": "S Infra",
+       "title": "Resident Engineer",
+       "start": null,
+       "end": null,
+       "is_current": false
+      },
+      {
+       "employer": "T Builders",
+       "title": "Engineer",
+       "start": "2010-01",
+       "end": "2014-12",
+       "is_current": false
+      }
+     ],
+     "education": [
+      {
+       "school": "Example Institute",
+       "degree": "M.Tech",
+       "field_of_study": "Transportation Engineering"
+      }
+     ]
+    }
+   },
+   "claims": {
+    "proposed_position": "team_leader",
+    "claimed_total_years": 16,
+    "claimed_similar_years": 7,
+    "rows": [
+     {
+      "employer": "Bidder Consult Pvt Ltd",
+      "title": "Team Leader",
+      "start": "2019-01",
+      "end": "present"
+     },
+     {
+      "employer": "S Infra",
+      "title": "Resident Engineer",
+      "start": "2015-01",
+      "end": "2018-12"
+     },
+     {
+      "employer": "T Builders",
+      "title": "Engineer",
+      "start": "2010-01",
+      "end": "2014-12"
+     }
+    ]
+   },
+   "expected": {
+    "status": "CANNOT_CHECK",
+    "codes": [
+     "PROFILE_THIN",
+     "ROW_MISSING_DATES"
+    ],
+    "documented_total_months": 60
+   }
+  },
+  {
+   "id": "E06",
+   "description": "CV start date 30 months earlier than profile (name variant 'Pvt. Ltd.'); the shifted CV date also makes the CV's own rows overlap by 30 months",
+   "bidder_name": "Bidder Consult Pvt Ltd",
+   "position": "team_leader",
+   "employment_with_bidder": "full_time",
+   "lookup": {
+    "status": "found",
+    "candidate_count": 1,
+    "profile": {
+     "person_id": null,
+     "name": "(synthetic)",
+     "profile_url": null,
+     "jobs": [
+      {
+       "employer": "Bidder Consult Pvt Ltd",
+       "title": "Team Leader",
+       "start": "2017-01",
+       "end": null,
+       "is_current": true
+      },
+      {
+       "employer": "U Projects Pvt. Ltd.",
+       "title": "Senior Highway Engineer",
+       "start": "2012-07",
+       "end": "2016-12",
+       "is_current": false
+      },
+      {
+       "employer": "V Consult",
+       "title": "Highway Engineer",
+       "start": "2008-01",
+       "end": "2012-06",
+       "is_current": false
+      }
+     ],
+     "education": [
+      {
+       "school": "Example Institute",
+       "degree": "M.Tech",
+       "field_of_study": "Transportation Engineering"
+      }
+     ]
+    }
+   },
+   "claims": {
+    "proposed_position": "team_leader",
+    "claimed_total_years": 18,
+    "claimed_similar_years": 9,
+    "rows": [
+     {
+      "employer": "Bidder Consult Pvt Ltd",
+      "title": "Team Leader",
+      "start": "2017-01",
+      "end": "present"
+     },
+     {
+      "employer": "U Projects",
+      "title": "Senior Highway Engineer",
+      "start": "2010-01",
+      "end": "2016-12"
+     },
+     {
+      "employer": "V Consult",
+      "title": "Highway Engineer",
+      "start": "2008-01",
+      "end": "2012-06"
+     }
+    ]
+   },
+   "expected": {
+    "status": "QUESTIONS",
+    "codes": [
+     "CV_ROWS_OVERLAP",
+     "ROW_DATES_DIFFER"
+    ],
+    "documented_total_months": 227,
+    "documented_similar_months": 119
+   }
+  },
+  {
+   "id": "E07",
+   "description": "Same job listed twice under old and new company name; must not double count",
+   "bidder_name": "Bidder Consult Pvt Ltd",
+   "position": "resident_engineer",
+   "employment_with_bidder": "full_time",
+   "lookup": {
+    "status": "found",
+    "candidate_count": 1,
+    "profile": {
+     "person_id": null,
+     "name": "(synthetic)",
+     "profile_url": null,
+     "jobs": [
+      {
+       "employer": "Bidder Consult Pvt Ltd",
+       "title": "Resident Engineer",
+       "start": "2020-01",
+       "end": null,
+       "is_current": true
+      },
+      {
+       "employer": "W Infra",
+       "title": "Resident Engineer",
+       "start": "2014-01",
+       "end": "2019-12",
+       "is_current": false
+      },
+      {
+       "employer": "W Infrastructure Private Limited (formerly W Infra)",
+       "title": "Resident Engineer",
+       "start": "2014-01",
+       "end": "2019-12",
+       "is_current": false
+      },
+      {
+       "employer": "X Roads",
+       "title": "Highway Engineer",
+       "start": "2010-01",
+       "end": "2013-12",
+       "is_current": false
+      }
+     ],
+     "education": [
+      {
+       "school": "Example Institute",
+       "degree": "M.Tech",
+       "field_of_study": "Transportation Engineering"
+      }
+     ]
+    }
+   },
+   "claims": {
+    "proposed_position": "resident_engineer",
+    "claimed_total_years": 16,
+    "claimed_similar_years": 12,
+    "rows": [
+     {
+      "employer": "Bidder Consult Pvt Ltd",
+      "title": "Resident Engineer",
+      "start": "2020-01",
+      "end": "present"
+     },
+     {
+      "employer": "W Infra",
+      "title": "Resident Engineer",
+      "start": "2014-01",
+      "end": "2019-12"
+     },
+     {
+      "employer": "X Roads",
+      "title": "Highway Engineer",
+      "start": "2010-01",
+      "end": "2013-12"
+     }
+    ]
+   },
+   "expected": {
+    "status": "CONSISTENT",
+    "codes": [
+     "DUPLICATE_ENTRY"
+    ],
+    "documented_total_months": 203,
+    "documented_similar_months": 155
+   }
+  },
+  {
+   "id": "E08",
+   "description": "No profile found: cannot check, not evidence of a fake",
+   "bidder_name": "Bidder Consult Pvt Ltd",
+   "position": "team_leader",
+   "employment_with_bidder": "full_time",
+   "lookup": {
+    "status": "not_found",
+    "candidate_count": 0,
+    "profile": null
+   },
+   "claims": {
+    "proposed_position": "team_leader",
+    "claimed_total_years": 15,
+    "claimed_similar_years": 6,
+    "rows": [
+     {
+      "employer": "Bidder Consult Pvt Ltd",
+      "title": "Team Leader",
+      "start": "2018-01",
+      "end": "present"
+     },
+     {
+      "employer": "Earlier Roads Ltd",
+      "title": "Highway Engineer",
+      "start": "2010-01",
+      "end": "2017-12"
+     }
+    ]
+   },
+   "expected": {
+    "status": "CANNOT_CHECK",
+    "codes": [
+     "NO_PROFILE_FOUND"
+    ]
+   }
+  },
+  {
+   "id": "E09",
+   "description": "Several people match: report only the count, never pick one",
+   "bidder_name": "Bidder Consult Pvt Ltd",
+   "position": "team_leader",
+   "employment_with_bidder": "full_time",
+   "lookup": {
+    "status": "ambiguous",
+    "candidate_count": 3,
+    "profile": null
+   },
+   "claims": {
+    "proposed_position": "team_leader",
+    "claimed_total_years": 15,
+    "claimed_similar_years": 6,
+    "rows": [
+     {
+      "employer": "Bidder Consult Pvt Ltd",
+      "title": "Team Leader",
+      "start": "2018-01",
+      "end": "present"
+     },
+     {
+      "employer": "Earlier Roads Ltd",
+      "title": "Highway Engineer",
+      "start": "2010-01",
+      "end": "2017-12"
+     }
+    ]
+   },
+   "expected": {
+    "status": "CANNOT_CHECK",
+    "codes": [
+     "AMBIGUOUS_IDENTITY"
+    ]
+   }
+  },
+  {
+   "id": "E10",
+   "description": "Same as E01 but no postgraduate degree on profile",
+   "bidder_name": "Bidder Consult Pvt Ltd",
+   "position": "team_leader",
+   "employment_with_bidder": "full_time",
+   "lookup": {
+    "status": "found",
+    "candidate_count": 1,
+    "profile": {
+     "person_id": null,
+     "name": "(synthetic)",
+     "profile_url": null,
+     "jobs": [
+      {
+       "employer": "Bidder Consult Pvt. Ltd.",
+       "title": "Team Leader",
+       "start": "2019-01",
+       "end": null,
+       "is_current": true
+      },
+      {
+       "employer": "Y Infra Ltd",
+       "title": "Resident Engineer",
+       "start": "2013-06",
+       "end": "2018-12",
+       "is_current": false
+      },
+      {
+       "employer": "Z Constructions",
+       "title": "Highway Engineer",
+       "start": "2009-07",
+       "end": "2013-05",
+       "is_current": false
+      }
+     ],
+     "education": [
+      {
+       "school": "Example Institute",
+       "degree": "B.E.",
+       "field_of_study": "Civil Engineering"
+      }
+     ]
+    }
+   },
+   "claims": {
+    "proposed_position": "team_leader",
+    "claimed_total_years": 17,
+    "claimed_similar_years": 7,
+    "rows": [
+     {
+      "employer": "Bidder Consult Pvt Ltd",
+      "title": "Team Leader",
+      "start": "2019-01",
+      "end": "present"
+     },
+     {
+      "employer": "Y Infra Ltd",
+      "title": "Resident Engineer",
+      "start": "2013-06",
+      "end": "2018-12"
+     },
+     {
+      "employer": "Z Constructions",
+      "title": "Highway Engineer",
+      "start": "2009-07",
+      "end": "2013-05"
+     }
+    ]
+   },
+   "expected": {
+    "status": "QUESTIONS",
+    "codes": [
+     "EDUCATION_NOT_SHOWN"
+    ],
+    "documented_total_months": 209,
+    "documented_similar_months": 95
+   }
+  },
+  {
+   "id": "E11",
+   "description": "Junk profile: simultaneous CEO/COO/Board roles; CV claims a job that ended as 'present'",
+   "bidder_name": "Bidder Consult Pvt Ltd",
+   "position": "team_leader",
+   "employment_with_bidder": "full_time",
+   "lookup": {
+    "status": "found",
+    "candidate_count": 1,
+    "profile": {
+     "person_id": null,
+     "name": "(synthetic)",
+     "profile_url": null,
+     "jobs": [
+      {
+       "employer": "Alpha Corp",
+       "title": "CEO",
+       "start": "2021-01",
+       "end": null,
+       "is_current": true
+      },
+      {
+       "employer": "Beta Inc",
+       "title": "Chief Operating Officer",
+       "start": "2022-01",
+       "end": null,
+       "is_current": true
+      },
+      {
+       "employer": "Gamma Ltd",
+       "title": "Board Member",
+       "start": "2020-06",
+       "end": null,
+       "is_current": true
+      },
+      {
+       "employer": "Bidder Consult Pvt Ltd",
+       "title": "Team Leader",
+       "start": "2010-01",
+       "end": "2020-05",
+       "is_current": false
+      }
+     ],
+     "education": [
+      {
+       "school": "Example Institute",
+       "degree": "M.Tech",
+       "field_of_study": "Transportation Engineering"
+      }
+     ]
+    }
+   },
+   "claims": {
+    "proposed_position": "team_leader",
+    "claimed_total_years": 16,
+    "claimed_similar_years": 10,
+    "rows": [
+     {
+      "employer": "Bidder Consult Pvt Ltd",
+      "title": "Team Leader",
+      "start": "2010-01",
+      "end": "present"
+     }
+    ]
+   },
+   "expected": {
+    "status": "QUESTIONS",
+    "codes": [
+     "CURRENT_ROLE_ELSEWHERE",
+     "EXPERT_NOT_AT_FIRM",
+     "IMPLAUSIBLE_PROFILE",
+     "OVERLAPPING_CURRENT_ROLES",
+     "ROW_DATES_DIFFER"
+    ],
+    "documented_total_months": 203,
+    "documented_similar_months": 125
+   }
+  },
+  {
+   "id": "E12",
+   "description": "Same as E03 but bid lists expert as an associate, not full-time",
+   "bidder_name": "Bidder Consult Pvt Ltd",
+   "position": "resident_engineer",
+   "employment_with_bidder": "associate",
+   "lookup": {
+    "status": "found",
+    "candidate_count": 1,
+    "profile": {
+     "person_id": null,
+     "name": "(synthetic)",
+     "profile_url": null,
+     "jobs": [
+      {
+       "employer": "Other Consultants Ltd",
+       "title": "Resident Engineer",
+       "start": "2021-04",
+       "end": null,
+       "is_current": true
+      },
+      {
+       "employer": "R Infra",
+       "title": "Highway Engineer",
+       "start": "2012-01",
+       "end": "2021-03",
+       "is_current": false
+      }
+     ],
+     "education": [
+      {
+       "school": "Example Institute",
+       "degree": "M.E.",
+       "field_of_study": "Civil (Highway)"
+      }
+     ]
+    }
+   },
+   "claims": {
+    "proposed_position": "resident_engineer",
+    "claimed_total_years": 14,
+    "claimed_similar_years": 5,
+    "rows": [
+     {
+      "employer": "Other Consultants Ltd",
+      "title": "Resident Engineer",
+      "start": "2021-04",
+      "end": "present"
+     },
+     {
+      "employer": "R Infra",
+      "title": "Highway Engineer",
+      "start": "2012-01",
+      "end": "2021-03"
+     }
+    ]
+   },
+   "expected": {
+    "status": "QUESTIONS",
+    "codes": [
+     "CURRENT_ROLE_ELSEWHERE"
+    ],
+    "documented_total_months": 179,
+    "documented_similar_months": 68
+   }
+  },
+  {
+   "id": "E13",
+   "description": "Real-format CV (anonymised): claims about 12 years but lists one job from May 2024; no profile. CV-only rule still raises a question.",
+   "bidder_name": "Bidder Consult Pvt Ltd",
+   "position": "resident_engineer",
+   "employment_with_bidder": "full_time",
+   "lookup": {
+    "status": "not_found",
+    "candidate_count": 0,
+    "profile": null
+   },
+   "claims": {
+    "proposed_position": "resident_engineer",
+    "claimed_total_years": 12,
+    "claimed_similar_years": null,
+    "rows": [
+     {
+      "employer": "Example Infratech Pvt Ltd",
+      "title": "Project Coordinator cum Project Manager",
+      "start": "2024-05",
+      "end": "present"
+     }
+    ]
+   },
+   "expected": {
+    "status": "CANNOT_CHECK",
+    "codes": [
+     "CLAIM_EXCEEDS_CV_ROWS",
+     "NO_PROFILE_FOUND"
+    ]
+   }
+  },
+  {
+   "id": "E14",
+   "description": "Pattern from a public NHAI CV: header vs 'Duration' text disagree; an impossible end year (2097) must not add 70 years",
+   "bidder_name": "Bidder Consult Pvt Ltd",
+   "position": "team_leader",
+   "employment_with_bidder": "full_time",
+   "lookup": {
+    "status": "not_found",
+    "candidate_count": 0,
+    "profile": null
+   },
+   "claims": {
+    "proposed_position": "team_leader",
+    "claimed_total_years": 26,
+    "claimed_similar_years": null,
+    "cv_date": "2023-12",
+    "rows": [
+     {
+      "employer": "Alpha Consultants",
+      "title": "Team Leader",
+      "start": "2022-01",
+      "end": "2023-11"
+     },
+     {
+      "employer": "Alpha Consultants",
+      "title": "Team Leader cum Highway Engineer",
+      "start": "2021-06",
+      "end": "2022-01",
+      "duration_start": "2019-06",
+      "duration_end": "2022-01"
+     },
+     {
+      "employer": "Beta Engineers",
+      "title": "Acting Team Leader",
+      "start": "2019-06",
+      "end": "2020-08"
+     },
+     {
+      "employer": "Gamma Projects",
+      "title": "Resident Engineer",
+      "start": "2005-01",
+      "end": "2019-05"
+     },
+     {
+      "employer": "Delta Construction",
+      "title": "Senior Engineer",
+      "start": "1995-10",
+      "end": null,
+      "end_raw": "09/12/2097",
+      "date_problem": "after today"
+     },
+     {
+      "employer": "Delta Construction",
+      "title": "Deputy Project Manager",
+      "start": "1997-12",
+      "end": "2004-12"
+     }
+    ]
+   },
+   "expected": {
+    "status": "CANNOT_CHECK",
+    "codes": [
+     "CV_DATE_INVALID",
+     "CV_HEADER_BODY_MISMATCH",
+     "NO_PROFILE_FOUND"
+    ]
+   }
+  },
+  {
+   "id": "E15",
+   "description": "Pattern from a private CV: a date with no year, and a row naming contractor/authority/consultant but no employer",
+   "bidder_name": "Bidder Consult Pvt Ltd",
+   "position": "resident_engineer",
+   "employment_with_bidder": "full_time",
+   "lookup": {
+    "status": "not_found",
+    "candidate_count": 0,
+    "profile": null
+   },
+   "claims": {
+    "proposed_position": "resident_engineer",
+    "claimed_total_years": 5,
+    "claimed_similar_years": null,
+    "rows": [
+     {
+      "employer": null,
+      "title": "Assistant Highway Engineer",
+      "start": "2024-05",
+      "end": "present"
+     },
+     {
+      "employer": "Epsilon Technocrats",
+      "title": "Assistant Highway Engineer",
+      "start": "2021-09",
+      "end": null,
+      "end_raw": "April",
+      "date_problem": "no year"
+     },
+     {
+      "employer": "Zeta Projects",
+      "title": "Site Engineer Highway",
+      "start": "2019-06",
+      "end": "2021-08"
+     }
+    ]
+   },
+   "expected": {
+    "status": "CANNOT_CHECK",
+    "codes": [
+     "CV_DATE_INVALID",
+     "CV_EMPLOYER_UNCLEAR",
+     "NO_PROFILE_FOUND"
+    ]
+   }
+  },
+  {
+   "id": "E16",
+   "description": "Two full-time CV rows at different firms overlap by 12 months",
+   "bidder_name": "Bidder Consult Pvt Ltd",
+   "position": "team_leader",
+   "employment_with_bidder": "full_time",
+   "lookup": {
+    "status": "not_found",
+    "candidate_count": 0,
+    "profile": null
+   },
+   "claims": {
+    "proposed_position": "team_leader",
+    "claimed_total_years": 12,
+    "claimed_similar_years": null,
+    "cv_date": "2023-01",
+    "rows": [
+     {
+      "employer": "Eta Infra",
+      "title": "Resident Engineer",
+      "start": "2015-01",
+      "end": "2019-12"
+     },
+     {
+      "employer": "Theta Consult",
+      "title": "Team Leader",
+      "start": "2019-01",
+      "end": "2022-12"
+     },
+     {
+      "employer": "Iota Roads",
+      "title": "Highway Engineer",
+      "start": "2010-01",
+      "end": "2014-12"
+     }
+    ]
+   },
+   "expected": {
+    "status": "CANNOT_CHECK",
+    "codes": [
+     "CV_ROWS_OVERLAP",
+     "NO_PROFILE_FOUND"
+    ]
+   }
+  },
+  {
+   "id": "E17",
+   "description": "CV dated Dec 2024: 'present' must mean Dec 2024, not today, so a 16-year claim exceeds 13 years of rows",
+   "bidder_name": "Bidder Consult Pvt Ltd",
+   "position": "team_leader",
+   "employment_with_bidder": "full_time",
+   "lookup": {
+    "status": "not_found",
+    "candidate_count": 0,
+    "profile": null
+   },
+   "claims": {
+    "proposed_position": "team_leader",
+    "claimed_total_years": 16,
+    "claimed_similar_years": null,
+    "cv_date": "2024-12",
+    "rows": [
+     {
+      "employer": "Kappa Highways",
+      "title": "Highway Engineer",
+      "start": "2012-01",
+      "end": "present"
+     }
+    ]
+   },
+   "expected": {
+    "status": "CANNOT_CHECK",
+    "codes": [
+     "CLAIM_EXCEEDS_CV_ROWS",
+     "NO_PROFILE_FOUND"
+    ]
+   }
+  }
+ ]
+}

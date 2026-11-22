@@ -1,0 +1,12 @@
+{
+  "_note": "Hand-written structured version of cvs/<id>.md. Must match the CV exactly. In Step 06 the LLM parser must reproduce this file; these hand-written files are its test answers.",
+  "expert_id": "X1",
+  "name": "<name>",
+  "proposed_position": "team_leader",
+  "claimed_total_years": 0,
+  "claimed_similar_years": 0,
+  "rows": [
+    {"employer": "<Employer>", "title": "<Title>", "start": "YYYY-MM", "end": "present"},
+    {"employer": "<Employer>", "title": "<Title>", "start": "YYYY-MM", "end": "YYYY-MM"}
+  ]
+}
