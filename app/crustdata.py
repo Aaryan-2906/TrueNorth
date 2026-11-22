@@ -22,6 +22,12 @@ PERSON_FIELDS = ["basic_profile", "experience", "education", "social_handles"]
 MAX_RETRIES = 3
 RETRY_WAIT_SECONDS = 5
 TIMEOUT_SECONDS = 60.0
+HTTP_ERROR_MESSAGES = {
+    401: "Crustdata rejected the API key (HTTP 401). Check CRUSTDATA_API_KEY in .env.",
+    402: "Crustdata reports a payment or credit problem (HTTP 402). Check the balance with GET /account/credits or ask an organiser.",
+    403: "This API key is not allowed to use this endpoint (HTTP 403). Ask an organiser which endpoints it allows (GET /account/endpoints).",
+    429: "Crustdata rate limit reached (HTTP 429) after 3 retries. Wait a minute and run again; results already fetched are reused.",
+}
 
 # Failures where the request was never sent, so retrying cannot double-bill.
 _NEVER_SENT = (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout)
@@ -64,6 +70,12 @@ def _append_ledger(path: str, sha1: str, credits_used: str, status: str) -> None
         writer.writerow([_now(), path, sha1, credits_used, status])
 
 
+def _not_retried(path: str, billed: bool, detail: str) -> str:
+    if billed:
+        return f"{path}: lookup failed: may have been billed, not retried ({detail})."
+    return f"{path}: call failed, not retried ({detail})."
+
+
 def _send(method: str, path: str, body: Any, sha1: str, billed: bool) -> httpx.Response:
     """Send one request, retrying only on 429 or a connection that never opened."""
     if not config.CRUSTDATA_API_KEY:
@@ -73,7 +85,6 @@ def _send(method: str, path: str, body: Any, sha1: str, billed: bool) -> httpx.R
         "x-api-version": API_VERSION,
         "content-type": "application/json",
     }
-    billing_note = " The call may have been billed." if billed else ""
 
     for attempt in range(MAX_RETRIES + 1):
         try:
@@ -88,9 +99,7 @@ def _send(method: str, path: str, body: Any, sha1: str, billed: bool) -> httpx.R
         except httpx.TransportError as exc:
             if billed:
                 _append_ledger(path, sha1, "", type(exc).__name__)
-            raise CrustdataError(
-                f"{path}: connection lost ({type(exc).__name__}).{billing_note} Not retrying."
-            ) from exc
+            raise CrustdataError(_not_retried(path, billed, type(exc).__name__)) from exc
 
         if billed:
             _append_ledger(
@@ -99,10 +108,10 @@ def _send(method: str, path: str, body: Any, sha1: str, billed: bool) -> httpx.R
         if response.status_code == 429 and attempt < MAX_RETRIES:
             time.sleep(RETRY_WAIT_SECONDS)
             continue
+        if response.status_code in HTTP_ERROR_MESSAGES:
+            raise CrustdataError(f"{path}: {HTTP_ERROR_MESSAGES[response.status_code]}")
         if response.status_code >= 500:
-            raise CrustdataError(
-                f"{path}: HTTP {response.status_code}.{billing_note} Not retrying."
-            )
+            raise CrustdataError(_not_retried(path, billed, f"HTTP {response.status_code}"))
         if response.status_code >= 400:
             raise CrustdataError(f"{path}: HTTP {response.status_code}: {response.text[:300]}")
         return response
@@ -115,8 +124,7 @@ def _parse_and_cache(response: httpx.Response, path: str, file: Path, billed: bo
     try:
         data = json.loads(raw)
     except json.JSONDecodeError as exc:
-        note = " The call may have been billed." if billed else ""
-        raise CrustdataError(f"{path}: reply was not valid JSON.{note}") from exc
+        raise CrustdataError(_not_retried(path, billed, "reply was not valid JSON")) from exc
     _write_cache(file, raw)
     return data
 
@@ -128,6 +136,13 @@ def post(path: str, body: Any, billed: bool, fresh: bool | None = None) -> Any:
     file = _cache_file(path, sha1)
 
     if not use_fresh and file.exists():
+        try:
+            cached = json.loads(file.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            # Never pay again on our own: the person decides whether to delete it and re-fetch.
+            raise CrustdataError(
+                f"{path}: cache file {file.name} could not be read. Delete it to fetch again (a paid call)."
+            ) from exc
         fetched_at = datetime.fromtimestamp(file.stat().st_mtime, timezone.utc)
         _lookups.append(
             {
@@ -137,7 +152,7 @@ def post(path: str, body: Any, billed: bool, fresh: bool | None = None) -> Any:
                 "fetched_at": fetched_at.isoformat(timespec="seconds"),
             }
         )
-        return json.loads(file.read_text(encoding="utf-8"))
+        return cached
 
     response = _send("POST", path, body, sha1, billed)
     data = _parse_and_cache(response, path, file, billed)

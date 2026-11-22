@@ -7,15 +7,119 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from pydantic import ValidationError
+
 from app import checker, config, crustdata, firm, normalise, parse_cv, report
 from app.models import Claims, CvRow, ExpertResult, Lookup
 
 DATA_DIR = config.ROOT_DIR / "data"
 BID_DIR = DATA_DIR / "bid"
+REQUIRED_EXPERT_FIELDS = ("id", "name", "proposed_position", "employment_with_bidder", "cv")
+EMPLOYMENT_TYPES = {"full_time", "associate", "intermittent"}
+REQUIRED_POSITION_FIELDS = ("min_total_years", "min_similar_years", "similar_title_keywords")
+CV_READ_ERRORS = (parse_cv.CvParseError, OSError, UnicodeDecodeError)
+
+
+class InputError(RuntimeError):
+    """An input file is malformed. The message names the file and the problem."""
+
+
+def _display(path: Path) -> str:
+    try:
+        return path.resolve().relative_to(config.ROOT_DIR).as_posix()
+    except ValueError:
+        return str(path)
 
 
 def _load_json(path: Path) -> Any:
-    return json.loads(path.read_text(encoding="utf-8"))
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise InputError(f"{_display(path)}: file not found.") from exc
+    except json.JSONDecodeError as exc:
+        raise InputError(f"{_display(path)}: not valid JSON (line {exc.lineno}, column {exc.colno}).") from exc
+    except (OSError, UnicodeDecodeError) as exc:
+        raise InputError(f"{_display(path)}: could not be read as text.") from exc
+
+
+def _load_tender() -> dict[str, Any]:
+    path = DATA_DIR / "tender.json"
+    tender = _load_json(path)
+    positions = tender.get("positions") if isinstance(tender, dict) else None
+    if not isinstance(positions, dict) or not positions:
+        raise InputError(f"{_display(path)}: missing field 'positions'.")
+    for key, position in positions.items():
+        for field in REQUIRED_POSITION_FIELDS:
+            if not isinstance(position, dict) or field not in position:
+                raise InputError(f"{_display(path)}: position '{key}' is missing field '{field}'.")
+    return tender
+
+
+def _check_expert_entry(expert: Any, index: int, tender: dict[str, Any], file: str) -> None:
+    label = f"experts[{index}]"
+    if not isinstance(expert, dict):
+        raise InputError(f"{file}: {label} is not an object.")
+    if "id" in expert:
+        label += f" ({expert['id']})"
+    for field in REQUIRED_EXPERT_FIELDS:
+        if field not in expert:
+            raise InputError(f"{file}: {label} is missing field '{field}'.")
+    key = expert["proposed_position"]
+    if key is not None and key not in tender["positions"]:
+        known = ", ".join(tender["positions"])
+        raise InputError(f"{file}: {label} has unknown proposed_position '{key}'. Known positions: {known}.")
+    if expert["employment_with_bidder"] not in EMPLOYMENT_TYPES:
+        known = ", ".join(sorted(EMPLOYMENT_TYPES))
+        raise InputError(
+            f"{file}: {label} has unknown employment_with_bidder '{expert['employment_with_bidder']}'. Known: {known}."
+        )
+    if not isinstance(expert["cv"], str):
+        raise InputError(f"{file}: {label} field 'cv' must be a file path.")
+    try:
+        (BID_DIR / expert["cv"]).resolve().relative_to(BID_DIR.resolve())
+    except ValueError as exc:
+        raise InputError(f"{file}: {label} field 'cv' points outside the bid folder.") from exc
+
+
+def _load_bid(tender: dict[str, Any]) -> dict[str, Any]:
+    path = BID_DIR / "bid.json"
+    file = _display(path)
+    bid = _load_json(path)
+    if not isinstance(bid, dict):
+        raise InputError(f"{file}: must be a JSON object.")
+    for field in ("firm", "experts"):
+        if field not in bid:
+            raise InputError(f"{file}: missing field '{field}'.")
+    if not isinstance(bid["firm"], dict) or not bid["firm"].get("name"):
+        raise InputError(f"{file}: firm is missing field 'name'.")
+    if not isinstance(bid["experts"], list):
+        raise InputError(f"{file}: field 'experts' must be a list.")
+    for index, expert in enumerate(bid["experts"]):
+        _check_expert_entry(expert, index, tender, file)
+    ids = [expert["id"] for expert in bid["experts"]]
+    repeated = sorted({str(expert_id) for expert_id in ids if ids.count(expert_id) > 1})
+    if repeated:
+        raise InputError(f"{file}: expert id used more than once: {', '.join(repeated)}.")
+    return bid
+
+
+def load_claims(path: Path) -> Claims:
+    """Load a hand-written claims file, naming the file and field on any problem."""
+    file = _display(path)
+    data = _load_json(path)
+    try:
+        claims = Claims.model_validate(data)
+    except ValidationError as exc:
+        first = exc.errors()[0]
+        field = ".".join(str(part) for part in first["loc"])
+        raise InputError(f"{file}: field '{field}': {first['msg']}.") from exc
+    positions = _load_tender()["positions"]
+    if claims.proposed_position is not None and claims.proposed_position not in positions:
+        known = ", ".join(positions)
+        raise InputError(
+            f"{file}: unknown proposed_position '{claims.proposed_position}'. Known positions: {known}."
+        )
+    return claims
 
 
 def _lookup_url(url: str, fresh: bool | None) -> tuple[Lookup, str]:
@@ -24,9 +128,15 @@ def _lookup_url(url: str, fresh: bool | None) -> tuple[Lookup, str]:
     latest = crustdata.run_stats()["lookups"][-1]
     source = "live" if latest["source"] == "live" else "from cache"
     origin = f"{source} (fetched {latest['fetched_at']})"
+    unexpected = "/person/enrich: the reply had an unexpected shape; it may have been billed, not retried."
+    if not isinstance(reply, list) or not all(isinstance(item, dict) for item in reply):
+        raise crustdata.CrustdataError(unexpected)
     if len(reply) > 1:
         return Lookup(status="ambiguous", candidate_count=len(reply)), origin
-    return normalise.profile_from_enrich(reply[0] if reply else {}), origin
+    try:
+        return normalise.profile_from_enrich(reply[0] if reply else {}), origin
+    except (ValidationError, AttributeError, TypeError) as exc:
+        raise crustdata.CrustdataError(unexpected) from exc
 
 
 def _no_url_lookup() -> tuple[Lookup, str]:
@@ -43,6 +153,34 @@ def _read_cv(expert: dict[str, Any], fresh: bool | None) -> Claims:
     text = (BID_DIR / expert["cv"]).read_text(encoding="utf-8")
     claims = parse_cv.parse_cv(text, expert["id"], expert.get("proposed_position"), fresh=fresh)
     return claims.model_copy(update={"name": expert.get("name") or claims.name})
+
+
+def _cv_problem(exc: Exception) -> str:
+    if isinstance(exc, FileNotFoundError):
+        return "file not found"
+    if isinstance(exc, UnicodeDecodeError):
+        return "the file is not readable text"
+    if isinstance(exc, OSError):
+        return "the file could not be opened"
+    return str(exc)
+
+
+def _unread_entry(expert: dict[str, Any], problem: str) -> report.ExpertEntry:
+    """An expert whose CV could not be read: nothing is checked and no paid lookup is made."""
+    claims = Claims(
+        expert_id=expert["id"],
+        name=expert["name"],
+        proposed_position=expert["proposed_position"],
+        claimed_total_years=0,
+        claimed_total_stated=False,
+        claimed_similar_years=None,
+        rows=[],
+    )
+    file = _display(BID_DIR / expert["cv"])
+    result = checker.cv_not_read_result(expert["id"], file, problem)
+    return report.ExpertEntry(
+        expert, claims, Lookup(status="not_found"), result, "not looked up (CV could not be read)"
+    )
 
 
 def _check(
@@ -95,18 +233,18 @@ def format_expert(
 
 
 def run_expert(expert_id: str, fresh: bool | None) -> int:
-    bid = _load_json(BID_DIR / "bid.json")
+    tender = _load_tender()
+    bid = _load_bid(tender)
     expert = next((e for e in bid["experts"] if e["id"] == expert_id), None)
     if expert is None:
-        known = ", ".join(e["id"] for e in bid["experts"])
+        known = ", ".join(str(e["id"]) for e in bid["experts"]) or "none"
         print(f"Unknown expert {expert_id!r}. Known experts: {known}", file=sys.stderr)
         return 2
 
-    tender = _load_json(DATA_DIR / "tender.json")
     try:
         claims = _read_cv(expert, fresh)
-    except (parse_cv.CvParseError, OSError) as exc:
-        print(f"Could not read the CV for {expert_id}: {exc}", file=sys.stderr)
+    except CV_READ_ERRORS as exc:
+        print(f"CV could not be read ({_display(BID_DIR / expert['cv'])}): {_cv_problem(exc)}.", file=sys.stderr)
         return 1
     try:
         url = expert.get("profile_url")
@@ -124,12 +262,16 @@ def _audit_experts(
     bid: dict[str, Any],
     tender: dict[str, Any],
     claims_by_id: dict[str, Claims],
+    cv_problems: dict[str, str],
     fresh: bool | None,
     errors: list[str],
 ) -> list[report.ExpertEntry]:
     entries = []
     seen: dict[str, tuple[Lookup, str, str]] = {}
     for expert in bid["experts"]:
+        if expert["id"] in cv_problems:
+            entries.append(_unread_entry(expert, cv_problems[expert["id"]]))
+            continue
         url = expert.get("profile_url")
         if not url:
             lookup, origin = _no_url_lookup()
@@ -142,7 +284,7 @@ def _audit_experts(
                 lookup, origin = _lookup_url(url, fresh)
             except crustdata.CrustdataError as exc:
                 lookup = Lookup(status="not_found", reason="lookup_failed")
-                origin = "failed (see the limits section)"
+                origin = str(exc)
                 errors.append(f"{expert['id']}: {exc}")
             seen[url] = (lookup, origin, expert["id"])
         claims = claims_by_id[expert["id"]]
@@ -156,7 +298,7 @@ def _audit_firm(bid: dict[str, Any], fresh: bool | None, errors: list[str]) -> t
     try:
         records, note = firm.lookup_firm(bid, fresh=fresh)
     except crustdata.CrustdataError as exc:
-        records, note = [], "The Crustdata firm lookup failed, so the firm was not compared."
+        records, note = [], f"The firm was not compared. {exc}"
         errors.append(f"firm: {exc}")
     result = firm.check_firm(records, full_time)
     result.lookup_note = note
@@ -165,21 +307,25 @@ def _audit_firm(bid: dict[str, Any], fresh: bool | None, errors: list[str]) -> t
 
 
 def run_audit(fresh: bool | None) -> int:
-    bid = _load_json(BID_DIR / "bid.json")
-    tender = _load_json(DATA_DIR / "tender.json")
+    tender = _load_tender()
+    bid = _load_bid(tender)
     ledger_start = report.ledger_row_count()
     errors: list[str] = []
 
-    # Read every CV first, so an unreadable CV stops the run before any paid lookup.
+    # Read every CV first, so no paid lookup is made for an expert whose CV cannot be read.
     claims_by_id: dict[str, Claims] = {}
+    cv_problems: dict[str, str] = {}
     for expert in bid["experts"]:
         try:
             claims_by_id[expert["id"]] = _read_cv(expert, fresh)
-        except (parse_cv.CvParseError, OSError) as exc:
-            print(f"Could not read the CV for {expert['id']}: {exc}. No report was written.", file=sys.stderr)
-            return 1
+        except CV_READ_ERRORS as exc:
+            cv_problems[expert["id"]] = _cv_problem(exc)
+            print(
+                f"CV could not be read for {expert['id']} ({_display(BID_DIR / expert['cv'])}): {cv_problems[expert['id']]}.",
+                file=sys.stderr,
+            )
 
-    entries = _audit_experts(bid, tender, claims_by_id, fresh, errors)
+    entries = _audit_experts(bid, tender, claims_by_id, cv_problems, fresh, errors)
     firm_result, full_time = _audit_firm(bid, fresh, errors)
 
     timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -195,7 +341,7 @@ def run_audit(fresh: bool | None) -> int:
 def run_check_cv(path_text: str, position_key: str | None, profile_url: str | None, fresh: bool | None) -> int:
     """Check one unseen CV. With no position this is Career Check mode (SPEC 7b)."""
     path = Path(path_text)
-    tender = _load_json(DATA_DIR / "tender.json")
+    tender = _load_tender()
     if position_key is not None and position_key not in tender["positions"]:
         known = ", ".join(tender["positions"])
         print(f"Unknown position {position_key!r}. Known positions: {known}", file=sys.stderr)
@@ -203,8 +349,8 @@ def run_check_cv(path_text: str, position_key: str | None, profile_url: str | No
     try:
         text = path.read_text(encoding="utf-8-sig", errors="replace")
         claims = parse_cv.parse_cv(text, path.stem, position_key, fresh=fresh)
-    except (parse_cv.CvParseError, OSError) as exc:
-        print(f"Could not read the CV {path}: {exc}", file=sys.stderr)
+    except CV_READ_ERRORS as exc:
+        print(f"CV could not be read ({path}): {_cv_problem(exc)}.", file=sys.stderr)
         return 1
 
     try:
@@ -222,7 +368,8 @@ def run_check_cv(path_text: str, position_key: str | None, profile_url: str | No
 
 
 def main(argv: list[str] | None = None) -> int:
-    sys.stdout.reconfigure(encoding="utf-8")
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(prog="app.cli")
     commands = parser.add_subparsers(dest="command", required=True)
     expert = commands.add_parser("expert", help="check one expert from data/bid/bid.json")
@@ -237,11 +384,15 @@ def main(argv: list[str] | None = None) -> int:
     check_cv.add_argument("--fresh", action="store_true", help="skip reading the cache")
     args = parser.parse_args(argv)
     fresh = True if args.fresh else None
-    if args.command == "expert":
-        return run_expert(args.expert_id, fresh)
-    if args.command == "check-cv":
-        return run_check_cv(args.path, args.position, args.profile_url, fresh)
-    return run_audit(fresh)
+    try:
+        if args.command == "expert":
+            return run_expert(args.expert_id, fresh)
+        if args.command == "check-cv":
+            return run_check_cv(args.path, args.position, args.profile_url, fresh)
+        return run_audit(fresh)
+    except InputError as exc:
+        print(f"Input problem: {exc}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

@@ -128,5 +128,21 @@
   2. All text is escaped before it becomes HTML, so anything written in a CV stays plain text.
   3. Statuses become coloured pills and evidence becomes grey chips, with nothing loaded from outside the file.
 
+## Step 08: robustness
+- **Built:** no new product features. A failed lookup or unreadable CV now affects only that expert, malformed inputs give a clear message naming the file and problem, and Crustdata 401/402/403/429 replies have clear messages.
+- **Files:** `app/cli.py`, `app/crustdata.py`, `app/parse_cv.py`, `app/firm.py`, `app/checker.py`, `app/questions.py`, `app/report.py`, `docs/CRUSTDATA.md`, `tests/test_robustness.py`, `tests/test_questions.py`.
+- **Test results:** 28 of the 38 new test cases failed before the fixes. `uv run pytest -q` now gives 180 passed. The normal `audit` matches the live run on all 180 report lines. A real recipe sent through the real model was reported as "does not look like a CV". No Crustdata credits were spent in this step.
+- **Decisions:**
+  1. An unreadable CV no longer stops the audit. That expert gets the new code `CV_NOT_READ`, status `CANNOT_CHECK`, and no paid lookup. `CV_NOT_READ` was added to the code list in `tests/test_questions.py`.
+  2. A malformed `bid.json` or `tender.json` stops the run before any paid call, because no result would be reliable.
+  3. A damaged Crustdata cache file is reported and never re-fetched automatically, since that would cost credits. A damaged LLM cache file is simply read again.
+  4. Rejected calls (401/402/403/429) are counted separately from paid calls in the report's credit line.
+  5. A bid's `cv` path may not point outside the bid folder, so a bad bid cannot send other local files to the LLM.
+- **Known gaps:** re-running after a timeout calls that one failed lookup again, so it could be charged twice if the first call went through. Crustdata error handling was tested with fake replies only. The meaning of 402 is the standard HTTP one. `cli.load_claims` is only used by tests, since runs read CVs rather than hand-written claims.
+- **How it works:**
+  1. Inputs are validated first, so a broken bid gives one clear message before anything is spent.
+  2. Each CV and lookup failure is recorded against that expert as "could not be read" or "lookup failed", and the run carries on.
+  3. Every paid result is cached as soon as it arrives, so a re-run pays only for what is still missing.
+
 ## Suggestions (ideas noted but not built)
 - SPEC §4 collapses same-employer, same-date jobs even when titles differ, which could hide a title a CV row should match. Consider keeping both titles.

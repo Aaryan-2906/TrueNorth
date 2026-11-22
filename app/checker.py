@@ -21,7 +21,7 @@ from app.normalise import collapse_duplicates, months, same_employer, union_mont
 CV_OVERLAP_MONTHS = 3
 MIN_DATED_JOBS = 2
 MAX_LISTED_EMPLOYERS = 3
-EXPERT_LEVEL_CANNOT_CHECK = {"NO_PROFILE_FOUND", "AMBIGUOUS_IDENTITY", "PROFILE_THIN"}
+EXPERT_LEVEL_CANNOT_CHECK = {"NO_PROFILE_FOUND", "AMBIGUOUS_IDENTITY", "PROFILE_THIN", "CV_NOT_READ"}
 NOT_COMPARED = "NOT_COMPARED (no profile)"
 NOT_COMPARED_AMBIGUOUS = "NOT_COMPARED (ambiguous identity)"
 
@@ -573,6 +573,20 @@ def _profile_rules(
     findings += rule_duplicate_entries(pairs)
     findings += rule_implausible_profile(jobs)
     return findings
+
+
+def cv_not_read_result(expert_id: str, file: str, reason: str) -> ExpertResult:
+    """The result for an expert whose CV could not be read: nothing was checked."""
+    message = f"CV could not be read ({file}: {reason}); this is not evidence against the expert"
+    finding = _finding("CV_NOT_READ", "cannot_check", message, ["cv.file"], file=file, reason=reason)
+    return ExpertResult(
+        expert_id=expert_id,
+        status=_status([finding]),
+        documented_total_months=None,
+        documented_similar_months=None,
+        findings=[finding],
+        row_results=[],
+    )
 
 
 def check_expert(

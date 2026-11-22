@@ -99,6 +99,10 @@ TEMPLATES = {
         "The company record shows {range} staff, but the bid lists {count} key experts as full-time. "
         "Company records can be out of date. Please ask the bidder for staff records."
     ),
+    "CV_NOT_READ": (
+        "The CV could not be read ({file}: {reason}), so it was not checked. "
+        "This is not evidence against the expert. Please ask the bidder for a readable copy of the CV."
+    ),
     "DUPLICATE_EXPERT": (
         "{ids} {relation}; please confirm they are different experts or that one person is proposed "
         "for one position only."

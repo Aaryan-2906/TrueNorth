@@ -151,13 +151,13 @@ def _call_model(client: anthropic.Anthropic, text: str, correction: str | None) 
         request.update(betas=[FALLBACK_BETA], fallbacks="default")
     try:
         response = client.beta.messages.create(**request)
-    except anthropic.APIError as exc:
-        raise CvParseError(f"The Anthropic API call failed: {exc}") from exc
+    except anthropic.AnthropicError as exc:
+        raise CvParseError(f"the Anthropic API call failed ({type(exc).__name__})") from exc
     if response.stop_reason in {"refusal", "max_tokens"}:
-        raise CvParseError(f"The model stopped early ({response.stop_reason}).")
+        raise CvParseError(f"the model stopped early ({response.stop_reason})")
     answer = next((block.text for block in response.content if block.type == "text"), None)
     if answer is None:
-        raise CvParseError("The model returned no text.")
+        raise CvParseError("the model returned no text")
     return answer
 
 
@@ -175,7 +175,7 @@ def _extract(text: str, path: Path) -> CvExtract:
             continue
         _write_cache(path, raw)
         return extract
-    raise CvParseError(f"The CV reading failed validation twice: {correction}")
+    raise CvParseError(f"the model's answer failed validation twice: {correction[:200]}")
 
 
 def _to_claims(
@@ -219,11 +219,16 @@ def parse_cv(
 ) -> Claims:
     """Read CV text into validated Claims, reusing a cached reading unless fresh is on."""
     if not text.strip():
-        raise CvParseError(f"The CV for {expert_id} is empty.")
+        raise CvParseError("the file is empty")
     use_fresh = config.FRESH if fresh is None else fresh
     path = cache_path(text)
+    extract = None
     if not use_fresh and path.exists():
-        extract = validate_extract(path.read_text(encoding="utf-8"), text)
+        try:
+            extract = validate_extract(path.read_text(encoding="utf-8"), text)
+        except (OSError, ValueError):
+            extract = None  # A damaged cached reading is simply read again.
+    if extract is not None:
         fetched = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc)
         source = "cache"
     else:
@@ -233,6 +238,8 @@ def parse_cv(
     _readings.append(
         {"expert_id": expert_id, "source": source, "fetched_at": fetched.isoformat(timespec="seconds")}
     )
+    if not extract.rows:
+        raise CvParseError("no employment record was found, so this does not look like a CV")
     return _to_claims(extract, expert_id, proposed_position, today or config.TODAY)
 
 

@@ -190,19 +190,22 @@ def rule_duplicate_experts(experts: list[dict[str, Any]]) -> list[Finding]:
 
 def _records_from_reply(reply: list[dict[str, Any]]) -> list[dict[str, Any]]:
     records = []
-    for item in reply:
-        for match in item.get("matches") or []:
-            company = match.get("company_data") or {}
-            info = company.get("basic_info") or {}
-            records.append(
-                {
-                    "crustdata_company_id": company.get("crustdata_company_id"),
-                    "name": info.get("name"),
-                    "primary_domain": info.get("primary_domain"),
-                    "employee_count_range": info.get("employee_count_range"),
-                    "headcount": company.get("headcount"),
-                }
-            )
+    try:
+        for item in reply:
+            for match in item.get("matches") or []:
+                company = match.get("company_data") or {}
+                info = company.get("basic_info") or {}
+                records.append(
+                    {
+                        "crustdata_company_id": company.get("crustdata_company_id"),
+                        "name": info.get("name"),
+                        "primary_domain": info.get("primary_domain"),
+                        "employee_count_range": info.get("employee_count_range"),
+                        "headcount": company.get("headcount"),
+                    }
+                )
+    except (AttributeError, TypeError) as exc:
+        raise crustdata.CrustdataError("/company/identify: the reply had an unexpected shape.") from exc
     return records
 
 

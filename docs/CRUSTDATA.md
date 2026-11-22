@@ -84,6 +84,17 @@ before using it; do not guess.
 6. Junk profiles exist (simultaneous CEO/COO/Board at big firms) → `IMPLAUSIBLE_PROFILE`.
 7. A network drop can lose a billed reply. Never auto-retry a paid call after a timeout/5xx.
 
+## Error messages (`app/crustdata.py`)
+| Reply | What the tool says and does |
+|---|---|
+| 401 | The API key was rejected: check `CRUSTDATA_API_KEY` in `.env`. Not retried. |
+| 402 | Payment or credit problem: check `GET /account/credits` or ask an organiser. Not retried. |
+| 403 | The key may not use this endpoint: ask an organiser (`GET /account/endpoints`). Not retried. |
+| 429 | Rate limited: waits 5s and retries up to 3 times, then says to wait a minute and run again. |
+| Timeout, lost connection or 5xx | "lookup failed: may have been billed, not retried". Logged in `credits.csv` with a blank credit figure. |
+
+These replies were tested with fake responses. The meaning given for 402 is the standard HTTP one, not confirmed from Crustdata's documentation.
+
 ## Rate limits
 person enrich 15/min · person search 30/min · company identify 30/min · 200/min per key.
 

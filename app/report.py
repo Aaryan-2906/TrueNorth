@@ -27,7 +27,9 @@ _FIXED_SOURCES = {
     "bid.profile_url": "profile URL field in the bid (empty)",
     "bid.employment_with_bidder": "employment status stated in the bid",
     "crustdata.lookup": "Crustdata lookup",
+    "cv.file": "the CV file named in the bid",
 }
+_REJECTED_STATUSES = {"401", "402", "403", "429"}
 _CV_ROW = re.compile(r"cv\.rows\[(\d+)\]")
 _FIRM_RECORD = re.compile(r"firm\.records\[(\d+)\]")
 _BID_EXPERT = re.compile(r"bid\.experts\[(.+)\]")
@@ -71,9 +73,13 @@ def _ledger_rows() -> list[dict[str, str]]:
 
 
 def _credits_line(ledger_start: int) -> str:
-    rows = _ledger_rows()[ledger_start:]
+    all_rows = _ledger_rows()[ledger_start:]
+    rows = [row for row in all_rows if row["status"] not in _REJECTED_STATUSES or row["credits_used"]]
     known = [float(row["credits_used"]) for row in rows if row["credits_used"]]
     line = f"Credits this run: {round(sum(known), 4):g} ({len(rows)} paid calls logged in credits.csv)"
+    rejected = len(all_rows) - len(rows)
+    if rejected:
+        line += f"; {rejected} call(s) rejected by Crustdata"
     blank = len(rows) - len(known)
     if blank:
         line += f"; {blank} call(s) had no credit figure and may also have been billed"
@@ -101,6 +107,8 @@ def headline(entries: list[ExpertEntry], firm_result: FirmResult) -> str:
         counts[entry.result.status] += 1
     questions = total_questions(entries, firm_result)
     noun = "question" if questions == 1 else "questions"
+    if not entries:
+        return f"0 experts: this bid lists no experts; {questions} {noun} in total"
     return (
         f"{len(entries)} experts: {counts['CONSISTENT']} consistent, "
         f"{counts['QUESTIONS']} need clarification, "
@@ -206,6 +214,8 @@ def _years_text(months: int | None) -> str:
 
 
 def _row_table(entry: ExpertEntry) -> list[str]:
+    if not entry.claims.rows:
+        return ["No CV rows could be read."]
     jobs = _jobs_by_source(entry.lookup)
     lines = ["| # | Employer | Title | CV dates | Outcome | Profile entry |", "|---|---|---|---|---|---|"]
     for index, row in enumerate(entry.claims.rows):
@@ -321,6 +331,8 @@ def render_report(
     lines += _summary_lines(entries)
     lines += _firm_lines(bid, firm_result, full_time_count)
     lines += ["## Experts", ""]
+    if not entries:
+        lines += ["This bid lists no experts, so no CV was checked.", ""]
     for entry in entries:
         lines += _expert_lines(entry)
     lines += _letter_lines(bid, entries, firm_result)
