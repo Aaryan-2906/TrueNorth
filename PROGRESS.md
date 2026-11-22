@@ -226,6 +226,20 @@
   2. If anything is unclear, they return nothing and Claude reads the CV, unless `LLM_ENABLED` is false.
   3. Dates and all checks then run through the same deterministic code, whichever reader was used.
 
+## PDF download and question-to-row links
+- **Built:** a "Download as PDF" button beside "Open report.html" calls `window.print()`. The print view hides the nav, input panel, Pip runway, Activity bar and buttons, uses a white background, opens every `<details>`, and avoids breaks inside cards. Clicking a question card scrolls to the CV rows cited in its evidence and rings them in amber for 1.5 s.
+- **Files:** `static/index.html`, `PROGRESS.md`.
+- **Test results:** `uv run pytest -q` gives 330 passed. In headless Edge on the real demo bid, 25 of 25 checks passed, covering the button, print styles, opened sections, a generated 9-page A4 PDF, each linked card's rows against its evidence, the 1.5 s timing, keyboard use and text selection. No Crustdata credits were spent.
+- **Decisions:**
+  1. Row numbers are read only from evidence chips that start "CV row N (" or are "CV rows N, M", so a number inside an employer's name or question text cannot link a row.
+  2. Cards with no CV-row evidence, including firm questions, are not clickable.
+  3. Dragging to select question text does not trigger the jump, and Enter or Space works from the keyboard.
+- **Known gaps:** the browser's print dialog was stubbed in the automated test, so the real "Save as PDF" dialog was not clicked through. A card taller than one page still splits across pages. The PDF's look depends on the browser's "Background graphics" handling.
+- **How it works:**
+  1. The button opens the browser's print dialog, and print-only CSS leaves just the results.
+  2. Closed sections are opened before printing and closed again afterwards.
+  3. A question card stores the row numbers from its own evidence and highlights those rows in its own expert's table.
+
 ## Suggestions (ideas noted but not built)
 - Check whether each job's sector matches the tender's wording ("in Highway Projects"), since total years currently count all jobs.
 - SPEC §4 collapses same-employer, same-date jobs even when titles differ, which could hide a title a CV row should match. Consider keeping both titles.

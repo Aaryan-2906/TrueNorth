@@ -216,6 +216,41 @@ details > summary:hover { color: #1A1917; }
     transition: none !important;
   }
 }
+
+/* Question card -> the CV rows named in its evidence */
+.question-link { cursor: pointer; transition: border-color .15s; }
+.question-link:hover { border-color: #D97706; }
+.question-link:focus-visible { outline: 2px solid #D97706; outline-offset: 2px; }
+tr.row-flash td, tr.row-flash:hover td {
+  background: #FFFBEB;
+  box-shadow: inset 0 2px 0 #F59E0B, inset 0 -2px 0 #F59E0B;
+}
+tr.row-flash td:first-child { box-shadow: inset 2px 0 0 #F59E0B, inset 0 2px 0 #F59E0B, inset 0 -2px 0 #F59E0B; }
+tr.row-flash td:last-child { box-shadow: inset -2px 0 0 #F59E0B, inset 0 2px 0 #F59E0B, inset 0 -2px 0 #F59E0B; }
+
+@media print {
+  @page { margin: 12mm; }
+  html, body, main, .card { background: #fff !important; }
+  body { min-height: 0 !important; padding-bottom: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body > header, footer[aria-label="Activity"], section[aria-label="Start a check"], #runway,
+  #results button, #results .btn-secondary { display: none !important; }
+  #page-studio { max-width: none !important; padding: 0 !important; }
+  #page-studio > .grid, section[aria-label="Results"] { display: block !important; }
+  .card, #results li, #results tr { break-inside: avoid; page-break-inside: avoid; }
+  .card { box-shadow: none !important; }
+  #results .bg-sand-50, #results [class*="bg-sand-50/"] { background: #fff !important; }
+  .table-wrap { overflow: visible !important; }
+  thead { display: table-header-group; }
+  table { font-size: 10.5px; }
+  th, td { padding: 4px 5px; min-width: 0 !important; overflow-wrap: break-word; }
+  th { white-space: normal; }
+  #results td:first-child { white-space: nowrap; }
+  #results td.whitespace-nowrap { font-size: 9.5px; }
+  #results td .pill { font-size: 8.5px; padding-left: 5px; padding-right: 5px; white-space: normal; }
+  #results > div > p:last-child { break-before: avoid; }
+  #results summary, #results h4 { break-after: avoid; }
+  tr.row-flash td { background: #fff !important; box-shadow: none !important; }
+}
 </style>
 </head>
 <body class="min-h-screen pb-36 antialiased">
@@ -599,15 +634,33 @@ function outcomePills(text) {
 
 const chips = (items) => (items || []).map((item) => `<span class="chip">${esc(item)}</span>`).join('');
 
-function questionsHtml(questions, info) {
-  const list = (questions || []).map((q) => `
-    <li class="flex gap-2.5 rounded-lg border border-sand-200 bg-sand-50/70 p-3">
+// Row numbers come only from the evidence's own "CV row N (...)" or "CV rows N, M" citations.
+function evidenceRows(evidence, tableRows) {
+  const found = new Set();
+  (evidence || []).forEach((item) => {
+    const one = /^CV row (\d+) \(/.exec(item);
+    const many = /^CV rows (\d+(?:, \d+)*)$/.exec(item);
+    if (one) found.add(Number(one[1]));
+    if (many) many[1].split(', ').forEach((n) => found.add(Number(n)));
+  });
+  return [...found].filter((n) => tableRows.includes(n));
+}
+
+function questionsHtml(questions, info, tableRows = []) {
+  const list = (questions || []).map((q) => {
+    const linked = evidenceRows(q.evidence, tableRows);
+    const link = linked.length ? ` question-link" data-rows="${linked.join(',')}" tabindex="0` : '';
+    const hint = linked.length ? `<span class="sr-only">Show CV ${linked.length === 1 ? 'row' : 'rows'} ${linked.join(', ')} in the table.</span>` : '';
+    return `
+    <li class="flex gap-2.5 rounded-lg border border-sand-200 bg-sand-50/70 p-3${link}">
       <span class="mt-0.5 font-mono text-xs font-semibold text-forest-800">${q.number}.</span>
       <div class="min-w-0">
         <p class="text-[13.5px] leading-relaxed text-ink-900">${esc(q.text)}</p>
         <div>${chips(q.evidence)}</div>
+        ${hint}
       </div>
-    </li>`).join('');
+    </li>`;
+  }).join('');
   const notes = (info || []).map((n) => `
     <li><p class="text-[13px] leading-relaxed text-ink-600">${esc(n.text)}</p><div>${chips(n.evidence)}</div></li>`).join('');
   return `
@@ -651,7 +704,7 @@ function tenureBar(documented, claimed) {
 
 function expertCard(expert) {
   const rows = expert.rows.map((row) => `
-    <tr>
+    <tr data-row="${Number(row.number)}">
       <td class="font-mono text-ink-400">${row.number}</td>
       <td class="min-w-[130px] font-medium">${esc(row.employer)}</td>
       <td class="min-w-[130px]">${esc(row.title)}</td>
@@ -689,7 +742,7 @@ function expertCard(expert) {
       ${expert.read_by ? `<p class="mt-0.5 font-mono text-[11px] text-ink-600">Read by: ${esc(expert.read_by)}</p>` : ''}
       ${notes}
       ${table}
-      ${questionsHtml(expert.questions, expert.info)}
+      ${questionsHtml(expert.questions, expert.info, expert.rows.map((row) => Number(row.number)))}
       ${why ? `<details class="mt-4"><summary>Why</summary><ul class="mt-2 space-y-2">${why}</ul></details>` : ''}
     </article>`;
 }
@@ -814,6 +867,7 @@ function renderResult(result) {
         ${summaryLine}
         <div class="mt-3 flex flex-wrap gap-2">
           ${result.report_url ? `<a class="btn-secondary" href="${esc(result.report_url)}" target="_blank" rel="noopener">Open report.html ↗</a>` : ''}
+          <button id="downloadPdf" class="btn-secondary" type="button">Download as PDF</button>
           <button id="copyLetter" class="btn-secondary" type="button" ${result.questions_total ? '' : 'disabled'}>${result.questions_total ? 'Copy draft clarification letter' : 'No questions to draft'}</button>
         </div>
       </div>
@@ -824,7 +878,51 @@ function renderResult(result) {
     </div>`;
   const copy = $('copyLetter');
   if (copy && result.questions_total) copy.addEventListener('click', copyLetter);
+  $('downloadPdf').addEventListener('click', () => window.print());
 }
+
+// Print with every section open, then put the page back as it was.
+let closedForPrint = [];
+window.addEventListener('beforeprint', () => {
+  const closed = [...document.querySelectorAll('#results details:not([open])')];
+  closed.forEach((item) => { item.open = true; });
+  closedForPrint.push(...closed); // A browser can announce printing twice before it finishes.
+});
+window.addEventListener('afterprint', () => {
+  closedForPrint.forEach((item) => { item.open = false; });
+  closedForPrint = [];
+});
+
+const FLASH_MS = 1500;
+let flashTimer = null;
+
+function clearRowFlash() {
+  clearTimeout(flashTimer);
+  document.querySelectorAll('tr.row-flash').forEach((row) => row.classList.remove('row-flash'));
+}
+
+function showQuestionRows(card) {
+  const table = card.closest('article');
+  const rows = card.dataset.rows.split(',').map((n) => table.querySelector(`tr[data-row="${n}"]`)).filter(Boolean);
+  if (!rows.length) return;
+  clearRowFlash();
+  rows.forEach((row) => row.classList.add('row-flash'));
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  rows[0].scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'center' });
+  flashTimer = setTimeout(clearRowFlash, FLASH_MS);
+}
+
+$('results').addEventListener('click', (event) => {
+  const card = event.target.closest('.question-link');
+  const selected = window.getSelection();
+  if (card && (!selected || selected.isCollapsed)) showQuestionRows(card);
+});
+$('results').addEventListener('keydown', (event) => {
+  if ((event.key === 'Enter' || event.key === ' ') && event.target.classList.contains('question-link')) {
+    event.preventDefault();
+    showQuestionRows(event.target);
+  }
+});
 
 async function copyLetter() {
   const button = $('copyLetter');
