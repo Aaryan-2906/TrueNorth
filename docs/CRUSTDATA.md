@@ -38,6 +38,8 @@ Response: a list, one item per URL:
                  }}]}]
 ```
 - Employer name is `name` (not `company_name`) in responses. Dates are ISO strings or null.
+- **Confirmed 22 Nov (Step 01):** real job dates are full timestamps like `2019-01-01T00:00:00+00:00`, not
+  `2019-01-01`. Current jobs had `end_date: null`. School `start_year`/`end_year` can be null.
 - `match_status != "matched"` or empty `matches` → `NO_PROFILE_FOUND`.
 - More than one match for one URL → `AMBIGUOUS_IDENTITY` (should be rare for a URL).
 - Do not request emails/phones: not needed, extra cost, and against our no-contact rule.
@@ -45,6 +47,8 @@ Response: a list, one item per URL:
 ## 2. Firm — `POST /company/identify` (0.2 credits per matched identifier; unmatched free)
 The Builder Handbook (p22) says identify is **free** for event keys and its example reply includes
 `headcount.total`; the public rate card says 0.2 credits/match. Log `x-credits-used` and trust the ledger.
+**Confirmed 22 Nov (Step 01):** a matched domain lookup with the event key cost **0.2 credits**
+(`x-credits-used: 0.2`), and its reply had **no `headcount` field**. Use `basic_info.employee_count_range`.
 ```json
 {"domains": ["example.com"]}
 ```
