@@ -179,6 +179,9 @@
   2. Python rejects anything not found verbatim, then derives the similar-role titles from the tender's own definition.
   3. A person reviews the numbers with their sources, and only an explicit approval writes the file an audit can use.
 
+## README update
+- Added the web app, `read-tender` and `audit --tender` commands, the current architecture, and the open-source table with licences. Python licences come from the installed package metadata. The remaining sections stay marked TODO, as does the diagram link.
+
 ## Suggestions (ideas noted but not built)
 - Check whether each job's sector matches the tender's wording ("in Highway Projects"), since total years currently count all jobs.
 - SPEC §4 collapses same-employer, same-date jobs even when titles differ, which could hide a title a CV row should match. Consider keeping both titles.
