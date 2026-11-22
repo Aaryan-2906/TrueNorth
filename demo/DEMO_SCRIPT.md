@@ -26,7 +26,7 @@ Fresh on, run. While Pip flies to Crustdata: "Now it pulls the employment record
 - Point at Activity: "1.2 credits for the whole bid; every call is logged."
 
 **1:35–2:00 Trust + who pays.**
-"353 tests, including 17 cases written before the build and never edited. The tender rules were checked against the
+"376 tests, including 17 cases written before the build and never edited. The tender rules were checked against the
 NHAI PDF, and the tool caught a mistake in our own data. First customer: the bidder, checking its own bid before
 submitting. Same engine checks hiring CVs."
 

@@ -270,7 +270,22 @@
   2. The toggle changes one attribute on `<html>`, which switches the whole set of variables.
   3. Print ignores the dark set, so reports stay white.
 
+## Find experts (preview)
+- **Built:** `app/finder.py` searches `/person/search` for India with the position's similar-title keywords in current or past titles, builds each profile with `normalise.py`, computes documented total and similar months with `union_months`, keeps those meeting the tender minimums, and sorts by similar months. `POST /api/find-experts` streams stage, call and result events. Audit Studio has a third tab with initials-only cards, years, matching titles with dates, and a Show name toggle that is off by default.
+- **Files:** `app/finder.py`, `app/server.py`, `static/index.html`, `tests/test_finder.py`, `README.md`, `demo/DEMO_SCRIPT.md`, `credits.csv` (appended by the two live calls).
+- **Test results:** `uv run pytest -q` gives 376 passed, with a mocked search reply. In headless Edge, 16 of 16 checks passed using synthetic search data. Filter field names were confirmed with the free autocomplete endpoint and one `limit=1` call (0.23 credits). The one live `team_leader` run with `limit=5` cost 1.15 credits, returned 5 of 861,028 matching records, and kept 3. Total for this step: 1.38 credits.
+- **Decisions:**
+  1. Only name, profile URL, employer, title and dates are requested. No email or phone fields are requested, and nobody is contacted.
+  2. The page receives no profile URLs or employers. A name reaches the visible card only when Show name is clicked.
+  3. A new default search of 10 results is estimated at 2.3 credits, from the measured 0.23 per result. A cached search costs 0.
+- **Known gaps:** results are not sector-specific. All 3 live matches qualified through generic "Project Manager" titles, and one was a "Technical Project Manager", so they may not be highway engineers. The search reads only the first page, so it does not find the best matches among all records. Degrees and other tender requirements are not checked. The live run used the finder directly; the web tab was tested only with synthetic data.
+- **How it works:**
+  1. Crustdata returns public records with a matching title in India.
+  2. Deterministic code counts each person's documented months and drops anyone below the tender minimums.
+  3. The page shows initials, years and matching titles, and the committee decides what they mean.
+
 ## Suggestions (ideas noted but not built)
+- Narrow Find experts to highway and construction work (for example by employer industry) before showing it as more than a preview.
 - Darken the light theme's muted text (for example to `#6F6A60`) so small labels meet the 4.5:1 contrast guideline.
 - Check whether each job's sector matches the tender's wording ("in Highway Projects"), since total years currently count all jobs.
 - SPEC §4 collapses same-employer, same-date jobs even when titles differ, which could hide a title a CV row should match. Consider keeping both titles.

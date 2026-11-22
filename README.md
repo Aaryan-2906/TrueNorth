@@ -30,6 +30,8 @@ End to end, with no one typing results:
    same person listed twice in one bid.
 6. Writes a report and a draft clarification letter: **questions for the committee, never accusations**. Statuses:
    CONSISTENT, QUESTIONS, CANNOT_CHECK. Missing data is "cannot check", never "false".
+7. **Find experts (preview):** searches public records for people whose documented years and titles appear to meet a
+   position's minimums. Cards show initials by default. It is not a recommendation and never contacts anyone.
 
 **Where it still needs a person:** approving the tender rules; judging "or equivalent and above" grades and whether a
 title really counts as similar capacity (titles are matched as text, so an IT "Project Manager" would count; the
@@ -43,9 +45,6 @@ committee decides); and acting on the questions. It never contacts anyone.
 - Name search for experts without a profile URL. Not built: same-name strangers make it risky; today we report only counts.
 - Conflict check: an expert who recently worked at the procuring agency.
 - Scanned-PDF CVs (OCR).
-- **Reverse mode:** from a tender's key-personnel rules, find people whose employment record actually meets them
-  (Crustdata person search + the same checker), already checked against the tender. Not built: it needs careful ranking,
-  raises privacy questions about listing people, and must never contact anyone.
 
 ## The future of this service
 Bidders self-audit every bid automatically before submission, and committees receive a clarification pack the day
@@ -180,7 +179,7 @@ irreversible happens anywhere; no message is ever sent.
 audit of the demo bid costs **1.2 credits** (1 person enrich + 0.2 company identify); repeat runs reuse the cache and
 cost 0. The web app shows each real call (live or cached, credits, time) in its Activity panel.
 
-**Tests (353 passing):** 17 hand-built expert cases and 5 firm cases written before the event and never edited;
+**Tests (376 passing):** 17 hand-built expert cases and 5 firm cases written before the event and never edited;
 29 real CV date strings plus extra formats; robustness tests (timeout mid-run resumes without re-billing cached calls,
 401/402/403/429, malformed bids, empty CVs, a recipe instead of a CV, LLM refusal/invalid JSON); parser tests on six
 CVs; tender parsing matched the PDF on all six positions in four fresh readings. A live audit matched the cached audit

@@ -24,7 +24,7 @@ from pydantic import BaseModel, Field, ValidationError
 from starlette.datastructures import UploadFile
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app import cli, config, crustdata, cv_files, parse_cv, parse_tender, report
+from app import cli, config, crustdata, cv_files, finder, parse_cv, parse_tender, report
 from app.models import FirmResult
 
 STATIC_DIR = config.ROOT_DIR / "static"
@@ -40,6 +40,7 @@ _LINKEDIN_PROFILE = re.compile(r"https?://(?:[a-z]{2,3}\.)?linkedin\.com/in/[^/\
 SERVICE_NAMES = {
     "/person/enrich": "Crustdata /person/enrich",
     "/company/identify": "Crustdata /company/identify",
+    "/person/search": "Crustdata /person/search",
 }
 
 logger = logging.getLogger("truenorth.server")
@@ -74,6 +75,11 @@ class BidUpload:
 
 class ReadTenderRequest(BaseModel):
     text: str = Field(max_length=MAX_TENDER_CHARACTERS)
+    fresh: bool = False
+
+
+class FindExpertsRequest(BaseModel):
+    position: str
     fresh: bool = False
 
 
@@ -196,6 +202,8 @@ def _run_job(job: Callable[[cli.Progress], dict[str, Any]], events: "queue.Queue
         _report_problem(stage, events, str(exc))
     except parse_tender.TenderParseError as exc:
         _report_problem(stage, events, f"The tender could not be read: {exc}.")
+    except crustdata.CrustdataError as exc:
+        _report_problem(stage, events, str(exc))
     except cli.CV_READ_ERRORS as exc:
         _report_problem(stage, events, f"CV could not be read: {cli._cv_problem(exc)}.")
     except Exception as exc:  # The browser gets a clean message; the details stay in the server log.
@@ -441,6 +449,31 @@ async def audit_upload(http_request: Request) -> Response:
     return _stream(job)
 
 
+@app.post("/api/find-experts")
+def find_experts(http_request: Request, request: FindExpertsRequest) -> Response:
+    """Preview: public records that appear to meet a position's minimums. Nobody is contacted."""
+    if _is_cross_site(http_request):
+        return JSONResponse({"error": "Searches are only accepted from this page."}, status_code=403)
+    try:
+        known = cli._load_tender()["positions"]
+    except cli.InputError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=500)
+    if request.position not in known:
+        return JSONResponse({"error": "Unknown position."}, status_code=422)
+
+    def job(progress: cli.Progress) -> dict[str, Any]:
+        ledger_start = report.ledger_row_count()
+        run = finder.find_candidates(request.position, fresh=True if request.fresh else None, progress=progress)
+        progress("writing", None, "Preparing the candidate cards")
+        return {
+            **finder.result_view(run),
+            "credits": report.credits_since(ledger_start),
+            "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        }
+
+    return _stream(job)
+
+
 @app.post("/api/read-tender")
 def read_tender(request: ReadTenderRequest) -> Response:
     """Propose positions only. Nothing is used until /api/tender/approve is called."""
@@ -497,7 +530,12 @@ def options() -> Response:
     positions = [{"key": key, "name": value.get("name", key)} for key, value in tender["positions"].items()]
     bids = [_bid_label(path) for path in sorted(cli.BID_DIR.glob("*.json")) if _is_bid_file(path)]
     return JSONResponse(
-        {"positions": positions, "bids": bids, "approved_tender": _approved_info(parse_tender.APPROVED_PATH)}
+        {
+            "positions": positions,
+            "bids": bids,
+            "approved_tender": _approved_info(parse_tender.APPROVED_PATH),
+            "finder_credits": round(finder.DEFAULT_LIMIT * finder.CREDITS_PER_RESULT, 2),
+        }
     )
 
 

@@ -506,7 +506,7 @@ html[data-theme="dark"] .theme-toggle [data-option="dark"] {
   <section class="mt-14 border-t border-sand-200 pt-8 pb-6">
     <div class="card flex flex-col items-start justify-between gap-4 bg-sand-100/70 px-6 py-5 sm:flex-row sm:items-center">
       <p class="font-mono text-xs leading-relaxed text-ink-600">
-        <strong class="font-semibold text-ink-900">353 tests</strong> ·
+        <strong class="font-semibold text-ink-900">376 tests</strong> ·
         <strong class="font-semibold text-ink-900">17 golden cases</strong> written before the build ·
         tender rules checked against the <a href="https://infracon.nic.in/WriteReadData/consultantprojectsAE/586_File1163110934.pdf" target="_blank" rel="noopener" class="underline hover:text-forest-800">NHAI PDF</a> ·
         built with Crustdata + Claude ·
@@ -535,6 +535,7 @@ html[data-theme="dark"] .theme-toggle [data-option="dark"] {
       <div class="mb-4 flex gap-1 rounded-lg bg-sand-100 p-1" role="tablist">
         <button id="tabCv" class="tab" role="tab" aria-selected="true" aria-controls="panelCv">Check one CV</button>
         <button id="tabBid" class="tab" role="tab" aria-selected="false" aria-controls="panelBid">Audit a bid</button>
+        <button id="tabFind" class="tab" role="tab" aria-selected="false" aria-controls="panelFind">Find experts (preview)</button>
       </div>
 
       <form id="panelCv" class="space-y-3" role="tabpanel" aria-labelledby="tabCv">
@@ -625,6 +626,20 @@ html[data-theme="dark"] .theme-toggle [data-option="dark"] {
         </div>
 
         <button id="runBid" class="btn-primary w-full" type="submit">Audit this bid</button>
+      </form>
+
+      <form id="panelFind" class="hidden space-y-3" role="tabpanel" aria-labelledby="tabFind">
+        <div>
+          <label class="mb-1.5 block text-xs font-medium text-ink-600" for="findPosition">Position</label>
+          <select id="findPosition" class="field"></select>
+        </div>
+        <label class="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-sand-200 bg-sand-50 px-3 py-2 text-xs text-ink-900">
+          <span>Fresh<span class="block text-[11px] text-ink-600">Skip the cache and make a new paid search</span></span>
+          <input id="freshFind" type="checkbox" class="h-4 w-4 accent-forest-800">
+        </label>
+        <p id="findCost" class="text-xs text-ink-600"></p>
+        <p class="text-xs leading-relaxed text-ink-600">Searches public records only. Nobody is contacted, and no email or phone details are requested.</p>
+        <button id="runFind" class="btn-primary w-full" type="submit">Find experts</button>
       </form>
     </section>
 
@@ -996,6 +1011,10 @@ function renderResult(result) {
     renderTender(result);
     return;
   }
+  if (result.kind === 'finder') {
+    renderFinder(result);
+    return;
+  }
   state.letter = result.letter || '';
   const problems = result.errors.map((e) => `<li class="break-words">${esc(e)}</li>`).join('');
   const elapsed = ((Date.now() - state.runStart) / 1000).toFixed(1);
@@ -1111,6 +1130,7 @@ function showRunning() {
 function setRunning(running) {
   state.running = running;
   $('runCv').disabled = running;
+  $('runFind').disabled = running;
   $('runBid').disabled = running || (state.bidMode !== 'upload' && !$('bidSelect').value);
   // Also disable readTender when running
   const rt = $('readTender');
@@ -1295,11 +1315,43 @@ async function startRun(url, body) {
   }
 }
 
-function selectTab(showCv) {
-  $('tabCv').setAttribute('aria-selected', String(showCv));
-  $('tabBid').setAttribute('aria-selected', String(!showCv));
-  $('panelCv').classList.toggle('hidden', !showCv);
-  $('panelBid').classList.toggle('hidden', showCv);
+function selectTab(name) {
+  [['cv', 'tabCv', 'panelCv'], ['bid', 'tabBid', 'panelBid'], ['find', 'tabFind', 'panelFind']].forEach(([key, tab, panel]) => {
+    $(tab).setAttribute('aria-selected', String(key === name));
+    $(panel).classList.toggle('hidden', key !== name);
+  });
+}
+
+function renderFinder(result) {
+  state.findCandidates = result.candidates;
+  const minimum = (value) => (value === null || value === undefined ? 'not stated' : `${value} yrs`);
+  const cards = result.candidates.map((person, index) => `
+    <article class="card p-5">
+      <div class="flex flex-wrap items-start justify-between gap-2">
+        <h3 class="font-serif text-lg font-semibold text-ink-900" data-person="${index}">${esc(person.initials)}</h3>
+        ${person.name ? `<button type="button" class="btn-secondary !px-2.5 !py-1 text-xs" data-show-name="${index}" aria-pressed="false">Show name</button>` : ''}
+      </div>
+      <p class="mt-1 text-sm font-medium text-ink-900">Documented ${person.total_years.toFixed(1)} yrs total <span class="text-ink-400">·</span> ${person.similar_years.toFixed(1)} yrs in similar roles</p>
+      <h4 class="mb-1 mt-3 text-xs font-semibold uppercase tracking-wider text-ink-600">Matching titles</h4>
+      <div>${chips(person.evidence.map((job) => `${job.title}, ${job.period}`))}</div>
+    </article>`).join('');
+  const empty = `<div class="card p-4 text-sm text-ink-600">None of the ${result.searched} records returned met this position's minimums. This says nothing about people outside this search.</div>`;
+  $('results').innerHTML = `
+    <div class="space-y-4">
+      <div class="card border-amber-300 bg-amber-50 p-3.5 text-[13px] text-amber-900">
+        <p class="font-semibold">${esc(result.label)}</p>
+        <p class="mt-1">${esc(result.note)}</p>
+      </div>
+      <div>
+        <p class="font-mono text-[11px] text-ink-600">${esc(result.position.name)} · minimum ${esc(minimum(result.position.min_total_years))} total, ${esc(minimum(result.position.min_similar_years))} similar · ${esc(result.region)}</p>
+        <div class="mt-2 grid grid-cols-3 gap-2.5">
+          ${metric('Records searched', result.searched)}
+          ${metric('Appear to meet rules', result.candidates.length)}
+          ${metric('Credits', result.credits)}
+        </div>
+      </div>
+      ${cards || empty}
+    </div>`;
 }
 
 async function loadOptions() {
@@ -1313,6 +1365,7 @@ async function loadOptions() {
       option.textContent = position.name;
       POSITION_NAMES[position.key] = position.name;
       $('position').appendChild(option);
+      $('findPosition').appendChild(option.cloneNode(true));
     }
     for (const bid of data.bids) {
       const option = document.createElement('option');
@@ -1320,6 +1373,7 @@ async function loadOptions() {
       option.textContent = bid;
       $('bidSelect').appendChild(option);
     }
+    $('findCost').textContent = `Costs about ${data.finder_credits} credits for a new search. A cached search costs 0.`;
     // Show approved tender row if one exists
     showApprovedTender(data.approved_tender);
     if (!data.bids.length) {
@@ -1392,8 +1446,23 @@ $('cvDrop').addEventListener('drop', (event) => chooseCvFile(event.dataTransfer.
 // A file dropped just outside the zone must not make the browser leave the page.
 ['dragover', 'drop'].forEach((type) => window.addEventListener(type, (event) => event.preventDefault()));
 
-$('tabCv').addEventListener('click', () => selectTab(true));
-$('tabBid').addEventListener('click', () => selectTab(false));
+$('tabCv').addEventListener('click', () => selectTab('cv'));
+$('tabBid').addEventListener('click', () => selectTab('bid'));
+$('tabFind').addEventListener('click', () => selectTab('find'));
+$('panelFind').addEventListener('submit', (event) => {
+  event.preventDefault();
+  if ($('findPosition').value) startRun('/api/find-experts', { position: $('findPosition').value, fresh: $('freshFind').checked });
+});
+$('results').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-show-name]');
+  if (!button) return;
+  const index = button.dataset.showName;
+  const person = state.findCandidates[index];
+  const showing = button.getAttribute('aria-pressed') === 'true';
+  $('results').querySelector(`[data-person="${index}"]`).textContent = showing ? person.initials : person.name;
+  button.setAttribute('aria-pressed', String(!showing));
+  button.textContent = showing ? 'Show name' : 'Hide name';
+});
 $('panelCv').addEventListener('submit', (event) => {
   event.preventDefault();
   if (state.cvFile) {
