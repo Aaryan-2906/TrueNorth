@@ -20,7 +20,7 @@ End to end, with no one typing results:
 1. Reads a tender's key-personnel section and proposes the rules (minimum years, similar-capacity titles, degree),
    each with its source sentence. **A person approves them** before they are used.
 2. Reads each expert's CV text (any layout) with Claude, copying employer, title and dates verbatim; anything not written
-   in the CV is rejected. Dates are converted by deterministic code (30+ real formats, including "Sep'14", "January2012",
+   in the CV is rejected. Dates are converted by deterministic code (tested on 29 real date strings plus extra formats, including "Sep'14", "January2012",
    "12th March, 2019", DD/MM/YYYY).
 3. Checks the CV against itself (impossible dates, header vs "Duration" mismatches, overlapping full-time jobs, unclear
    employer, claimed years vs listed jobs), with no lookup needed.
@@ -195,6 +195,7 @@ No open-source code was copied into this repository. It uses these libraries as 
 | Anthropic Python SDK | Claude API calls | Apache-2.0 |
 | pytest | Tests | MIT |
 | Tailwind CSS (CDN) | Page styling | MIT |
+| Fraunces (Google Fonts) | Heading font | SIL OFL 1.1 |
 | Inter (Google Fonts) | Page font | SIL OFL 1.1 |
 | JetBrains Mono (Google Fonts) | Monospace font | SIL OFL 1.1 |
 

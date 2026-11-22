@@ -946,15 +946,17 @@ function setPip(pose, at) {
 function onStage(event) {
   $('pipCaption').textContent = event.detail;
   if (event.stage === 'looking_up' && event.external === false) return;
-  if (event.stage === 'done') setPip(DONE_POSE[event.status] || 'cannot', 50);
+  if (event.stage === 'done') setPip(DONE_POSE[event.status] || 'idle', 50);
   else if (event.stage === 'error') setPip('resting');
   else if (STAGE_POSE[event.stage]) setPip(...STAGE_POSE[event.stage]);
 }
 
 function onResult(result) {
   if (result.ok) {
-    state.credits = result.credits;
-    $('creditsTotal').textContent = formatCredits(result.credits);
+    if (typeof result.credits === 'number') {
+      state.credits = result.credits;
+      $('creditsTotal').textContent = formatCredits(result.credits);
+    }
     renderResult(result);
   } else {
     showProblem(result.error);

@@ -182,6 +182,18 @@
 ## README update
 - Added the web app, `read-tender` and `audit --tender` commands, the current architecture, and the open-source table with licences. Python licences come from the installed package metadata. The remaining sections stay marked TODO, as does the diagram link.
 
+## Check after the Sandstone redesign
+- **Checked:** the new `static/index.html`, README, demo script and code tour from commit `436fc17`. In headless Edge: all three pages, Check one CV (`SAMPLE_real_format.md`), cached bid audit, Read a tender (first part of the excerpt, through PDF page 28), Approve, audit with the approved tender, report link, letter copy, reload and phone width.
+- **Fixed (only real breakages):**
+  1. After reading a tender, the Activity credits total showed `NaN`, because a tender result has no credits field.
+  2. After reading a tender, Pip showed the "cannot check" pose, although nothing had been checked. It now returns to its calm pose.
+  3. README said "30+ real formats". The tests hold 29 real date strings plus extra formats, so it now says that.
+  4. README's licence table was missing Fraunces, the new heading font (SIL OFL 1.1).
+- **Files:** `static/index.html`, `README.md`, `PROGRESS.md`. The design and all other text were kept.
+- **Test results:** `uv run pytest -q` gives 238 passed, matching the README and the page. The browser run went from 43 of 45 checks to 45 of 45, with no console or request errors. Every README command ran, except `audit --fresh` and `--profile-url`, which spend credits and were checked through `--help` only. All 42 code names in the code tour exist. The demo script's unseen-CV claims match a real `check-cv` run. No Crustdata credits were spent.
+- **Known gaps:** the World Bank and MoRTH claims on the page and in the README were not re-checked against their sources. The NHAI debarment quote was found in the PDF. When a tender excerpt has only the marking tables, a source sentence can be a bare table fragment such as "12 years -7": it is verbatim, but less readable than the Enclosure-B sentence.
+- **How it works:** the page now updates the credits total only when a result carries one, and a finished run with no expert status leaves Pip calm instead of implying a result.
+
 ## Suggestions (ideas noted but not built)
 - Check whether each job's sector matches the tender's wording ("in Highway Projects"), since total years currently count all jobs.
 - SPEC §4 collapses same-employer, same-date jobs even when titles differ, which could hide a title a CV row should match. Consider keeping both titles.
