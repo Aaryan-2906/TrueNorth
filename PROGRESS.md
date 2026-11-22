@@ -63,5 +63,22 @@
   2. If there is a profile URL it calls Crustdata through the cache; if not, it records that no lookup was made instead of implying a search failed.
   3. It prints the status, documented vs claimed years, each CV row's outcome, each finding with its evidence, and whether the lookup was live or from cache.
 
+## Step 05: firm check, committee questions, Markdown report
+- **Built:** firm lookup and check, one question template per reason code, `out/report.md`, and `uv run python -m app.cli audit [--fresh]`. CV rows with no profile now read `NOT_COMPARED (no profile)`, and `NO_PROFILE_FOUND` stays at expert level.
+- **Files:** `app/firm.py`, `app/questions.py`, `app/report.py`, `app/cli.py`, `app/checker.py`, `app/models.py`, `tests/test_firm_golden.py`, `tests/test_questions.py`.
+- **Test results:** firm golden test failed first (no module), then 5 of 5 passed. All 17 expert golden cases still pass unchanged. `uv run pytest -q` gives 63 passed. `audit` made no paid call and `credits.csv` did not change.
+- **Headline:** 4 experts: 0 consistent, 2 need clarification (5 questions), 2 cannot be checked.
+- **Decisions:**
+  1. The headline's question count covers only experts with status `QUESTIONS`. X3 and X4 still list their CV-only questions in their own sections.
+  2. `ROW_TITLE_DIFFERS` says "for the same period" only when the dates agree. Otherwise it says "in its closest entry (dates)", so X2's question stays accurate.
+  3. If a domain lookup returns 0, the firm is reported as not found. The one retry without a legal suffix applies to name lookups only.
+  4. `audit --fresh` looks up a repeated URL once per run, so X1 and X2 cost 1 credit, not 2.
+  5. A failed lookup is reported as failed and not compared, is not retried, and does not stop the rest of the audit.
+- **Known gaps:** `audit --fresh` and the failed-lookup path were tested offline with fake API replies, not with real paid calls. X1 and X2 are the same person, so the firm check counts 2 full-time experts for one person. No HTML report or CV parser yet, by design.
+- **How it works:**
+  1. The firm check finds company records by domain or exact name and compares the largest headcount range with the experts the bid lists as full-time.
+  2. Each finding carries its values, and a fixed template turns it into a numbered committee question. No LLM writes this wording.
+  3. The report combines the headline, firm, per-expert tables, cited questions, a draft letter that is never sent, and a footer with credits and data freshness.
+
 ## Suggestions (ideas noted but not built)
 - SPEC §4 collapses same-employer, same-date jobs even when titles differ, which could hide a title a CV row should match. Consider keeping both titles.

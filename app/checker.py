@@ -20,7 +20,10 @@ from app.normalise import collapse_duplicates, months, same_employer, union_mont
 
 CV_OVERLAP_MONTHS = 3
 MIN_DATED_JOBS = 2
+MAX_LISTED_EMPLOYERS = 3
 EXPERT_LEVEL_CANNOT_CHECK = {"NO_PROFILE_FOUND", "AMBIGUOUS_IDENTITY", "PROFILE_THIN"}
+NOT_COMPARED = "NOT_COMPARED (no profile)"
+NOT_COMPARED_AMBIGUOUS = "NOT_COMPARED (ambiguous identity)"
 
 _TITLE_STOPWORDS = {"cum", "and", "of", "the", "sr", "senior", "jr", "junior"}
 _TOP_ROLE = re.compile(r"\b(?:ceo|coo|cfo|cto|chief|president|board)\b", re.IGNORECASE)
@@ -31,8 +34,8 @@ _POSTGRADUATE = re.compile(
 )
 
 
-def _finding(code: str, severity: str, message: str, evidence: list[str]) -> Finding:
-    return Finding(code=code, severity=severity, message=message, evidence=evidence)
+def _finding(code: str, severity: str, message: str, evidence: list[str], **params: Any) -> Finding:
+    return Finding(code=code, severity=severity, message=message, evidence=evidence, params=params)
 
 
 def _years(month_count: int) -> str:
@@ -47,9 +50,17 @@ def _resolve(value: Any, as_of: YearMonth) -> YearMonth | None:
     return as_of if value == "present" else value
 
 
-def _cite(job: Job) -> str:
+def job_period(job: Job) -> str:
     end = "present" if job.is_current else job.end or "no end date"
-    return f"{job.employer}, {job.title}, {job.start or 'no start date'} to {end}"
+    return f"{job.start or 'no start date'} to {end}"
+
+
+def cite_job(job: Job) -> str:
+    return f"{job.employer}, {job.title}, {job_period(job)}"
+
+
+def _row_number(source: str) -> int:
+    return int(source[len("cv.rows[") : -1]) + 1
 
 
 def _cv_jobs(claims: Claims, as_of: YearMonth) -> list[Job]:
@@ -91,6 +102,12 @@ def _distinct_employers(jobs: list[Job]) -> list[Job]:
     return distinct
 
 
+def _short_list(names: list[str]) -> str:
+    shown = "; ".join(names[:MAX_LISTED_EMPLOYERS])
+    hidden = len(names) - MAX_LISTED_EMPLOYERS
+    return f"{shown} and {hidden} more" if hidden > 0 else shown
+
+
 # --- SPEC 5b: CV-only rules ---
 
 
@@ -106,7 +123,17 @@ def rule_cv_date_invalid(claims: Claims) -> list[Finding]:
         else:
             label, raw = "dates", f"{row.start_raw} to {row.end_raw}"
         message = f"row {index + 1} {label} '{raw}' is {row.date_problem}"
-        findings.append(_finding("CV_DATE_INVALID", "question", message, [f"cv.rows[{index}]"]))
+        findings.append(
+            _finding(
+                "CV_DATE_INVALID",
+                "question",
+                message,
+                [f"cv.rows[{index}]"],
+                n=index + 1,
+                raw=raw,
+                problem=row.date_problem,
+            )
+        )
     return findings
 
 
@@ -123,7 +150,16 @@ def rule_cv_header_body_mismatch(claims: Claims, as_of: YearMonth) -> list[Findi
             if _gap(header_date, body_date) > DATE_TOLERANCE_MONTHS:
                 message = f"row {index + 1} {label} is {header} in the header but {body} in its Duration text"
                 findings.append(
-                    _finding("CV_HEADER_BODY_MISMATCH", "question", message, [f"cv.rows[{index}]"])
+                    _finding(
+                        "CV_HEADER_BODY_MISMATCH",
+                        "question",
+                        message,
+                        [f"cv.rows[{index}]"],
+                        n=index + 1,
+                        field=label,
+                        header=str(header),
+                        body=str(body),
+                    )
                 )
     return findings
 
@@ -140,7 +176,19 @@ def rule_cv_rows_overlap(cv_jobs: list[Job]) -> list[Finding]:
         overlap = months(start, end)
         if overlap > CV_OVERLAP_MONTHS:
             message = f"CV rows at {a.employer} and {b.employer} overlap by {overlap} months"
-            findings.append(_finding("CV_ROWS_OVERLAP", "question", message, [a.source, b.source]))
+            findings.append(
+                _finding(
+                    "CV_ROWS_OVERLAP",
+                    "question",
+                    message,
+                    [a.source, b.source],
+                    n_a=_row_number(a.source),
+                    n_b=_row_number(b.source),
+                    employer_a=a.employer,
+                    employer_b=b.employer,
+                    overlap=overlap,
+                )
+            )
     return findings
 
 
@@ -151,6 +199,8 @@ def rule_cv_employer_unclear(claims: Claims) -> list[Finding]:
             "question",
             f"row {index + 1} ({row.title}) does not make the employer clear",
             [f"cv.rows[{index}]"],
+            n=index + 1,
+            title=row.title,
         )
         for index, row in enumerate(claims.rows)
         if row.employer is None
@@ -161,12 +211,12 @@ def rule_claim_exceeds_cv_rows(claims: Claims, cv_jobs: list[Job], as_of: YearMo
     listed = union_months(cv_jobs, as_of)
     if claims.claimed_total_years * 12 - listed <= CLAIM_GAP_MONTHS:
         return []
-    message = (
-        f"CV claims about {claims.claimed_total_years:g} years; "
-        f"its employment record lists {_years(listed)} years of jobs."
-    )
+    claimed = f"{claims.claimed_total_years:g}"
+    message = f"CV claims about {claimed} years; its employment record lists {_years(listed)} years of jobs."
     evidence = ["cv.claimed_total_years"] + [job.source for job in cv_jobs]
-    return [_finding("CLAIM_EXCEEDS_CV_ROWS", "question", message, evidence)]
+    return [
+        _finding("CLAIM_EXCEEDS_CV_ROWS", "question", message, evidence, claimed=claimed, listed=_years(listed))
+    ]
 
 
 # --- SPEC 5: per-row rules ---
@@ -174,14 +224,25 @@ def rule_claim_exceeds_cv_rows(claims: Claims, cv_jobs: list[Job], as_of: YearMo
 
 def rule_row_not_on_profile(index: int, row: CvRow) -> Finding:
     message = f"cannot confirm from profile: no entry at {row.employer} (CV row {index + 1})"
-    return _finding("ROW_NOT_ON_PROFILE", "question", message, [f"cv.rows[{index}]"])
+    return _finding(
+        "ROW_NOT_ON_PROFILE", "question", message, [f"cv.rows[{index}]"], n=index + 1, employer=row.employer
+    )
 
 
 def rule_row_missing_dates(index: int, job: Job) -> list[Finding]:
     if job.start is not None and (job.is_current or job.end is not None):
         return []
-    message = f"cannot check CV row {index + 1}: profile entry has incomplete dates ({_cite(job)})"
-    return [_finding("ROW_MISSING_DATES", "cannot_check", message, [f"cv.rows[{index}]", job.source])]
+    message = f"cannot check CV row {index + 1}: profile entry has incomplete dates ({cite_job(job)})"
+    return [
+        _finding(
+            "ROW_MISSING_DATES",
+            "cannot_check",
+            message,
+            [f"cv.rows[{index}]", job.source],
+            n=index + 1,
+            employer=job.employer,
+        )
+    ]
 
 
 def _dates_differ(row: CvRow, job: Job) -> bool:
@@ -197,20 +258,45 @@ def _dates_differ(row: CvRow, job: Job) -> bool:
 def rule_row_dates_differ(index: int, row: CvRow, job: Job) -> list[Finding]:
     if not _dates_differ(row, job):
         return []
-    message = f"CV row {index + 1} says {row.start} to {row.end}; profile shows {_cite(job)}"
-    return [_finding("ROW_DATES_DIFFER", "question", message, [f"cv.rows[{index}]", job.source])]
+    cv_dates = f"{row.start} to {row.end}"
+    message = f"CV row {index + 1} says {cv_dates}; profile shows {cite_job(job)}"
+    return [
+        _finding(
+            "ROW_DATES_DIFFER",
+            "question",
+            message,
+            [f"cv.rows[{index}]", job.source],
+            n=index + 1,
+            employer=job.employer,
+            cv_dates=cv_dates,
+            profile_dates=job_period(job),
+        )
+    ]
 
 
 def _title_tokens(title: str) -> set[str]:
     return set(re.findall(r"[a-z0-9]+", title.lower())) - _TITLE_STOPWORDS
 
 
-def rule_row_title_differs(index: int, row: CvRow, job: Job) -> list[Finding]:
+def rule_row_title_differs(index: int, row: CvRow, job: Job, same_period: bool) -> list[Finding]:
     cv_tokens, profile_tokens = _title_tokens(row.title), _title_tokens(job.title)
     if not cv_tokens or not profile_tokens or cv_tokens & profile_tokens:
         return []
-    message = f"CV row {index + 1} title is '{row.title}'; profile shows {_cite(job)}"
-    return [_finding("ROW_TITLE_DIFFERS", "question", message, [f"cv.rows[{index}]", job.source])]
+    message = f"CV row {index + 1} title is '{row.title}'; profile shows {cite_job(job)}"
+    period = "for the same period" if same_period else f"in its closest entry ({job_period(job)})"
+    return [
+        _finding(
+            "ROW_TITLE_DIFFERS",
+            "question",
+            message,
+            [f"cv.rows[{index}]", job.source],
+            n=index + 1,
+            cv=row.title,
+            profile=job.title,
+            employer=job.employer,
+            period=period,
+        )
+    ]
 
 
 def _closest_job(row: CvRow, candidates: list[Job]) -> Job:
@@ -232,7 +318,7 @@ def check_row(index: int, row: CvRow, jobs: list[Job]) -> tuple[RowResult, list[
     findings = rule_row_missing_dates(index, job)
     if not findings:
         findings = rule_row_dates_differ(index, row, job)
-    findings += rule_row_title_differs(index, row, job)
+    findings += rule_row_title_differs(index, row, job, same_period=not findings)
     outcome = findings[0].code if findings else "MATCHED"
     return RowResult(row_index=index, matched_source=job.source, outcome=outcome), findings
 
@@ -262,13 +348,16 @@ def rule_no_profile_found(reason: str | None = None) -> Finding:
     if reason == "no_profile_url":
         message = "No profile URL was supplied, so no lookup was made; this is not evidence against the expert"
         return _finding("NO_PROFILE_FOUND", "cannot_check", message, ["bid.profile_url"])
+    if reason == "lookup_failed":
+        message = "The Crustdata lookup failed, so no profile was compared; this is not evidence against the expert"
+        return _finding("NO_PROFILE_FOUND", "cannot_check", message, ["crustdata.lookup"])
     message = "not found in Crustdata; this is not evidence against the expert"
     return _finding("NO_PROFILE_FOUND", "cannot_check", message, ["crustdata.lookup"])
 
 
 def rule_ambiguous_identity(candidate_count: int) -> Finding:
     message = f"{candidate_count} candidate profiles match; none was chosen"
-    return _finding("AMBIGUOUS_IDENTITY", "cannot_check", message, ["crustdata.lookup"])
+    return _finding("AMBIGUOUS_IDENTITY", "cannot_check", message, ["crustdata.lookup"], count=candidate_count)
 
 
 def rule_profile_thin(jobs: list[Job]) -> list[Finding]:
@@ -276,7 +365,8 @@ def rule_profile_thin(jobs: list[Job]) -> list[Finding]:
     if len(dated) >= MIN_DATED_JOBS:
         return []
     message = f"cannot check years: only {len(dated)} of {len(jobs)} profile jobs have a start date"
-    return [_finding("PROFILE_THIN", "cannot_check", message, [job.source for job in jobs] or ["profile.jobs"])]
+    evidence = [job.source for job in jobs] or ["profile.jobs"]
+    return [_finding("PROFILE_THIN", "cannot_check", message, evidence, dated=len(dated), total=len(jobs))]
 
 
 def rule_years_shortfall(total: int, position: dict[str, Any], jobs: list[Job]) -> list[Finding]:
@@ -284,14 +374,17 @@ def rule_years_shortfall(total: int, position: dict[str, Any], jobs: list[Job]) 
     if total >= minimum * 12:
         return []
     message = f"documented {_years(total)} years vs tender minimum {minimum:g}"
-    return [_finding("YEARS_SHORTFALL", "question", message, ["tender.min_total_years"] + [j.source for j in jobs])]
+    evidence = ["tender.min_total_years"] + [job.source for job in jobs]
+    return [_finding("YEARS_SHORTFALL", "question", message, evidence, min=f"{minimum:g}", doc=_years(total))]
 
 
 def rule_claim_exceeds_record(claims: Claims, total: int, jobs: list[Job]) -> list[Finding]:
     if claims.claimed_total_years * 12 - total <= CLAIM_GAP_MONTHS:
         return []
-    message = f"documented {_years(total)} years vs claimed {claims.claimed_total_years:g}"
-    return [_finding("CLAIM_EXCEEDS_RECORD", "question", message, ["cv.claimed_total_years"] + [j.source for j in jobs])]
+    claimed = f"{claims.claimed_total_years:g}"
+    message = f"documented {_years(total)} years vs claimed {claimed}"
+    evidence = ["cv.claimed_total_years"] + [job.source for job in jobs]
+    return [_finding("CLAIM_EXCEEDS_RECORD", "question", message, evidence, claimed=claimed, doc=_years(total))]
 
 
 def _similar_jobs(jobs: list[Job], position: dict[str, Any]) -> list[Job]:
@@ -309,10 +402,22 @@ def rule_similar_role_unproven(
     if not below_minimum and not over_claimed:
         return []
     message = f"documented {_years(similar)} years in a similar role vs tender minimum {minimum:g}"
+    claim_part = ""
     if claimed is not None:
         message += f" and claimed {claimed:g}"
+        claim_part = f", against {claimed:g} years claimed"
     sources = [job.source for job in similar_jobs] or ["profile.jobs"]
-    return [_finding("SIMILAR_ROLE_UNPROVEN", "question", message, ["tender.min_similar_years"] + sources)]
+    return [
+        _finding(
+            "SIMILAR_ROLE_UNPROVEN",
+            "question",
+            message,
+            ["tender.min_similar_years"] + sources,
+            min=f"{minimum:g}",
+            doc=_years(similar),
+            claim_part=claim_part,
+        )
+    ]
 
 
 def rule_current_role_elsewhere(jobs: list[Job], bidder_name: str | None) -> list[Finding]:
@@ -321,9 +426,21 @@ def rule_current_role_elsewhere(jobs: list[Job], bidder_name: str | None) -> lis
     elsewhere = [job for job in jobs if job.is_current and not same_employer(job.employer, bidder_name)]
     if not elsewhere:
         return []
-    listed = "; ".join(_cite(job) for job in elsewhere)
+    listed = "; ".join(cite_job(job) for job in elsewhere)
     message = f"profile shows a current role outside {bidder_name}: {listed}"
-    return [_finding("CURRENT_ROLE_ELSEWHERE", "question", message, [job.source for job in elsewhere])]
+    names = [job.employer for job in _distinct_employers(elsewhere)]
+    count = len(names)
+    roles = "a current role at 1 other organisation" if count == 1 else f"current roles at {count} other organisations"
+    return [
+        _finding(
+            "CURRENT_ROLE_ELSEWHERE",
+            "question",
+            message,
+            [job.source for job in elsewhere],
+            roles=roles,
+            names=_short_list(names),
+        )
+    ]
 
 
 def rule_overlapping_current_roles(jobs: list[Job]) -> list[Finding]:
@@ -332,7 +449,16 @@ def rule_overlapping_current_roles(jobs: list[Job]) -> list[Finding]:
     if len(employers) < 2:
         return []
     message = f"profile shows current roles at {len(employers)} different employers"
-    return [_finding("OVERLAPPING_CURRENT_ROLES", "question", message, [job.source for job in current])]
+    return [
+        _finding(
+            "OVERLAPPING_CURRENT_ROLES",
+            "question",
+            message,
+            [job.source for job in current],
+            n=len(employers),
+            names=_short_list([job.employer for job in employers]),
+        )
+    ]
 
 
 def rule_expert_not_at_firm(
@@ -344,7 +470,8 @@ def rule_expert_not_at_firm(
     if any(same_employer(job.employer, bidder_name) for job in current):
         return []
     message = f"bid lists the expert as full-time at {bidder_name}; profile shows no current role there"
-    return [_finding("EXPERT_NOT_AT_FIRM", "question", message, ["bid.employment_with_bidder"] + [j.source for j in current])]
+    evidence = ["bid.employment_with_bidder"] + [job.source for job in current]
+    return [_finding("EXPERT_NOT_AT_FIRM", "question", message, evidence, bidder=bidder_name)]
 
 
 def rule_education_not_shown(profile: Profile, position: dict[str, Any]) -> list[Finding]:
@@ -354,9 +481,12 @@ def rule_education_not_shown(profile: Profile, position: dict[str, Any]) -> list
         return []
     if not profile.education:
         message = "no education listed on profile"
+        shown = "The profile lists no education."
     else:
         message = "tender requires a postgraduate degree; none is shown in the profile's education"
-    return [_finding("EDUCATION_NOT_SHOWN", "question", message, ["tender.requires_postgraduate", "profile.education"])]
+        shown = "No postgraduate degree appears in the profile's education."
+    evidence = ["tender.requires_postgraduate", "profile.education"]
+    return [_finding("EDUCATION_NOT_SHOWN", "question", message, evidence, shown=shown)]
 
 
 def rule_duplicate_entries(pairs: list[tuple[str, str]]) -> list[Finding]:
@@ -366,6 +496,8 @@ def rule_duplicate_entries(pairs: list[tuple[str, str]]) -> list[Finding]:
             "info",
             f"{dropped} repeats {kept}; counted once",
             [kept, dropped],
+            kept=kept,
+            dropped=dropped,
         )
         for kept, dropped in pairs
     ]
@@ -381,7 +513,9 @@ def rule_implausible_profile(jobs: list[Job]) -> list[Finding]:
     if len(employers) < 2:
         return []
     message = f"profile shows top roles at {len(employers)} different employers at the same time"
-    return [_finding("IMPLAUSIBLE_PROFILE", "question", message, [job.source for job in top_roles])]
+    return [
+        _finding("IMPLAUSIBLE_PROFILE", "question", message, [job.source for job in top_roles], n=len(employers))
+    ]
 
 
 def _status(findings: list[Finding]) -> str:
@@ -447,10 +581,10 @@ def check_expert(
 
     if lookup.status != "found" or lookup.profile is None:
         if lookup.status == "ambiguous":
-            stop = rule_ambiguous_identity(lookup.candidate_count)
+            stop, label = rule_ambiguous_identity(lookup.candidate_count), NOT_COMPARED_AMBIGUOUS
         else:
-            stop = rule_no_profile_found(lookup.reason)
-        row_results, _ = _check_rows(claims, None, stop.code)
+            stop, label = rule_no_profile_found(lookup.reason), NOT_COMPARED
+        row_results, _ = _check_rows(claims, None, label)
         return ExpertResult(
             expert_id=claims.expert_id,
             status=_status(findings + [stop]),

@@ -95,7 +95,7 @@ class Lookup(BaseModel):
     status: Literal["found", "not_found", "ambiguous"]
     candidate_count: int = 0
     profile: Profile | None = None
-    reason: Literal["no_profile_url"] | None = None  # why no lookup was made, if none was
+    reason: Literal["no_profile_url", "lookup_failed"] | None = None  # why there is no profile
 
 
 class Finding(BaseModel):
@@ -103,6 +103,7 @@ class Finding(BaseModel):
     severity: Literal["question", "cannot_check", "info"]
     message: str  # factual, e.g. "documented 10.9 years vs claimed 15"
     evidence: list[str]  # sources, e.g. ["profile.past[1]", "cv.rows[2]"]
+    params: dict[str, Any] = {}  # values for the committee-question template
 
 
 class RowResult(BaseModel):
@@ -118,3 +119,11 @@ class ExpertResult(BaseModel):
     documented_similar_months: int | None
     findings: list[Finding]
     row_results: list[RowResult]  # one per CV row
+
+
+class FirmResult(BaseModel):
+    status: Literal["CONSISTENT", "QUESTIONS", "CANNOT_CHECK"]
+    records: list[dict[str, Any]]
+    headcount_range: tuple[int, float] | None  # (low, high); high may be infinity
+    findings: list[Finding]
+    lookup_note: str | None = None  # e.g. that a second name form was used
