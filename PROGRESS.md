@@ -298,7 +298,23 @@
   2. Each remaining person's jobs are scanned for a sector word in the title or employer.
   3. People with no such job are dropped, and the matching job is shown as evidence.
 
+## Find experts: custom roles
+- **Built:** the Position dropdown has "Custom role…" with role titles, optional sector words, minimum total years, minimum years in those titles, and region. The inputs become a position with the same shape as a tender position and run through the same finder, `union_months` maths and initials-only cards. `checker.py` is unchanged.
+- **Files:** `app/finder.py`, `app/server.py`, `static/index.html`, `tests/test_finder_custom.py`, `README.md`, `demo/DEMO_SCRIPT.md`, `credits.csv`.
+- **Test results:** `uv run pytest -q` gives 437 passed with mocked replies. In headless Edge, 22 of 22 checks passed with synthetic data, including hostile text shown safely. The one live run (data engineer or analytics engineer; fintech, payments or financial services; at least 5 years total and 3 in those titles; India; `limit=10`) cost 2.3 credits and found 21,786 matching records. Of the 10 returned, 1 met the year minimums and **0 remain** after the same-job sector check.
+- **Decisions:**
+  1. The sector words search role title, employer name and company industry, because industries are a fixed list and "fintech" is not one of them.
+  2. For custom roles, the sector word must be on a job that also has one of the role titles. The live run showed why: the one person who met the years matched only on a separate "VP Operations" job. Tender positions keep their earlier rule, where any job can give the sector evidence.
+  3. Inputs are checked before any paid call: at least one title, at most 10 titles or sector words, years from 0 to 50, and a place name for region.
+- **Known gaps:** the search can match the role and the sector on different jobs, so a page of paid results can shrink to nothing after the same-job check. Only the first page is read. Region must match the data's country name exactly. The visible label still says "the tender's rules", as requested, even for a custom role. `test_fallback_claims_still_match[X1]` failed once during this step because a Fresh audit had replaced the cached Claude reading with a shorter name, and it passed after a later Fresh run, so it depends on Claude's wording.
+- **How it works:**
+  1. The form's inputs are validated and turned into a position.
+  2. Crustdata returns people with those titles and sector words in the chosen country.
+  3. Deterministic code counts their years and keeps only people whose role-title job also shows the sector.
+
 ## Suggestions (ideas noted but not built)
+- Compare CV names in `test_fallback_claims_still_match` without bracketed notes, so a fresh Claude reading cannot change the result.
+- For custom roles, fetch more pages until enough people meet the same-job check, with a visible credit cap.
 - Put the sector words into the paid search filter, so credits are spent on relevant records rather than filtered out afterwards.
 - Narrow Find experts to highway and construction work (for example by employer industry) before showing it as more than a preview.
 - Darken the light theme's muted text (for example to `#6F6A60`) so small labels meet the 4.5:1 contrast guideline.

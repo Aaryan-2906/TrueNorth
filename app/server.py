@@ -80,6 +80,7 @@ class ReadTenderRequest(BaseModel):
 
 class FindExpertsRequest(BaseModel):
     position: str
+    custom: dict[str, Any] | None = None
     fresh: bool = False
 
 
@@ -454,16 +455,29 @@ def find_experts(http_request: Request, request: FindExpertsRequest) -> Response
     """Preview: public records that appear to meet a position's minimums. Nobody is contacted."""
     if _is_cross_site(http_request):
         return JSONResponse({"error": "Searches are only accepted from this page."}, status_code=403)
-    try:
-        known = cli._load_tender()["positions"]
-    except cli.InputError as exc:
-        return JSONResponse({"error": str(exc)}, status_code=500)
-    if request.position not in known:
-        return JSONResponse({"error": "Unknown position."}, status_code=422)
+    custom_position, region = None, finder.DEFAULT_REGION
+    if request.position == finder.CUSTOM_KEY:
+        try:
+            custom_position, region = finder.build_custom_position(request.custom or {})
+        except finder.FinderInputError as exc:
+            return JSONResponse({"error": str(exc)}, status_code=422)
+    else:
+        try:
+            known = cli._load_tender()["positions"]
+        except cli.InputError as exc:
+            return JSONResponse({"error": str(exc)}, status_code=500)
+        if request.position not in known:
+            return JSONResponse({"error": "Unknown position."}, status_code=422)
 
     def job(progress: cli.Progress) -> dict[str, Any]:
         ledger_start = report.ledger_row_count()
-        run = finder.find_candidates(request.position, fresh=True if request.fresh else None, progress=progress)
+        run = finder.find_candidates(
+            request.position,
+            region=region,
+            fresh=True if request.fresh else None,
+            progress=progress,
+            custom_position=custom_position,
+        )
         progress("writing", None, "Preparing the candidate cards")
         return {
             **finder.result_view(run),
