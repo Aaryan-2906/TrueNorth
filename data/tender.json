@@ -1,7 +1,8 @@
 {
   "_source": "NHAI RFP (April 2018): Consultancy Services for Authority's Engineer, Belekeri Port to Kumta-Sirsi Road (SH-69), Karnataka, Package I, Bharatmala Pariyojana Phase I. https://infracon.nic.in/WriteReadData/consultantprojectsAE/586_File1163110934.pdf",
-  "_verify": "TODO BEFORE SUNDAY: open the PDF, find Appendix-EC (CV evaluation criteria) and the key-personnel enclosure, and confirm every number below. These were extracted automatically and the minimum-requirements enclosure (Enclosure-B of the ToR) was not checked. Fix any number that differs and note the page.",
-  "_interpretation": "similar_title_keywords is OUR reading of 'Team Leader or similar capacity'. The committee decides what counts; the report says so.",
+  "_checked": "Every number below was checked against the RFP PDF on 22 Nov 2026. Page numbers are PDF pages, which match the printed page numbers. The source sentences are copied from the PDF text and saved in data/tender_source_excerpt.txt.",
+  "_note": "PDF typo: clause 11.1 on page 74 says 'Senior Quantity cum Material Expert', while pages 19 and 77 say 'Senior Quality cum Material Expert' and page 80 says 'SENIOR QUALITY/MATERIAL EXPERT'. It is treated here as Quality.",
+  "_interpretation": "similar_title_keywords come from the PDF's 'Similar Capacity includes' notes. Whether a title or an equivalent grade counts is for the committee to judge; the report says so.",
   "tender_id": "NHAI-AE-SH69-PKG1-2018",
   "procuring_agency": "National Highways Authority of India",
   "positions": {
@@ -11,38 +12,227 @@
       "min_similar_years": 5,
       "similar_title_keywords": [
         "team leader",
-        "project director"
+        "resident engineer",
+        "project manager",
+        "superintending engineer"
       ],
-      "requires_postgraduate": true
+      "postgraduate": "preferential",
+      "postgraduate_marks": 3,
+      "equivalent_grades": true,
+      "similar_capacity_wording": "Similar Capacity includes the following positions i) On behalf of Consultant: Team Leader/Resident Engineer (Construction Supervision/IE/AE/DPR). ii) On behalf of Contractor: Project Manager (Construction/Construction Supervision) iii) In Government Organizations: Superintending Engineer (or equivalent) and above",
+      "_source_page": 78,
+      "_source_sentences": {
+        "min_total_years": {
+          "page": 78,
+          "text": "Total Professional Experience of 12 years in handling Highway Projects."
+        },
+        "min_similar_years": {
+          "page": 78,
+          "text": "At least 5 years experience as Team Leader/Project Manager or similar capacity in Highway Development Project."
+        },
+        "postgraduate": {
+          "page": 78,
+          "text": "Post Graduate Degree in Construction Management/Transportation/Highway Engineering//Structural Engineering/ any specialised stream of Civil Engineering ."
+        },
+        "postgraduate_marks": {
+          "page": 24,
+          "text": "II) Post Graduation in Management/ 03"
+        },
+        "similar_capacity": {
+          "page": 26,
+          "text": "Similar Capacity includes the following positions i) On behalf of Consultant: Team Leader/Resident Engineer (Construction Supervision/IE/AE/DPR). ii) On behalf of Contractor: Project Manager (Construction/Construction Supervision) iii) In Government Organizations: Superintending Engineer (or equivalent) and above"
+        }
+      }
     },
     "resident_engineer": {
       "name": "Resident cum Highway Engineer",
       "min_total_years": 10,
       "min_similar_years": 5,
       "similar_title_keywords": [
-        "resident engineer"
+        "resident engineer",
+        "highway engineer",
+        "project manager",
+        "executive engineer"
       ],
-      "requires_postgraduate": true
+      "postgraduate": "preferential",
+      "postgraduate_marks": 4,
+      "equivalent_grades": true,
+      "similar_capacity_wording": "Similar Capacity includes the following positions i) On behalf of Consultant: Resident / Highway Engineer ii) On behalf of Contractor: Resident Engineer/ Highway Engineer / Project Manager (Construction/Construction Supervision) iii) In Government Organizations: Executive Engineer (or equivalent) and above",
+      "_source_page": 79,
+      "_source_sentences": {
+        "min_total_years": {
+          "page": 79,
+          "text": "Professional Experience of 10 years in supervision of Highway Projects."
+        },
+        "min_similar_years": {
+          "page": 79,
+          "text": "5 years experience in similar capacity in Highway Development Project."
+        },
+        "postgraduate": {
+          "page": 79,
+          "text": "Post Graduate Degree in Transportation/Highway Engineering/Structural Engineering/Geotechnical Engineering/any specialised stream of Civil Engineering."
+        },
+        "postgraduate_marks": {
+          "page": 26,
+          "text": "II) Post Graduation in 04"
+        },
+        "similar_capacity": {
+          "page": 28,
+          "text": "Similar Capacity includes the following positions i) On behalf of Consultant: Resident / Highway Engineer ii) On behalf of Contractor: Resident Engineer/ Highway Engineer / Project Manager (Construction/Construction Supervision) iii) In Government Organizations: Executive Engineer (or equivalent) and above"
+        }
+      }
     },
     "bridge_engineer": {
       "name": "Bridge/Structural Engineer",
       "min_total_years": 10,
       "min_similar_years": 5,
       "similar_title_keywords": [
-        "bridge",
-        "structural"
+        "bridge engineer",
+        "project manager (bridges)",
+        "executive engineer"
       ],
-      "requires_postgraduate": true
+      "postgraduate": "preferential",
+      "postgraduate_marks": 4,
+      "equivalent_grades": false,
+      "similar_capacity_wording": "Similar Capacity includes the following positions i) On behalf of Consultant/Contractor: Bridge Engineer/Project Manager (Bridges) ii) On behalf of Government: Executive Engineer",
+      "_source_page": 79,
+      "_source_sentences": {
+        "min_total_years": {
+          "page": 79,
+          "text": "Professional Experience of 10 years in handling Highway/Bridge projects."
+        },
+        "min_similar_years": {
+          "page": 79,
+          "text": "5 years experience in Construction / Construction Supervision of bridge / interchange / any other structures."
+        },
+        "postgraduate": {
+          "page": 80,
+          "text": "Post Graduate Degree in Structural Engineering."
+        },
+        "postgraduate_marks": {
+          "page": 28,
+          "text": "II) Post Graduation in Structural 04"
+        },
+        "similar_capacity": {
+          "page": 29,
+          "text": "Similar Capacity includes the following positions i) On behalf of Consultant/Contractor: Bridge Engineer/Project Manager (Bridges) ii) On behalf of Government: Executive Engineer"
+        }
+      }
+    },
+    "pavement_specialist": {
+      "name": "Senior Pavement Specialist",
+      "min_total_years": 10,
+      "min_similar_years": 5,
+      "similar_title_keywords": [
+        "pavement specialist",
+        "pavement engineer",
+        "pavement expert",
+        "highway engineer",
+        "executive engineer"
+      ],
+      "postgraduate": "preferential",
+      "postgraduate_marks": 4,
+      "equivalent_grades": false,
+      "similar_capacity_wording": "Similar Capacity includes the following positions i) On behalf of Consultant/Contractor: Pavement Specialist/ Pavement Engineer/ Pavement Expert / Highway Engineer ii) On behalf of Government: Executive Engineer",
+      "_source_page": 80,
+      "_source_sentences": {
+        "min_total_years": {
+          "page": 80,
+          "text": "Professional Experience of 10 years in Pavement Design / Pavement Construction / Pavement Maintenance of Highways / Roads / Airfield Runways"
+        },
+        "min_similar_years": {
+          "page": 80,
+          "text": "Experience of 5 years in similar capacity in Construction / Construction Supervision of 2/4/6 laning** of major highway projects."
+        },
+        "postgraduate": {
+          "page": 80,
+          "text": "Post Graduate Degree in Highway Engineering / Pavement Engineering /Transportation"
+        },
+        "postgraduate_marks": {
+          "page": 30,
+          "text": "II) Post Graduation in 04"
+        },
+        "similar_capacity": {
+          "page": 31,
+          "text": "Similar Capacity includes the following positions i) On behalf of Consultant/Contractor: Pavement Specialist/ Pavement Engineer/ Pavement Expert / Highway Engineer ii) On behalf of Government: Executive Engineer"
+        }
+      }
     },
     "quality_material_expert": {
       "name": "Senior Quality cum Material Expert",
       "min_total_years": 10,
       "min_similar_years": 5,
       "similar_title_keywords": [
-        "material",
-        "quality"
+        "quality expert",
+        "material engineer",
+        "material expert",
+        "quality engineer",
+        "geo-technical expert",
+        "executive engineer"
       ],
-      "requires_postgraduate": true
+      "postgraduate": "preferential",
+      "postgraduate_marks": 4,
+      "equivalent_grades": false,
+      "similar_capacity_wording": "Similar Capacity includes the following positions i) On behalf of Consultant/Contractor: Quality Expert/ Material Engineer/Material Expert/ Quality Engineer/ Geo-Technical Expert. ii) On behalf of Government: Executive Engineer",
+      "_source_page": 81,
+      "_source_sentences": {
+        "min_total_years": {
+          "page": 81,
+          "text": "Professional Experience of 10 years in handling Highway projects."
+        },
+        "min_similar_years": {
+          "page": 81,
+          "text": "Experience of at least 5 years as Senior Quality/ Material Expert or in similar capacity in Construction / Construction Supervision /major highway projects"
+        },
+        "postgraduate": {
+          "page": 81,
+          "text": "Post Graduate Degree in Geotechnical Engineering / Foundation Engineering / Soil Mechanics."
+        },
+        "postgraduate_marks": {
+          "page": 32,
+          "text": "II) Post Graduation in Geotechnical 04"
+        },
+        "similar_capacity": {
+          "page": 33,
+          "text": "Similar Capacity includes the following positions i) On behalf of Consultant/Contractor: Quality Expert/ Material Engineer/Material Expert/ Quality Engineer/ Geo-Technical Expert. ii) On behalf of Government: Executive Engineer"
+        }
+      }
+    },
+    "road_safety_expert": {
+      "name": "Road Safety Expert",
+      "min_total_years": 10,
+      "min_similar_years": 5,
+      "similar_title_keywords": [
+        "road safety expert",
+        "executive engineer"
+      ],
+      "postgraduate": "preferential",
+      "postgraduate_marks": 4,
+      "equivalent_grades": true,
+      "similar_capacity_wording": "Similar Capacity includes the following positions i) On behalf of Consultant/Contractor: Road Safety Expert ii) In Government Organizations: Executive Engineer (or equivalent) and above",
+      "_source_page": 81,
+      "_source_sentences": {
+        "min_total_years": {
+          "page": 81,
+          "text": "Professional Experience of 10 years in handling Highway projects."
+        },
+        "min_similar_years": {
+          "page": 81,
+          "text": "Minimum 5 years experience in Road Safety works of Major Highway Projects (4 / 6 laning projects)"
+        },
+        "postgraduate": {
+          "page": 81,
+          "text": "Post Graduate Degree in Traffic Transportation/Safety Engineering."
+        },
+        "postgraduate_marks": {
+          "page": 33,
+          "text": "II) Post Graduation in 04"
+        },
+        "similar_capacity": {
+          "page": 34,
+          "text": "Similar Capacity includes the following positions i) On behalf of Consultant/Contractor: Road Safety Expert ii) In Government Organizations: Executive Engineer (or equivalent) and above"
+        }
+      }
     }
   }
 }

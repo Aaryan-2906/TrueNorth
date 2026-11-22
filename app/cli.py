@@ -10,14 +10,15 @@ from typing import Any, Callable
 
 from pydantic import ValidationError
 
-from app import checker, config, crustdata, firm, normalise, parse_cv, report
+from app import checker, config, crustdata, firm, normalise, parse_cv, parse_tender, report
 from app.models import Claims, CvRow, ExpertResult, Lookup
 
 DATA_DIR = config.ROOT_DIR / "data"
 BID_DIR = DATA_DIR / "bid"
 REQUIRED_EXPERT_FIELDS = ("id", "name", "proposed_position", "employment_with_bidder", "cv")
 EMPLOYMENT_TYPES = {"full_time", "associate", "intermittent"}
-REQUIRED_POSITION_FIELDS = ("min_total_years", "min_similar_years", "similar_title_keywords")
+REQUIRED_POSITION_FIELDS = ("min_total_years", "min_similar_years", "similar_title_keywords", "postgraduate")
+POSTGRADUATE_LEVELS = {"required", "preferential", "none"}
 CV_READ_ERRORS = (parse_cv.CvParseError, OSError, UnicodeDecodeError)
 
 # progress(stage, expert id or None, detail, external=False when no outside service is contacted).
@@ -42,6 +43,7 @@ class AuditRun:
     report_path: Path
     errors: list[str] = field(default_factory=list)
     cv_problems: dict[str, str] = field(default_factory=dict)
+    tender_id: str | None = None
 
 
 @dataclass
@@ -73,8 +75,8 @@ def _load_json(path: Path) -> Any:
         raise InputError(f"{_display(path)}: could not be read as text.") from exc
 
 
-def _load_tender() -> dict[str, Any]:
-    path = DATA_DIR / "tender.json"
+def _load_tender(path: Path | None = None) -> dict[str, Any]:
+    path = path or DATA_DIR / "tender.json"
     tender = _load_json(path)
     positions = tender.get("positions") if isinstance(tender, dict) else None
     if not isinstance(positions, dict) or not positions:
@@ -83,6 +85,17 @@ def _load_tender() -> dict[str, Any]:
         for field in REQUIRED_POSITION_FIELDS:
             if not isinstance(position, dict) or field not in position:
                 raise InputError(f"{_display(path)}: position '{key}' is missing field '{field}'.")
+        if position["postgraduate"] not in POSTGRADUATE_LEVELS:
+            known = ", ".join(sorted(POSTGRADUATE_LEVELS))
+            raise InputError(f"{_display(path)}: position '{key}' has unknown postgraduate '{position['postgraduate']}'. Known: {known}.")
+    return tender
+
+
+def _load_approved_tender(path: Path) -> dict[str, Any]:
+    """Only a tender a person has approved may replace data/tender.json."""
+    tender = _load_tender(path)
+    if tender.get("_approved") is not True:
+        raise InputError(f"{_display(path)}: this is not an approved tender. Run read-tender and approve it first.")
     return tender
 
 
@@ -159,7 +172,10 @@ def _lookup_url(url: str, fresh: bool | None) -> tuple[Lookup, str]:
     latest = crustdata.run_stats()["lookups"][-1]
     source = "live" if latest["source"] == "live" else "from cache"
     origin = f"{source} (fetched {latest['fetched_at']})"
-    unexpected = "/person/enrich: the reply had an unexpected shape; it may have been billed, not retried."
+    unexpected = (
+        "/person/enrich: lookup did not complete: it may have been billed, so it was not retried "
+        "(the reply had an unexpected shape)."
+    )
     if not isinstance(reply, list) or not all(isinstance(item, dict) for item in reply):
         raise crustdata.CrustdataError(unexpected)
     if len(reply) > 1:
@@ -204,7 +220,9 @@ def _cv_problem(exc: Exception) -> str:
     return str(exc)
 
 
-def _unread_entry(expert: dict[str, Any], problem: str) -> report.ExpertEntry:
+def _unread_entry(
+    expert: dict[str, Any], problem: str, position: dict[str, Any] | None = None
+) -> report.ExpertEntry:
     """An expert whose CV could not be read: nothing is checked and no paid lookup is made."""
     claims = Claims(
         expert_id=expert["id"],
@@ -218,7 +236,7 @@ def _unread_entry(expert: dict[str, Any], problem: str) -> report.ExpertEntry:
     file = _display(BID_DIR / expert["cv"])
     result = checker.cv_not_read_result(expert["id"], file, problem)
     return report.ExpertEntry(
-        expert, claims, Lookup(status="not_found"), result, "not looked up (CV could not be read)"
+        expert, claims, Lookup(status="not_found"), result, "not looked up (CV could not be read)", position
     )
 
 
@@ -312,7 +330,7 @@ def _audit_experts(
         expert_id = expert["id"]
         if expert_id in cv_problems:
             progress("checking", expert_id, f"{expert_id}: the CV could not be read, so it was not checked")
-            entries.append(_unread_entry(expert, cv_problems[expert_id]))
+            entries.append(_unread_entry(expert, cv_problems[expert_id], _position(expert, tender)))
             continue
         url = expert.get("profile_url")
         if not url:
@@ -342,7 +360,7 @@ def _audit_experts(
         claims = claims_by_id[expert_id]
         progress("checking", expert_id, _checking_detail(expert_id, claims, lookup))
         result = _check(expert, claims, lookup, tender, bid)
-        entries.append(report.ExpertEntry(expert, claims, lookup, result, origin))
+        entries.append(report.ExpertEntry(expert, claims, lookup, result, origin, _position(expert, tender)))
     return entries
 
 
@@ -369,9 +387,14 @@ def _audit_firm(
     return result, full_time
 
 
-def audit_bid(fresh: bool | None, progress: Progress = _silent, bid_path: Path | None = None) -> AuditRun:
+def audit_bid(
+    fresh: bool | None,
+    progress: Progress = _silent,
+    bid_path: Path | None = None,
+    tender_path: Path | None = None,
+) -> AuditRun:
     """Run every expert and the firm, and write the report. The CLI and the web UI both call this."""
-    tender = _load_tender()
+    tender = _load_approved_tender(tender_path) if tender_path else _load_tender()
     bid = _load_bid(tender, bid_path)
     ledger_start = report.ledger_row_count()
     errors: list[str] = []
@@ -392,11 +415,11 @@ def audit_bid(fresh: bool | None, progress: Progress = _silent, bid_path: Path |
     timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     text = report.render_report(bid, tender, entries, firm_result, full_time, ledger_start, errors, timestamp)
     path = report.write_report(text)
-    return AuditRun(bid, entries, firm_result, full_time, ledger_start, path, errors, cv_problems)
+    return AuditRun(bid, entries, firm_result, full_time, ledger_start, path, errors, cv_problems, tender.get("tender_id"))
 
 
-def run_audit(fresh: bool | None) -> int:
-    run = audit_bid(fresh)
+def run_audit(fresh: bool | None, tender_path: Path | None = None) -> int:
+    run = audit_bid(fresh, tender_path=tender_path)
     for expert_id, problem in run.cv_problems.items():
         expert = next(e for e in run.bid["experts"] if e["id"] == expert_id)
         print(f"CV could not be read for {expert_id} ({_display(BID_DIR / expert['cv'])}): {problem}.", file=sys.stderr)
@@ -446,7 +469,8 @@ def check_one_cv(
     progress("checking", cv_id, f"Checking {_rows_text(len(claims.rows))} against {target}")
     position = tender["positions"][position_key] if position_key else None
     result = checker.check_expert(lookup, claims, position, None, None, today=config.TODAY)
-    return CvRun(report.ExpertEntry({"id": cv_id}, claims, lookup, result, origin), ledger_start, lookup_error)
+    entry = report.ExpertEntry({"id": cv_id}, claims, lookup, result, origin, position)
+    return CvRun(entry, ledger_start, lookup_error)
 
 
 def run_check_cv(path_text: str, position_key: str | None, profile_url: str | None, fresh: bool | None) -> int:
@@ -469,6 +493,52 @@ def run_check_cv(path_text: str, position_key: str | None, profile_url: str | No
     return 0
 
 
+def _shown(value: Any) -> str:
+    return "not stated" if value is None else f"{value:g}"
+
+
+def format_proposal(positions: dict[str, dict[str, Any]]) -> str:
+    lines = [f"Proposed positions ({len(positions)}). Nothing is used until you approve."]
+    for key, position in positions.items():
+        sources = position["_source_sentences"]
+        lines += ["", f"{key}: {position['name']}"]
+        for label, field in (("Minimum total years", "min_total_years"), ("Minimum similar years", "min_similar_years")):
+            lines.append(f"  {label}: {_shown(position[field])}")
+            if sources.get(field):
+                lines.append(f"    source: {sources[field]['text']}")
+        lines.append(f"  Postgraduate: {position['postgraduate']} (marks: {_shown(position['postgraduate_marks'])})")
+        for field in ("postgraduate", "postgraduate_marks"):
+            if sources.get(field):
+                lines.append(f"    source: {sources[field]['text']}")
+        lines.append(f"  Similar-role titles (proposed): {', '.join(position['similar_title_keywords'])}")
+        if position["similar_capacity_wording"]:
+            lines.append(f"    source: {position['similar_capacity_wording']}")
+    return "\n".join(lines)
+
+
+def run_read_tender(path_text: str, fresh: bool | None) -> int:
+    """Propose positions from a tender's text. Only an explicit y writes the approved file."""
+    path = Path(path_text)
+    try:
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        positions = parse_tender.parse_tender(text, fresh)
+    except (parse_tender.TenderParseError, OSError) as exc:
+        problem = "could not be opened" if isinstance(exc, OSError) else str(exc)
+        print(f"Tender could not be read ({path}): {problem}.", file=sys.stderr)
+        return 1
+    print(format_proposal(positions))
+    try:
+        answer = input("Approve? [y/N] ")
+    except EOFError:
+        answer = ""
+    if answer.replace("﻿", "").strip().lower() != "y":  # PowerShell pipes can prepend a byte-order mark.
+        print("Not approved. Nothing was written.")
+        return 0
+    approved = parse_tender.approve(positions, path.name)
+    print(f"Approved. Written to {approved}. Use it with: uv run python -m app.cli audit --tender {_display(approved)}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
@@ -479,7 +549,11 @@ def main(argv: list[str] | None = None) -> int:
     expert.add_argument("--fresh", action="store_true", help="skip reading the cache (paid call)")
     audit = commands.add_parser("audit", help="check every expert and the firm, and write out/report.md")
     audit.add_argument("--fresh", action="store_true", help="skip reading the cache (paid calls)")
-    check_cv = commands.add_parser("check-cv", help="check one CV file (.md or .txt)")
+    audit.add_argument("--tender", help="an approved tender file written by read-tender")
+    read_tender = commands.add_parser("read-tender", help="propose positions from a tender's text, for approval")
+    read_tender.add_argument("path")
+    read_tender.add_argument("--fresh", action="store_true", help="skip reading the cache")
+    check_cv =commands.add_parser("check-cv", help="check one CV file (.md or .txt)")
     check_cv.add_argument("path")
     check_cv.add_argument("--position", help="key in data/tender.json; omit for Career Check mode")
     check_cv.add_argument("--profile-url", help="profile to compare against (1 paid credit)")
@@ -491,7 +565,9 @@ def main(argv: list[str] | None = None) -> int:
             return run_expert(args.expert_id, fresh)
         if args.command == "check-cv":
             return run_check_cv(args.path, args.position, args.profile_url, fresh)
-        return run_audit(fresh)
+        if args.command == "read-tender":
+            return run_read_tender(args.path, fresh)
+        return run_audit(fresh, Path(args.tender) if args.tender else None)
     except InputError as exc:
         print(f"Input problem: {exc}", file=sys.stderr)
         return 2

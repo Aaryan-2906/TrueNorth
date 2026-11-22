@@ -91,7 +91,7 @@ before using it; do not guess.
 | 402 | Credits have run out (confirmed by the event handbook): check `GET /account/credits` or ask an organiser. Not retried. |
 | 403 | The key may not use this endpoint: ask an organiser (`GET /account/endpoints`). Not retried. |
 | 429 | Rate limited: waits 5s and retries up to 3 times, then says to wait a minute and run again. |
-| Timeout, lost connection or 5xx | "lookup failed: may have been billed, not retried". Logged in `credits.csv` with a blank credit figure. |
+| Timeout, lost connection or 5xx | "lookup did not complete: it may have been billed, so it was not retried". Logged in `credits.csv` with a blank credit figure. |
 
 These replies were tested with fake responses. The meaning of 402 (credits run out) is confirmed by the event handbook.
 

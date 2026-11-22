@@ -140,10 +140,13 @@ def _write_cache(path: Path, raw: str) -> None:
     os.replace(temp, path)
 
 
-def _notify(source: str, started: float, fetched_at: str | None, status: str) -> None:
+def notify_call(
+    source: str, started: float, fetched_at: str | None, status: str, service: str = "Claude CV reading"
+) -> None:
     if call_listener is not None:
         call_listener(
             {
+                "service": service,
                 "source": source,
                 "fetched_at": fetched_at,
                 "ms": round((time.perf_counter() - started) * 1000),
@@ -161,12 +164,23 @@ def _call_model(client: anthropic.Anthropic, text: str, correction: str | None) 
     content = f"<cv>\n{text}\n</cv>"
     if correction:
         content += f"\n\nYour previous answer was rejected. Fix this and answer again: {correction}"
+    return call_llm(client, SYSTEM_PROMPT, content, OUTPUT_SCHEMA)
+
+
+def call_llm(
+    client: anthropic.Anthropic,
+    system: str,
+    content: str,
+    schema: dict[str, Any],
+    service: str = "Claude CV reading",
+) -> str:
+    """One structured-output call. Raises CvParseError on any API problem or early stop."""
     request: dict[str, Any] = {
         "model": config.ANTHROPIC_MODEL,
         "max_tokens": MAX_TOKENS,
-        "system": SYSTEM_PROMPT,
+        "system": system,
         "messages": [{"role": "user", "content": content}],
-        "output_config": {"effort": "medium", "format": {"type": "json_schema", "schema": OUTPUT_SCHEMA}},
+        "output_config": {"effort": "medium", "format": {"type": "json_schema", "schema": schema}},
     }
     if config.ANTHROPIC_MODEL in FALLBACK_MODELS:
         request.update(betas=[FALLBACK_BETA], fallbacks="default")
@@ -174,9 +188,9 @@ def _call_model(client: anthropic.Anthropic, text: str, correction: str | None) 
     try:
         response = client.beta.messages.create(**request)
     except anthropic.AnthropicError as exc:
-        _notify("live", started, None, type(exc).__name__)
+        notify_call("live", started, None, type(exc).__name__, service)
         raise CvParseError(f"the Anthropic API call failed ({type(exc).__name__})") from exc
-    _notify("live", started, datetime.now(timezone.utc).isoformat(timespec="seconds"), str(response.stop_reason))
+    notify_call("live", started, datetime.now(timezone.utc).isoformat(timespec="seconds"), str(response.stop_reason), service)
     if response.stop_reason in {"refusal", "max_tokens"}:
         raise CvParseError(f"the model stopped early ({response.stop_reason})")
     answer = next((block.text for block in response.content if block.type == "text"), None)
@@ -257,7 +271,7 @@ def parse_cv(
     if extract is not None:
         fetched = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc)
         source = "cache"
-        _notify("cache", started, fetched.isoformat(timespec="seconds"), "cached")
+        notify_call("cache", started, fetched.isoformat(timespec="seconds"), "cached")
     else:
         extract = _extract(text, path)
         fetched = datetime.now(timezone.utc)

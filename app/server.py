@@ -7,6 +7,7 @@ import json
 import logging
 import queue
 import threading
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterator
@@ -15,11 +16,12 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
 
-from app import cli, config, crustdata, parse_cv, report
+from app import cli, config, crustdata, parse_cv, parse_tender, report
 from app.models import FirmResult
 
 STATIC_DIR = config.ROOT_DIR / "static"
 MAX_CV_CHARACTERS = 200_000
+MAX_TENDER_CHARACTERS = 1_000_000
 PASTED_CV_ID = "pasted_cv"
 SERVICE_NAMES = {
     "/person/enrich": "Crustdata /person/enrich",
@@ -32,6 +34,9 @@ app = FastAPI(title="TrueNorth")
 # Lookup counts, listeners and the report file are shared, so only one run happens at a time.
 _run_lock = threading.Lock()
 
+# Proposals awaiting a person's decision. Approval sends only a token, so the browser cannot alter the numbers.
+_proposals: dict[str, dict[str, Any]] = {}
+
 
 class CheckCvRequest(BaseModel):
     cv_text: str = Field(max_length=MAX_CV_CHARACTERS)
@@ -43,6 +48,16 @@ class CheckCvRequest(BaseModel):
 class AuditRequest(BaseModel):
     bid: str = "data/bid/bid.json"
     fresh: bool = False
+    use_approved_tender: bool = False
+
+
+class ReadTenderRequest(BaseModel):
+    text: str = Field(max_length=MAX_TENDER_CHARACTERS)
+    fresh: bool = False
+
+
+class ApproveTenderRequest(BaseModel):
+    token: str
 
 
 def _source_label(call: dict[str, Any]) -> str:
@@ -66,7 +81,7 @@ def _crustdata_call_event(call: dict[str, Any], expert: str | None) -> dict[str,
 
 def _llm_call_event(call: dict[str, Any], expert: str | None) -> dict[str, Any]:
     return {
-        "service": "Claude CV reading",
+        "service": call.get("service", "Claude CV reading"),
         "source": _source_label(call),
         "credits": None,
         "ms": call["ms"],
@@ -93,6 +108,7 @@ def _audit_result(run: cli.AuditRun) -> dict[str, Any]:
     return {
         "ok": True,
         "kind": "audit",
+        "tender_id": run.tender_id,
         "headline": report.headline(run.entries, run.firm_result),
         "counts": counts,
         "overall": _overall_status(counts),
@@ -157,6 +173,8 @@ def _run_job(job: Callable[[cli.Progress], dict[str, Any]], events: "queue.Queue
         events.put(_sse("result", result))
     except cli.InputError as exc:
         _report_problem(stage, events, str(exc))
+    except parse_tender.TenderParseError as exc:
+        _report_problem(stage, events, f"The tender could not be read: {exc}.")
     except cli.CV_READ_ERRORS as exc:
         _report_problem(stage, events, f"CV could not be read: {cli._cv_problem(exc)}.")
     except Exception as exc:  # The browser gets a clean message; the details stay in the server log.
@@ -235,9 +253,56 @@ def check_cv(request: CheckCvRequest) -> Response:
 def audit(request: AuditRequest) -> Response:
     def job(progress: cli.Progress) -> dict[str, Any]:
         path = _resolve_bid(request.bid)
-        return _audit_result(cli.audit_bid(True if request.fresh else None, progress, path))
+        tender_path = parse_tender.APPROVED_PATH if request.use_approved_tender else None
+        return _audit_result(cli.audit_bid(True if request.fresh else None, progress, path, tender_path))
 
     return _stream(job)
+
+
+@app.post("/api/read-tender")
+def read_tender(request: ReadTenderRequest) -> Response:
+    """Propose positions only. Nothing is used until /api/tender/approve is called."""
+
+    def job(progress: cli.Progress) -> dict[str, Any]:
+        progress("reading_tender", None, f"Reading the tender text ({len(request.text)} characters)")
+        positions = parse_tender.parse_tender(request.text, True if request.fresh else None)
+        progress("writing", None, "Preparing the proposed positions for approval")
+        token = uuid.uuid4().hex
+        _proposals.clear()
+        _proposals[token] = positions
+        count = len(positions)
+        noun = "position" if count == 1 else "positions"
+        return {
+            "ok": True,
+            "kind": "tender",
+            "headline": f"{count} proposed {noun}. Nothing is used until you approve.",
+            "overall": None,
+            "token": token,
+            "positions": positions,
+        }
+
+    return _stream(job)
+
+
+@app.post("/api/tender/approve")
+def approve_tender(request: ApproveTenderRequest) -> Response:
+    positions = _proposals.get(request.token)
+    if positions is None:
+        return JSONResponse({"error": "That proposal is no longer available. Please read the tender again."}, status_code=404)
+    path = parse_tender.approve(positions, "pasted tender text")
+    _proposals.clear()
+    return JSONResponse({"ok": True, "approved": _approved_info(path)})
+
+
+def _approved_info(path: Path) -> dict[str, Any] | None:
+    """A summary of the approved tender on disk, if there is a valid one."""
+    if not path.exists():
+        return None
+    try:
+        tender = cli._load_approved_tender(path)
+    except cli.InputError:
+        return None
+    return {"positions": len(tender["positions"]), "approved_at": tender.get("_approved_at")}
 
 
 @app.get("/api/options")
@@ -249,7 +314,9 @@ def options() -> Response:
         return JSONResponse({"error": str(exc)}, status_code=500)
     positions = [{"key": key, "name": value.get("name", key)} for key, value in tender["positions"].items()]
     bids = [_bid_label(path) for path in sorted(cli.BID_DIR.glob("*.json")) if _is_bid_file(path)]
-    return JSONResponse({"positions": positions, "bids": bids})
+    return JSONResponse(
+        {"positions": positions, "bids": bids, "approved_tender": _approved_info(parse_tender.APPROVED_PATH)}
+    )
 
 
 @app.get("/api/report.html")

@@ -81,6 +81,10 @@ TEMPLATES = {
     "EDUCATION_NOT_SHOWN": (
         "The tender asks for a postgraduate degree. {shown} Please ask for the degree certificate."
     ),
+    "POSTGRADUATE_PREFERENTIAL": (
+        "Postgraduate degree is a preferential qualification{worth}; none shown on the profile. "
+        "This affects scoring, not eligibility."
+    ),
     "DUPLICATE_ENTRY": "The profile repeats one job ({kept} and {dropped}). It was counted once.",
     "IMPLAUSIBLE_PROFILE": (
         "The profile shows senior leadership roles at {n} organisations at the same time. Profile data can be "

@@ -163,7 +163,8 @@ Thresholds: `CLAIM_GAP_MONTHS = 24`.
 | `CURRENT_ROLE_ELSEWHERE` | question | any current job at an employer that is not the bidder (availability question) |
 | `OVERLAPPING_CURRENT_ROLES` | question | current jobs at ≥ 2 different employers |
 | `EXPERT_NOT_AT_FIRM` | question | bid says `full_time` and no current job is at the bidder |
-| `EDUCATION_NOT_SHOWN` | question | position requires postgraduate and no education entry's degree matches `m.tech mtech m.e. m.e master m.sc msc post graduate postgraduate pg` (case-insensitive, word-ish match). If the education list is empty, message says "no education listed on profile". |
+| `EDUCATION_NOT_SHOWN` | question | position has `postgraduate: "required"` and no education entry's degree matches `m.tech mtech m.e. m.e master m.sc msc post graduate postgraduate pg` (case-insensitive, word-ish match). If the education list is empty, message says "no education listed on profile". |
+| `POSTGRADUATE_PREFERENTIAL` | info | position has `postgraduate: "preferential"` and no degree matches the same list. A note on scoring, never a question. |
 | `DUPLICATE_ENTRY` | info | see §4 |
 | `IMPLAUSIBLE_PROFILE` | question | ≥ 2 current jobs at different employers whose titles contain CEO/COO/CFO/CTO/Chief/President/Board (founder/owner excluded) |
 

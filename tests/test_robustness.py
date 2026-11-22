@@ -17,7 +17,7 @@ from app import cli, config, crustdata, parse_cv, report
 ROOT = Path(__file__).resolve().parent.parent
 CV = "Name: Expert\nTotal experience: 5 years\nFrom Jan 2020 to Present: Acme, Engineer\n"
 RECIPE = "Banana bread\n2 cups flour, 3 ripe bananas, 1 egg.\nMix, pour into a tin and bake for an hour.\n"
-TIMEOUT_TEXT = "lookup failed: may have been billed, not retried"
+TIMEOUT_TEXT = "lookup did not complete: it may have been billed, so it was not retried"
 
 
 def extract_from_cv(text):

@@ -162,6 +162,23 @@
   2. The page only displays those events and the final result, escaping all CV text so it can never become markup.
   3. Pip's position, pose and caption come directly from the stage events, so it cannot show progress that did not happen.
 
+## Step 09a: corrected tender, tender reading and approval
+- **Built:** `data/tender.json` corrected from the NHAI RFP (six positions, the PDF's similar-capacity titles, source pages and exact sentences), postgraduate levels, `parse_tender`, `read-tender`, `audit --tender`, and a "Read a tender" box with an Approve button in the UI.
+- **Files:** `data/tender.json`, `data/tender_source_excerpt.txt`, `data/golden/tender_golden.json`, `app/parse_tender.py`, `app/checker.py`, `app/questions.py`, `app/report.py`, `app/parse_cv.py`, `app/cli.py`, `app/server.py`, `app/crustdata.py`, `static/index.html`, `docs/SPEC.md`, `docs/CRUSTDATA.md`, `tests/test_tender.py`, `tests/test_golden.py`, `tests/test_questions.py`, `tests/test_robustness.py`.
+- **What the PDF changed:** all year minimums were right. Postgraduate is preferential for every position (3 marks for Team Leader, 4 for the others), not required. Similar-role titles were too narrow, and Senior Pavement Specialist and Road Safety Expert were missing. The Quality/Quantity typo on page 74 is recorded in `_note`.
+- **Test results:** `uv run pytest -q` passes. All 17 golden cases pass against the frozen `tender_golden.json`, and `expert_cases.json` was not edited. Four fresh live readings of the excerpt matched `tender.json` on all six positions. In headless Edge, reading, approving and auditing with the approved tender worked. No Crustdata credits were spent. The normal audit differs from the previous report only by two "Equivalent grades" notes, on X3 and X4.
+- **Decisions:**
+  1. A number is accepted only if its source sentence is verbatim in the tender and contains that exact number, so "5" does not match "5.5".
+  2. Similar-role keywords are derived by code from the PDF's wording and marked "proposed". The LLM does not choose them.
+  3. `audit --tender` refuses any file that was not written by an approval. The UI approves by a one-time token, so the browser cannot change the numbers.
+  4. A tender with no stated minimum skips that rule instead of guessing.
+  5. "Preferential" produces an info note only, so it never changes an expert's status or adds a question.
+- **Known gaps:** only text can be pasted or read; a tender PDF must be converted first. Keyword matching on titles cannot judge "or equivalent and above" grades, so the report leaves those to the committee. The experience type in the tender ("in Highway Projects") is not checked against each job. LLM token cost is not in `credits.csv`.
+- **How it works:**
+  1. The LLM copies each position's requirements and the sentence each number came from.
+  2. Python rejects anything not found verbatim, then derives the similar-role titles from the tender's own definition.
+  3. A person reviews the numbers with their sources, and only an explicit approval writes the file an audit can use.
+
 ## Suggestions (ideas noted but not built)
-- Add the web UI command to the README's "How to run it" and "How it's built", and credit FastAPI, uvicorn, Tailwind, Inter and JetBrains Mono under "Open-source and tools".
+- Check whether each job's sector matches the tender's wording ("in Highway Projects"), since total years currently count all jobs.
 - SPEC §4 collapses same-employer, same-date jobs even when titles differ, which could hide a title a CV row should match. Consider keeping both titles.

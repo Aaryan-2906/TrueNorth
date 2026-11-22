@@ -1,0 +1,834 @@
+Excerpt from the NHAI Request for Proposal for Authority's Engineer (SH-69, Package I).
+Source: https://infracon.nic.in/WriteReadData/consultantprojectsAE/586_File1163110934.pdf
+PDF sha256: bebe03656ae35015d1c1f7dae2bd3705f495e457a331edb6828dd92ea80abb5e
+Text extracted by pdftotext. Page numbers are PDF pages, which match the printed page numbers.
+
+=== [PDF page 74] Clause 11.1: list of key personnel ===
+11. CONSULTANT'S PROPOSAL
+11.1 List of key personnel to be fielded by the Consultants shall be as below:
+i.  Team Leader Cum Senior Highway Engineer
+ii. Resident cum Highway Engineer
+iii. Senior Quantity cum Material Expert
+iv. Bridge/Structural Engineer
+v. Senior Pavement Specialist
+vi. Road Safety Expert
+
+
+=== [PDF page 21] Appendix-EC ===
+National Highways Authority of India  Request for Proposal for AE
+Appendix-EC
+1. Evaluation Criteria for Assessment of Experience of the Firm.
+S. No.  Description  Max.  Reference/Details Marks self
+Marks  of projects Claimed assessed by
+for self assessment the bidder
+1 Average Annual Turnover (last 3 years)  2
+from consultancy business
+< 2% of TPC ( 7.41 Cr.) - 0 marks
+2% of TPC( 7.41 Cr.) - 1.5 marks
+Add for additional turnover 0.25 (Zero
+point two five) marks for every 1% of
+TPC above 2% of TPC subject to
+maximum 0.5 marks.
+2 Numbers of key personnel (as defined  2
+in RFP) with the firm in highway sector
+with more than one year with the firm.
+20 personnel - 0 marks
+21 to 30 - Linearly varying from 0.2 to 2
+> 30 personnel - 2 marks
+3 Experience as Independent  12
+Engineer/Authority Engineer/
+Construction Supervision in Number of
+Highway Projects of 2/4/6-laning** of
+length (40% of project length = 23.57
+Km.) or more in last 7 years.
+1 project - 9 marks
+Add 1(one) mark extra for completed
+assignment of Authority
+Engineer/Independent Engineer and
+add 0.5 (Zero point five) marks extra
+for completed assignment of
+supervision consultancy subject to
+maximum 3 (three) marks.
+4 Experience in DPR/Feasibility Study cum  6
+Preliminary Design Report preparation
+for Number of Highway Projects of
+2/4/6-laning** of length (40% of project
+length = 23.57 Km. ) or more in last 7
+years.
+1 project - 4 marks
+Add 0.5 (Zero point five) marks extra for
+each additional project subject to
+maximum 2 marks.
+5 In hand DPRs for NHAI Projects  10
+21
+
+=== [PDF page 22] Appendix-EC ===
+National Highways Authority of India  Request for Proposal for AE
+For DPR project length > the length of
+project(58.92 Km. for which RFP invited
+-5 Marks
+For DPR project length > two times the
+length of project for which RFP invited
+-7.5 Marks
+For project length > three times the
+length of project for which RFP invited -
+10 Marks
+6 Experience in Construction  3
+Supervision/DPR/Design Review of
+Major structures having length of more
+than 500 metre in last 7 years.
+1 project - 2.0 marks
+Add 0. 5 (Zero point five) marks extra
+for each additional project subject to
+maximum 1.0 marks.
+Note 1: In case of JV the turnover and experience details of Lead and JV partners to be added.
+Note 2: Employer's certificate/ certificate from Statutory Auditor should be submitted
+substantiating the experience/turnover claimed by the firm.
+Note 3: **For 4/6 laning projects, experience of 2 lane will be considered with a multiplication
+factor of 0.4, but only for those 2 lane projects whose cost of consultancy services was more than
+Rs.3.0 crores.
+2. Evaluation Criteria for Adequacy of the Proposed Work Plan and Methodology
+Criteria for Adequacy of The Proposed Work Plan and Methodology
+Description  Maximum  Reference/Details  Marks self
+Marks  of projects Claimed  assessed by the
+Site Appreciation  for self assessment
+(i) Average 0.50  1  bidder
+(ii) Good 0.75
+(iii) Very Good 1.00  2
+Quality of Approach and Methodology
+(Review of scope of work and design
+review, construction supervision
+methodology, contract management
+approach, safety review/audit and
+O&M stage, initial view on project
+plan including key challenges
+envisaged and potential solutions to
+be judged).
+(i) Average 0.75
+22
+
+=== [PDF page 23] Appendix-EC ===
+National Highways Authority of India  Request for Proposal for AE
+(ii) Good 1.50
+(iii) Very Good 2.00
+Quality Audit Methodology and  2
+Quality Assurance Plan
+(i) Average 0.75
+(ii) Good 1.50
+(iii) Very Good 2.00
+Total Marks  5
+3. Evaluation Criteria for assessment of experience in use of technology for road
+inspection
+Evaluation sheet for assessment of experience in  use of technology  for road
+inspection
+Reference/Details  Marks
+S.No Description  Maximum  of projects  self
+Points
+Claimed for self  assessed
+assessment  by the
+bidder
+Experience in Network Survey Vehicle
+(NSV) or better technology for
+pavement inspection
+Own an equipment/MOU with
+1  Associate - 4  7
+1-2 projects- 5
+3-5 projects- 6
+>5 projects- 7
+Experience in Falling Weight
+Deflectometer (FWD) or better
+technology for pavement strength
+measurement
+2  Own an equipment/MOU with  4
+Associate - 2
+1-3 projects- 3
+>3 projects- 4
+Experience in Mobile Bridge Inspection
+Unit (MBIU) or better technology for
+bridges inspection
+3  Own an equipment/MOU with  5
+Associate -2
+1-2 projects -3
+3-5 projects -4
+23
+
+=== [PDF page 24] Appendix-EC ===
+National Highways Authority of India  Request for Proposal for AE
+Evaluation sheet for assessment of experience in use of technology for road
+inspection
+S.No Description  Maximum  Reference/Details  Marks
+Points  of projects  self
+Claimed for self  assessed
+assessment  by the
+bidder
+>5 projects- 5
+Experience in Retro reflectometer
+technology
+Own an equipment/MOU with
+4  Associate - 2  4
+1-3 projects- 3
+>3 projects- 4
+Total  20
+4. Evaluation Criteria for assessment of score of Key Staff for adequacy of the
+Assignment.
+4.4 Team Leader cum Senior Highway Engineer
+S. No.  Description  Max.  Reference/Details  Marks self
+Points  of projects  assessed by
+the bidder
+Claimed for self
+assessment
+1 General Qualification  25
+I) Graduate in Civil Engineering  21 25
+II) Post Graduation in Management/ 03
+Construction/
+Transportation/Highway
+Engineering/Structural Engineering
+or equivalent specialised stream of
+civil engineering
+III) Degree/Diploma/Certificate in
+Project Management
+01
+2 Adequacy for the Project  70
+a) Professional Experience in Highway
+Projects:
+i) Total Professional Experience in handling 10
+Highway projects
+24
+
+=== [PDF page 25] Appendix-EC ===
+National Highways Authority of India  Request for Proposal for AE
+< 12 years -0
+12 years -7
+Add 1 marks extra for each additional
+year of experience subject to maximum
+3 (three) marks.
+ii) Experience as Team Leader or similar  15
+capacity in Highway Development
+Projects(similar configuration (2/4/6
+laning**) and above)
+< 5 years -0
+5 years -11
+Add 1 marks extra for each additional
+year of experience subject to maximum
+4 (four) marks.
+iii) Experience as Team Leader or similar  5
+capacity in Highway Development
+projects (of length 40% of project length
+or more of similar configuration (2/4/6
+laning**) and above) on EPC
+1 projects -3 marks add 1 mark extra for
+additional projects subject to maximum
+2 (two) marks
+b) Experience as Team Leader or similar  15
+capacity of project Preparation including
+design of major highway Project (of
+length 40% of project length or more of
+similar configuration (2/4/6 laning**) and
+above).
+< 2 projects -0
+2 Projects -11
+Add 2 mark for each additional project
+subject to maximum 4 marks.
+c) Experience in position of Team  20
+Leader/Project Manager or similar
+capacity in Construction Supervision/IC
+involving length 40% of project length or
+more of similar configuration (2/4/6**
+laning) and above
+< 2 projects - 0
+2 Projects - 16
+Add 2 marks extra for each additional
+project subject to maximum 4 (four)
+marks
+d) Experience as Team Leader or similar  5
+capacity in Operation and Maintenance
+of Major Highway (of length 40% of
+project length or more of similar
+25
+
+=== [PDF page 26] Appendix-EC ===
+National Highways Authority of India  Request for Proposal for AE
+configuration (2/4/6 laning**) and
+above).
+1 project - 3 marks
+Add 1 mark extra for each additional
+project subject to maximum 2 (two)
+marks
+3 Employment with the Firm  5
+< 1 year -0
+1 year -3
+Add 0.5 marks for each subsequent year
+subject to maximum 2 marks
+Total :  100
+Note:
+(1) Similar Capacity includes the following positions
+i)  On behalf of Consultant: Team Leader/Resident Engineer (Construction
+Supervision/IE/AE/DPR).
+ii) On behalf of Contractor: Project Manager (Construction/Construction Supervision)
+iii) In Government Organizations: Superintending Engineer (or equivalent) and above
+(2) Only those projects will be considered for evaluation at S. No. 2(b) where the input of the
+personnel is not < 9 months.
+(3) Only those projects will be considered for evaluation at S. No. 2(c), (d) where the input of
+the personnel is not < 12 months.
+(4) In case of experience on behalf of Consultant or Contractor, the experience shall be duly
+endorsed by the respective Government agency. In case of non-availability of
+endorsement from Govt. Agency, the experience uploaded on Infracon Portal will
+be taken into consideration. However, the key personnel/ bidder will be solely
+responsible for any fake information/ CV, which may result in debarment.
+4.5 Resident cum Highway Engineer
+S. No.  Description  Max.  Reference/Details  Marks self
+Points  of projects  assessed by
+the bidder
+Claimed for self
+assessment
+1 General Qualification  25
+I) Graduate in Civil Engineering  21 25
+II) Post Graduation in  04
+Transportation/Highway
+Engineering/Structural
+Engineering/Geotechnical
+Engineering
+26
+
+=== [PDF page 27] Appendix-EC ===
+National Highways Authority of India  Request for Proposal for AE
+2 Adequacy for the Project  70
+Professional Experience
+i) Total Professional Experience in  20
+handling Highway projects
+< 10 years -0
+10 years -15
+Add one marks extra for each additional
+completed year of experience subject to
+maximum 5 (five) marks.
+ii) Experience as Resident Engineer/Project 20
+Director/Project
+Manager/Superintending Engineer or
+equivalent/Executive Engineer or
+equivalent on construction
+works/Authority Engineer/Independent
+Engineer Projects (similar configuration
+(2/4/6 laning*) and above).
+< 5 years -0
+5 years -15
+Add 1 marks extra for each additional
+year of experience subject to maximum
+5 (five) marks.
+iii) Experience in similar capacity in  25
+handling major 2/4/6-laning** projects
+(of length 40% of project length or more
+of
+similar configuration (2/4/6 laning**) and
+above)
+< 2 nos -0
+2 nos -19
+Add three marks extra for each
+additional project subject to maximum 6
+(Six) marks.
+iv) Experience in similar capacity of  5
+Highway Project of
+Construction/Construction
+Supervision/IC on EPC Mode (of length
+40% of project length or more of similar
+configuration (2/4/6 laning**) and above)
+2.5 marks for each project subject to
+maximum 5 (five) marks
+3 Employment with the Firm  5
+< 1 year -0
+27
+
+=== [PDF page 28] Appendix-EC ===
+National Highways Authority of India  Request for Proposal for AE
+1 year -3
+Add 0.5 marks for each subsequent year
+subject to maximum 2 marks
+Total :  100
+Note:
+(1) Similar Capacity includes the following positions
+i)  On behalf of Consultant: Resident / Highway Engineer
+ii) On behalf of Contractor: Resident Engineer/ Highway Engineer / Project Manager
+(Construction/Construction Supervision)
+iii) In Government Organizations: Executive Engineer (or equivalent) and above
+(2) Only those projects (in numbers) will be considered for evaluation above, where the input
+of the personnel is not < 12 months
+(3) In case of experience on behalf of Consultant or Contractor, the experience shall be duly
+endorsed by the respective Government agency. In case of non-availability of
+endorsement from Govt. Agency, the experience uploaded on Infracon Portal will
+be taken into consideration. However, the key personnel/ bidder will be solely
+responsible for any fake information/ CV, which may result in debarment.
+4.6 Bridge/Structural Engineer
+S. No.  Description  Max.  Reference/Details  Marks self
+Points  of projects  assessed by
+the bidder
+Claimed for self
+assessment
+1 General Qualification  25
+I) Graduate in Civil Engineering
+21 25
+II) Post Graduation in Structural  04
+Engineering  70
+2 Adequacy for the Project
+i) Total Professional Experience in  15
+handling Highway/Bridge projects
+< 10 years -0
+10 years -11
+Add one mark extra for each additional 2
+year subject to maximum 4(four) marks.
+ii) Experience in similar capacity in  20
+Design/Construction/Construction  28
+Supervision of
+
+=== [PDF page 29] Appendix-EC ===
+National Highways Authority of India  Request for Proposal for AE
+Bridges/ROB/Flyover/Interchanges/any
+other such structures (similar
+configuration (2/4/6 laning**) and above)
+< 5 years -0
+5 years -15
+Add 1 (one) mark extra for each
+additional completed year of experience
+subject to maximum 5 (five) marks.
+iii) Experience in similar capacity in  20
+supervision of Major Highway
+Bridges/ROB/Flyover/ Interchanges/ any
+other structures
+< 2 Bridges -0
+02 Bridge -15
+Add 2.5 mark extra for each additional
+bridge subject to maximum 5 marks
+iv) Experience in similar capacity in  10
+supervision of Rehabilitation and repair
+of Major Bridges/ROB/Flyover/
+Interchanges/ any other structures
+< 2 - 0
+2 nos -07
+3 or more -10
+v) Experience in similar capacity of modern 5
+bridge construction technology viz.,
+Precast Segmental, Balanced Cantilever
+Construction, Extradosed Bridge, Full
+Span Launching, Incremental Launching.
+Experience in 1 project - 3
+More than one project - 5 marks
+3 Employment with the Firm  5
+< 1 year -0
+1 year -3
+Add 0.5 marks for each subsequent year
+subject to maximum 2 marks
+Total :  100
+Note:
+(1) Similar Capacity includes the following positions
+i)  On behalf of Consultant/Contractor: Bridge Engineer/Project Manager (Bridges)
+ii) On behalf of Government: Executive Engineer
+29
+
+=== [PDF page 30] Appendix-EC ===
+National Highways Authority of India  Request for Proposal for AE
+(2) Only those projects (in numbers) will be considered for evaluation above, where the input
+of the personnel is not < 12 months
+(3) In case of experience on behalf of Consultant or Contractor, the experience shall be duly
+endorsed by the respective Government agency. In case of non-availability of
+endorsement from Govt. Agency, the experience uploaded on Infracon Portal will
+be taken into consideration. However, the key personnel/ bidder will be solely
+responsible for any fake information/ CV, which may result in debarment.
+4.7 Senior Pavement Specialist
+S. No.  Description  Max.  Reference/Details  Marks self
+Points  of projects  assessed by
+the bidder
+Claimed for self
+assessment
+1 General Qualification  25
+I) Graduate in Civil Engineering
+21 25
+II) Post Graduation in  04
+Transportation/Highway
+Engineering/Pavement engineering
+or equivalent
+2 Adequacy for the Project  70
+Professional Experience
+i) Total Professional Experience of  20
+Pavement Design/Construction and
+Maintenance of Highways/Roads/Air
+Field Runway
+< 10 years -0
+10 years -15
+Add one mark extra for each additional
+year of experience subject to maximum
+5 (five) marks.
+ii) Experience in Similar capacity in  20
+Construction/Construction Supervision of
+2/4/6-laning** of major Highway Projects
+(similar configuration (2/4/6 laning**)
+and above)
+< 5 years -0
+5 years -15
+Add one mark extra for each additional
+year of experience subject to maximum
+5 (five) marks.
+iii) Experience in similar capacity as  20
+Pavement/Geo-technical Engineer in
+construction/ construction supervision of
+Major Highway projects (of length 40% of
+30
+
+=== [PDF page 31] Appendix-EC ===
+National Highways Authority of India  Request for Proposal for AE
+project length or more of similar
+configuration (2/4/6 laning**) and above)
+< 2 nos -0
+2 nos -16
+Add 2 marks extra for each additional
+project subject to maximum 4 marks.
+iv) Experience in similar capacity on major  5
+Highway projects (of length 40% of
+project length or more of similar
+configuration (2/4/6 laning**) and above)
+in innovative/non traditional technology
+and design
+1 Project -4
+2 or more -5
+v) Experience in similar capacity on EPC  5
+Projects (of length 40% of project length
+or more of similar configuration (2/4/6
+laning**) and above)
+2.5 marks for each project subject to
+maximum 5 (five) marks
+3 Employment with the Firm  5
+< 1 year -0
+1 year -3
+Add 0.5 marks for each subsequent year
+subject to maximum 2 marks
+Total :  100
+Note:
+(1) Similar Capacity includes the following positions
+i)  On behalf of Consultant/Contractor: Pavement Specialist/ Pavement Engineer/ Pavement
+Expert / Highway Engineer
+ii) On behalf of Government: Executive Engineer
+(2) Only those projects (in numbers) will be considered for evaluation above, where the input
+of the personnel is not < 6 months
+(3) In case of experience on behalf of Consultant or Contractor, the experience shall be duly
+endorsed by the respective Government agency. In case of non-availability of
+endorsement from Govt. Agency, the experience uploaded on Infracon Portal will
+be taken into consideration. However, the key personnel/ bidder will be solely
+responsible for any fake information/ CV, which may result in debarment.
+4.8 Senior Quality/Material Expert
+31
+
+=== [PDF page 32] Appendix-EC ===
+National Highways Authority of India  Request for Proposal for AE
+S. No.  Description  Max.  Reference/Details  Marks self
+Points  of projects  assessed by
+the bidder
+Claimed for self
+assessment
+1 General Qualification  25
+I) Graduate in Civil Engineering
+21 25
+II) Post Graduation in Geotechnical 04
+Engineering/Foundation
+Engineering/Soil Mechanics/Rock
+Mechanics
+2 Adequacy for the Project  70
+Professional Experience
+i) Total Professional Experience in  15
+handling Highway/Bridge projects
+< 10 years -0
+10 years -11
+Add one mark extra for each additional
+year of experience subject to maximum
+4 (four) marks.
+ii) Experience in similar capacity in  25
+Construction/Construction Supervision of
+major Highway Projects ((similar
+configuration (2/4/6 laning**) and
+above))
+< 5 years -0
+5 years -19
+Add 2.0 (two) marks extra for each
+additional year of experience subject to
+maximum 6 (Six) marks.
+iii) Experience in similar capacity in  25
+handling Similar Highway projects (of
+length 40% of project length or more of
+similar configuration (2/4/6 laning**) and
+above)
+< 2 nos -0
+2 nos -19
+Add 3.0 marks extra for each additional
+project subject to maximum 6 (six)
+marks.
+iv) Experience in similar capacity on major  5
+Highway projects (of length 40% of
+project length or more of similar
+configuration (2/4/6 laning**) and above)
+in innovative/non traditional technology
+32
+
+=== [PDF page 33] Appendix-EC ===
+National Highways Authority of India  Request for Proposal for AE
+1 Project -4
+2 or more -5
+3 Employment with the Firm  5
+< 1 year - 0
+1 year - 3
+Add 0.5 marks for each subsequent year
+subject to maximum 2 marks
+Total :  100
+Note:
+(1) Similar Capacity includes the following positions
+i)  On behalf of Consultant/Contractor: Quality Expert/ Material Engineer/Material
+Expert/ Quality Engineer/ Geo-Technical Expert.
+ii) On behalf of Government: Executive Engineer
+(2) Only those projects (in numbers) will be considered for evaluation above, where the input
+of the personnel is not < 12 months
+(3) In case of experience on behalf of Consultant or Contractor, the experience shall be duly
+endorsed by the respective Government agency. In case of non-availability of
+endorsement from Govt. Agency, the experience uploaded on Infracon Portal will
+be taken into consideration. However, the key personnel/ bidder will be solely
+responsible for any fake information/ CV, which may result in debarment.
+4.6 Road Safety Expert  Description  Max.  Reference/  Marks
+Points  Details of  self
+S.  projects
+No.  25  Claimed  assessed
+by the
+for self  bidder
+assessment
+1 General Qualification
+I) Graduate in Civil Engineering  21 25
+II)  Post  Graduation  in 04
+Traffic/Transportation/Safety Engineering or
+equivalent
+2 Adequacy for the Project  70
+Professional Experience
+i) Total Professional Experience in handling  15
+Highway/Bridge projects
+< 10 years  -0
+10 years  -11
+Add one mark extra for each additional year of
+experience subject to maximum 4 (four) marks.
+33
+
+=== [PDF page 34] Appendix-EC ===
+National Highways Authority of India  Request for Proposal for AE
+ii) Experience in similar capacity in Road Safety works  15
+on Major Highway Project (similar configuration  20
+(2/4/6 laning**) and above).  10
+< 5 years  -0  5
+5 years  -11
+Add one mark extra for each additional year of
+experience subject to maximum 4 (four) marks.
+iii) Experience in similar capacity in Road Safety Audits
+of 2/4/6-laning** Highway projects at different
+stages including at least one at design stage
+< 2 nos  -0
+2 nos  -16
+Add 2 marks extra for each additional project
+subject to maximum 4 marks.
+iv) Experience in similar capacity in identification and
+improvement of black spots on Major Highway
+Project (similar configuration (2/4/6 laning**) and
+above)
+< 2 nos  -0
+2 nos  -6
+Add 2 marks extra for each additional improvement
+of black spots subject to maximum 4 marks.
+v) Experience in similar capacity of preparing Road
+Safety Management Plans for Inter Urban Highway
+1 project  -3marks
+2 or more  -5 marks
+vi) Experience in similar capacity in field of Road  5
+Safety Management Plan
+1 project  -3 marks
+2 or more  -5 marks
+3 Employment with the Firm  5
+< 1 year  - 0
+1 year  - 3
+Add 0.5 marks for each subsequent year subject to
+maximum 2 marks
+Total :  100
+Note:
+(1) Similar Capacity includes the following positions
+i) On behalf of Consultant/Contractor: Road Safety Expert
+ii) In Government Organizations: Executive Engineer (or equivalent) and above
+(2) Only those projects (in numbers) will be considered for evaluation above, where the input
+of the personnel is not < 6 months
+Note applicable to all key personnel:
+1. If a key personnel has worked in next lower category to the similar capacity, the marks
+allotted to key personnel in the category `experience in similar capacity' shall be reduced
+to two thirds of marks in this category. This shall be applicable for evaluation of all key
+personnel.
+2. **Similar projects means 2/4/6 lane as applicable for the project for which RFP is invited.
+For 2-lane projects experience of 4/6 lane also to be considered with a multiplication
+factor of 1.5. Experience of 4/6 lane shall be considered interchangeably for 4/6 laning
+projects. For 4/6 laning projects, experience of 2 lane will be considered with a
+multiplication factor of 0.4.
+34
+
+=== [PDF page 78] Enclosure-B: qualification of key personnel ===
+Enclosure B
+QUALIFICATION OF KEY PERSONNEL
+TEAM LEADER CUM SENIOR HIGHWAY ENGINEER
+This is the senior most position and the expert engaged as the team leader shall be
+responsible for reviewing the entire Project preparation and implementation activities
+of the Concessionaire. He shall check all the Designs being prepared by the
+Concessionaire, ensure execution of works on site as per specification and standards,
+and continuously interact with the NHAI and the Concessionaire. He shall undertake
+Project site visits and shall guide, supervise, coordinate and monitor the work of other
+experts in his team as well as those of the Concessionaire. The candidate is required
+to be a Senior Highway Engineer, who should have a proven record of supervising,
+organising and managing of construction of highway projects and also of Project
+preparation of large magnitudes projects, as defined below, financed by international
+lending agencies and others. Knowledge of Project management shall be an added
+advantage.
+He should have the following qualification / experience.
+1. Essential Qualifications.
+a) Graduate in Civil Engineering from recognized university.
+b) Total Professional Experience of 12 years in handling Highway Projects.
+c) At least 5 years experience as Team Leader/Project Manager or similar
+capacity in Highway Development Project.
+d) He should have handled as Team Leader/Project Manager or similar capacity
+of at least two projects in Construction Supervision / IC (of length 40% of
+project length or more of similar configuration (2/4/6 laning**)
+e) He should have handled as Team Leader or similar capacity of at least two
+Projects of project Preparation of major highway Project (of length 40% of
+project length or more of similar configuration (2/4/6 laning**).
+f) Experience as Team Leader/Project Manager or similar capacity in Operation
+and Maintenance of Major Highway Projects(of length 40% of project length or
+more of similar configuration (2/4/6 laning**).
+2. Preferential Qualifications.
+a) Post Graduate Degree in Construction Management/Transportation/Highway
+Engineering//Structural Engineering/ any specialised stream of Civil
+Engineering .
+b) Highway Development Projects (of length 40% of project length or more of
+similar configuration (2/4/6 laning**) taken up under EPC.
+c) Degree/Diploma/Certificate in Project Management
+Note: (1) Similar Capacity includes the following positions
+i. On behalf of Consultant : Team Leader / Resident Engineer (Construction
+Supervision/IE/AE).
+78
+
+=== [PDF page 79] Enclosure-B: qualification of key personnel ===
+ii. On behalf of Contractor : Project Manager (Construction/ Construction
+Supervision)
+iii. In Government Organizations : Superintending Engineer (or equivalent)
+and above
+(2) Only those projects will be considered for evaluation at Sl. No. 1(d), 1(e) &
+1(f) above, where the input of the personnel is 12 months, 9 months and 12 months
+respectively.
+RESIDENT CUM HIGHWAY ENGINEER
+The Resident cum Highway Engineer shall be responsible for supervising the works of
+highway to be constructed by the Concessionaire for this project. He shall also inspect
+the pavement rehabilitation and repair works to be undertaken by the Concessionaire.
+He should have the following qualification / experience.
+1. Essential Qualifications.
+a) Graduate in Civil Engineering from a recognized University.
+b) Professional Experience of 10 years in supervision of Highway Projects.
+c) 5 years experience in similar capacity in Highway Development Project.
+d) Should have handled at least 2 major projects(of length 40% of project length
+or more of similar configuration (2/4/6 laning**) and above).
+2. Preferential Qualifications.
+a) Post Graduate Degree in Transportation/Highway Engineering/Structural
+Engineering/Geotechnical Engineering/any specialised stream of Civil
+Engineering.
+b) Experience of Highway Project (of length 40% of project length or more of
+similar configuration (2/4/6 laning**) and above) of Construction / Construction
+Supervision / IC of Highway projects
+BRIDGE & STRUCTURAL ENGINEER
+The Bridge & Structural Engineer shall be responsible for checking the designs of
+bridges, ROBs, interchanges and any other structure to be constructed in the Project
+highway and supervising the works of bridges, interchanges and any other structure to
+be constructed by the Concessionaire for this project. He shall also inspect the bridge
+rehabilitation and repair works to be undertaken by the Concessionaire. He should
+have thorough understanding and experience with international `best practices' of
+modern bridge construction technology.
+He should have the following qualification / experience.
+1. Essential Qualifications.
+a) Graduate in Civil Engineering from a recognized University.
+b) Professional Experience of 10 years in handling Highway/Bridge projects.
+c) 5 years experience in Construction / Construction Supervision of bridge /
+interchange / any other structures.
+d) Experience in similar capacity in supervision of 2 Major Highway Bridges.
+79
+
+=== [PDF page 80] Enclosure-B: qualification of key personnel ===
+e) Experience in supervision of Rehabilitation and repair of 2 nos Major Bridges.
+2. Preferential Qualifications.
+a) Post Graduate Degree in Structural Engineering.
+b) He should have thorough understanding and experience of modern bridge
+construction technology . viz., Precast Segmental, Balanced Cantilever
+Construction, Extradosed Bridge, Full Span Launching, Incremental Launching.
+SENIOR PAVEMENT SPECIALIST
+The expert shall be continuously interacting with the Concessionaire, for the review
+of highway designs and drawings using sophisticated computer software and also
+construction and O&M works and to ensure life cycle cost effectiveness and viable
+design of pavement including appropriate rehabilitation / strengthening of the existing
+two lane pavement which is significantly distressed. He shall also be responsible for
+ensuring complete adherence to maintenance standards during Construction and
+Operation period. Thus, the position requires a pavement specialist with thorough
+knowledge and understanding of international `best practices' in the field of Design,
+Construction and maintenance of flexible/rigid type of pavements including latest
+Codal stipulations and specifications.
+He should have the following qualification / experience.
+1. Essential Qualifications.
+a) Graduate in Civil Engineering from a recognized University.
+b) Professional Experience of 10 years in Pavement Design / Pavement
+Construction / Pavement Maintenance of Highways / Roads / Airfield Runways
+c) Experience of 5 years in similar capacity in Construction / Construction
+Supervision of 2/4/6 laning** of major highway projects.
+d) Experience as Pavement / Geotechnical Engineer in Construction/Construction
+Supervision of at least 2 major highway projects(of length 40% of project length
+or more of similar configuration (2/4/6 laning**) and above).
+2. Preferential Qualifications.
+a) Post Graduate Degree in Highway Engineering / Pavement Engineering
+/Transportation
+b) Experience in similar capacity in Highway Development Project in
+innovative/non traditional technology and design
+c) Experience as a Pavement Specialist/Pavement Engineer in Highway project
+(of length 40% of project length or more of similar configuration (2/4/6
+laning**) and above).
+SENIOR QUALITY/MATERIAL EXPERT
+The Quality/Material Expert shall review the test results of bore holes, quarry and
+borrow area material to find out their strength characteristics and suitability for using
+them in construction. He shall inspect the Concessionaire's field laboratories to ensure
+80
+
+=== [PDF page 81] Enclosure-B: qualification of key personnel ===
+that they are adequately equipped and capable of performing all the specified testing
+requirements of the contract. He shall look into the quality assurance aspect of the
+construction works and supervise the setting-up of the various Concessionaire's rock
+crushers and bituminous mixing plants to ensure that the specified requirements for
+such equipment are fully met. Experience in latest Quality Management techniques in
+highway projects shall have added advantage.
+He should have the following qualification / experience.
+1. Essential Qualifications.
+a) Graduate in Civil Engineering from a recognized University.
+b) Professional Experience of 10 years in handling Highway projects.
+c) Experience of at least 5 years as Senior Quality/ Material Expert or in similar
+capacity in Construction / Construction Supervision /major highway projects
+d) Experience as Senior Quality/ Material Expert or in similar capacity in handling
+of at least 2 similar highway projects.(of length 40% of project length or more
+of similar configuration (2/4/6 laning**) and above)
+2. Preferential Qualifications.
+a) Post Graduate Degree in Geotechnical Engineering / Foundation Engineering /
+Soil Mechanics.
+b) Experience in similar capacity in Highway Development Project in
+innovative/non traditional technology
+ROAD SAFETY EXPERT
+Shall be responsible for the overall Road Safety Aspect of the Project. He shall ensure
+that safety provisions as per relevant codes are strictly followed at site during
+Construction of Road and also during the Maintenance Period
+1. Essential Qualifications.
+a) Graduate in Civil Engineering from a recognized University.
+b) Professional Experience of 10 years in handling Highway projects.
+c) Minimum 5 years experience in Road Safety works of Major Highway Projects (4
+/ 6 laning projects)
+d) Experience in similar capacity in Road Safety Audit of at least 2 nos 2/4/6 lane**
+highway / expressway project including 1 nos at design stage
+e) Experience in similar capacity in the field of Road Safety Management Plan.
+2. Preferential Qualifications
+a) Post Graduate Degree in Traffic Transportation/Safety Engineering.
+b) Experience in similar capacity in identification and improvement of black spots
+on Major Highway Project.
+c) Experience in similar capacity in Preparation of Road Safety Management Plan
+for inter urban Highways.
+81

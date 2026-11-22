@@ -94,7 +94,7 @@ def reset_run() -> None:
 
 def _not_retried(path: str, billed: bool, detail: str) -> str:
     if billed:
-        return f"{path}: lookup failed: may have been billed, not retried ({detail})."
+        return f"{path}: lookup did not complete: it may have been billed, so it was not retried ({detail})."
     return f"{path}: call failed, not retried ({detail})."
 
 

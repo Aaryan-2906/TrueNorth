@@ -14,6 +14,7 @@ from app.questions import Question, build_questions
 
 OUT_PATH = config.ROOT_DIR / "out" / "report.md"
 UNDATED_NOTE = "CV is undated; 'present' taken as today"
+EQUIVALENT_GRADES_NOTE = "Equivalent grades are for the committee to judge."
 CLOSING_LINE = "These are questions for the committee, not findings."
 MAX_DETAILED_CV_ROWS = 2
 
@@ -21,7 +22,7 @@ _FIXED_SOURCES = {
     "cv.claimed_total_years": "total years claimed on the CV",
     "tender.min_total_years": "tender minimum total years",
     "tender.min_similar_years": "tender minimum similar-role years",
-    "tender.requires_postgraduate": "tender postgraduate requirement",
+    "tender.postgraduate": "tender postgraduate rule",
     "profile.education": "education section of the profile",
     "profile.jobs": "job list of the profile",
     "bid.profile_url": "profile URL field in the bid (empty)",
@@ -42,6 +43,7 @@ class ExpertEntry:
     lookup: Lookup
     result: ExpertResult
     origin: str
+    position: dict[str, Any] | None = None
 
 
 def row_dates(row: CvRow) -> str:
@@ -259,6 +261,8 @@ def _expert_notes(entry: ExpertEntry) -> list[str]:
         notes.append(UNDATED_NOTE)
     if claims.cv_date is not None and entry.lookup.profile is not None:
         notes.append(f"the profile was read as it stood at the CV date, {claims.cv_date}")
+    if entry.position and entry.position.get("equivalent_grades"):
+        notes.append(EQUIVALENT_GRADES_NOTE)
     return notes
 
 

@@ -147,6 +147,20 @@ details > summary:hover { color: #E4E4E7; }
         <span>Fresh<span class="block text-xs text-zinc-500">Skip the cache and make new paid calls</span></span>
         <input id="freshBid" type="checkbox" class="h-4 w-4 accent-sky-400">
       </label>
+      <details id="tenderBox" class="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+        <summary>Read a tender (optional)</summary>
+        <div class="mt-2 space-y-2">
+          <label class="label" for="tenderText">Tender text</label>
+          <textarea id="tenderText" class="field h-32 resize-y font-mono text-xs leading-relaxed" placeholder="Paste the key-personnel section"></textarea>
+          <p class="text-xs text-zinc-500">Proposed positions appear with their source sentences. Nothing is used until you approve.</p>
+          <p id="tenderHint" class="hidden text-xs text-amber-300" role="alert"></p>
+          <button id="readTender" class="ghost w-full" type="button">Read tender</button>
+        </div>
+      </details>
+      <label id="useTenderRow" class="hidden cursor-pointer items-center justify-between gap-3 text-sm text-zinc-300">
+        <span>Use approved tender<span id="useTenderInfo" class="block text-xs text-zinc-500"></span></span>
+        <input id="useTender" type="checkbox" class="h-4 w-4 accent-sky-400">
+      </label>
       <button id="runBid" class="primary" type="submit">Audit this bid</button>
     </form>
   </section>
@@ -287,13 +301,83 @@ function metric(name, value, tone) {
   return `<div class="card px-3 py-2.5"><p class="text-[11px] text-zinc-500">${name}</p><p class="mt-0.5 text-xl font-semibold ${tone || 'text-white'}">${esc(value)}</p></div>`;
 }
 
+function sourceChip(label, source) {
+  return source ? `<div class="mt-1"><span class="text-[11px] text-zinc-500">${esc(label)}</span><br><span class="chip">${esc(source.text)}</span></div>` : '';
+}
+
+const shownNumber = (value) => (value === null || value === undefined ? 'not stated' : value);
+
+function tenderCard(key, position) {
+  const s = position._source_sentences;
+  const fact = (name, value) => `<div><dt class="text-xs text-zinc-500">${esc(name)}</dt><dd class="mt-0.5 text-[13.5px] text-zinc-200">${esc(value)}</dd></div>`;
+  return `
+    <article class="card p-4">
+      <h3 class="text-[15px] font-semibold text-white">${esc(position.name)}</h3>
+      <p class="mt-0.5 font-mono text-[11px] text-zinc-500">${esc(key)}</p>
+      <dl class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        ${fact('Minimum total years', shownNumber(position.min_total_years))}
+        ${fact('Minimum similar years', shownNumber(position.min_similar_years))}
+        ${fact('Postgraduate', position.postgraduate)}
+        ${fact('Postgraduate marks', shownNumber(position.postgraduate_marks))}
+      </dl>
+      <p class="mt-3 text-xs text-zinc-500">Similar-role titles (proposed)</p>
+      <div>${chips(position.similar_title_keywords)}</div>
+      <details class="mt-3" open><summary>Source sentences</summary>
+        ${sourceChip('Total years', s.min_total_years)}
+        ${sourceChip('Similar years', s.min_similar_years)}
+        ${sourceChip('Postgraduate', s.postgraduate)}
+        ${sourceChip('Postgraduate marks', s.postgraduate_marks)}
+        ${sourceChip('Similar capacity', s.similar_capacity)}
+      </details>
+    </article>`;
+}
+
+function renderTender(result) {
+  $('results').innerHTML = `
+    <div class="space-y-4">
+      <div class="card flex flex-wrap items-center justify-between gap-3 p-4">
+        <p class="text-sm text-zinc-300">Check each number against its source sentence before approving.</p>
+        <button id="approveTender" class="ghost" type="button">Approve these positions</button>
+      </div>
+      ${Object.entries(result.positions).map(([key, position]) => tenderCard(key, position)).join('')}
+    </div>`;
+  $('approveTender').addEventListener('click', () => approveTender(result.token));
+}
+
+function showApprovedTender(info) {
+  $('useTenderRow').classList.toggle('hidden', !info);
+  $('useTenderRow').classList.toggle('flex', Boolean(info));
+  if (info) $('useTenderInfo').textContent = `${info.positions} positions, approved ${info.approved_at}`;
+}
+
+async function approveTender(token) {
+  const button = $('approveTender');
+  button.disabled = true;
+  try {
+    const response = await fetch('/api/tender/approve', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token }) });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    showApprovedTender(data.approved);
+    $('useTender').checked = true;
+    button.textContent = 'Approved. The next audit uses it';
+  } catch (problem) {
+    button.disabled = false;
+    button.textContent = problem.message || 'Could not save the approval';
+  }
+}
+
 function renderResult(result) {
+  if (result.kind === 'tender') {
+    renderTender(result);
+    return;
+  }
   state.letter = result.letter || '';
   const problems = result.errors.map((e) => `<li class="break-words">${esc(e)}</li>`).join('');
   $('results').innerHTML = `
     <div class="space-y-4">
       <div>
         <h2 class="sr-only">${esc(result.headline)}</h2>
+        ${result.tender_id ? `<p class="mb-2 font-mono text-[11px] text-zinc-500">Tender: ${esc(result.tender_id)}</p>` : ''}
         <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
           ${metric('Experts', result.experts.length)}
           ${metric('Consistent', result.counts.CONSISTENT, 'text-emerald-300')}
@@ -354,6 +438,7 @@ function setRunning(running) {
   state.running = running;
   $('runCv').disabled = running;
   $('runBid').disabled = running;
+  $('readTender').disabled = running;
 }
 
 function resetActivity() {
@@ -422,6 +507,7 @@ function buildPip() {
 const STAGE_POSE = {
   reading_cv: ['reading', 0],
   reading_dates: ['reading', 0],
+  reading_tender: ['reading', 0],
   looking_up: ['flying', 100],
   checking: ['thinking', 50],
   writing: ['thinking', 50],
@@ -439,15 +525,17 @@ function setPip(pose, at) {
 function onStage(event) {
   $('pipCaption').textContent = event.detail;
   if (event.stage === 'looking_up' && event.external === false) return;
-  if (event.stage === 'done') setPip(DONE_POSE[event.status] || 'cannot', 50);
+  if (event.stage === 'done') setPip(DONE_POSE[event.status] || 'idle', 50);
   else if (event.stage === 'error') setPip('resting');
   else if (STAGE_POSE[event.stage]) setPip(...STAGE_POSE[event.stage]);
 }
 
 function onResult(result) {
   if (result.ok) {
-    state.credits = result.credits;
-    $('creditsTotal').textContent = formatCredits(result.credits);
+    if (typeof result.credits === 'number') {
+      state.credits = result.credits;
+      $('creditsTotal').textContent = formatCredits(result.credits);
+    }
     renderResult(result);
   } else {
     showProblem(result.error);
@@ -541,6 +629,7 @@ async function loadOptions() {
       option.textContent = bid;
       $('bidSelect').appendChild(option);
     }
+    showApprovedTender(data.approved_tender);
     if (!data.bids.length) {
       $('bidSelect').innerHTML = '<option value="">No bid files found in data/bid</option>';
       $('runBid').disabled = true;
@@ -568,7 +657,20 @@ $('panelCv').addEventListener('submit', (event) => {
 });
 $('panelBid').addEventListener('submit', (event) => {
   event.preventDefault();
-  if ($('bidSelect').value) startRun('/api/audit', { bid: $('bidSelect').value, fresh: $('freshBid').checked });
+  if ($('bidSelect').value) {
+    startRun('/api/audit', {
+      bid: $('bidSelect').value,
+      fresh: $('freshBid').checked,
+      use_approved_tender: $('useTender').checked,
+    });
+  }
+});
+$('readTender').addEventListener('click', () => {
+  const text = $('tenderText').value;
+  const hint = $('tenderHint');
+  hint.classList.toggle('hidden', Boolean(text.trim()));
+  hint.textContent = text.trim() ? '' : 'Paste the tender text first.';
+  if (text.trim()) startRun('/api/read-tender', { text, fresh: $('freshBid').checked });
 });
 
 buildPip();

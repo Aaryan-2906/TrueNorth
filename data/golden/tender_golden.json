@@ -1,0 +1,44 @@
+{
+  "_note": "Frozen positions for the golden tests only. These are the pre-correction values the expected answers in expert_cases.json were written against; requires_postgraduate=true is expressed as postgraduate=required. The real tender is data/tender.json.",
+  "positions": {
+    "team_leader": {
+      "name": "Team Leader cum Senior Highway Engineer",
+      "min_total_years": 12,
+      "min_similar_years": 5,
+      "similar_title_keywords": [
+        "team leader",
+        "project director"
+      ],
+      "postgraduate": "required"
+    },
+    "resident_engineer": {
+      "name": "Resident cum Highway Engineer",
+      "min_total_years": 10,
+      "min_similar_years": 5,
+      "similar_title_keywords": [
+        "resident engineer"
+      ],
+      "postgraduate": "required"
+    },
+    "bridge_engineer": {
+      "name": "Bridge/Structural Engineer",
+      "min_total_years": 10,
+      "min_similar_years": 5,
+      "similar_title_keywords": [
+        "bridge",
+        "structural"
+      ],
+      "postgraduate": "required"
+    },
+    "quality_material_expert": {
+      "name": "Senior Quality cum Material Expert",
+      "min_total_years": 10,
+      "min_similar_years": 5,
+      "similar_title_keywords": [
+        "material",
+        "quality"
+      ],
+      "postgraduate": "required"
+    }
+  }
+}

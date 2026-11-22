@@ -380,7 +380,7 @@ def rule_profile_thin(jobs: list[Job]) -> list[Finding]:
 
 def rule_years_shortfall(total: int, position: dict[str, Any], jobs: list[Job]) -> list[Finding]:
     minimum = position["min_total_years"]
-    if total >= minimum * 12:
+    if minimum is None or total >= minimum * 12:  # None: the tender states no minimum.
         return []
     message = f"documented {_years(total)} years vs tender minimum {minimum:g}"
     evidence = ["tender.min_total_years"] + [job.source for job in jobs]
@@ -405,6 +405,8 @@ def rule_similar_role_unproven(
     claims: Claims, similar: int, position: dict[str, Any], similar_jobs: list[Job]
 ) -> list[Finding]:
     minimum = position["min_similar_years"]
+    if minimum is None:  # The tender states no minimum.
+        return []
     claimed = claims.claimed_similar_years
     below_minimum = similar < minimum * 12
     over_claimed = claimed is not None and claimed * 12 - similar > CLAIM_GAP_MONTHS
@@ -484,17 +486,28 @@ def rule_expert_not_at_firm(
 
 
 def rule_education_not_shown(profile: Profile, position: dict[str, Any]) -> list[Finding]:
-    if not position.get("requires_postgraduate"):
+    level = position.get("postgraduate", "none")
+    if level not in {"required", "preferential"}:
         return []
     if any(_POSTGRADUATE.search(entry.degree or "") for entry in profile.education):
         return []
+    if level == "preferential":
+        marks = position.get("postgraduate_marks")
+        worth = "" if marks is None else f" worth {marks:g} mark{'' if marks == 1 else 's'}"
+        message = (
+            f"Postgraduate degree is a preferential qualification{worth}; none shown on the profile. "
+            "This affects scoring, not eligibility."
+        )
+        return [
+            _finding("POSTGRADUATE_PREFERENTIAL", "info", message, ["tender.postgraduate", "profile.education"], worth=worth)
+        ]
     if not profile.education:
         message = "no education listed on profile"
         shown = "The profile lists no education."
     else:
         message = "tender requires a postgraduate degree; none is shown in the profile's education"
         shown = "No postgraduate degree appears in the profile's education."
-    evidence = ["tender.requires_postgraduate", "profile.education"]
+    evidence = ["tender.postgraduate", "profile.education"]
     return [_finding("EDUCATION_NOT_SHOWN", "question", message, evidence, shown=shown)]
 
 

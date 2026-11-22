@@ -8,7 +8,8 @@ from app.models import Claims, Lookup
 
 ROOT = Path(__file__).resolve().parent.parent
 GOLDEN = json.loads((ROOT / "data" / "golden" / "expert_cases.json").read_text(encoding="utf-8"))
-TENDER = json.loads((ROOT / "data" / "tender.json").read_text(encoding="utf-8"))
+# A frozen copy of the positions these expected answers were written against. The real tender is data/tender.json.
+TENDER = json.loads((ROOT / "data" / "golden" / "tender_golden.json").read_text(encoding="utf-8"))
 TODAY = (2026, 11)
 
 
