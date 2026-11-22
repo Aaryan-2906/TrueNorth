@@ -312,6 +312,21 @@
   2. Crustdata returns people with those titles and sector words in the chosen country.
   3. Deterministic code counts their years and keeps only people whose role-title job also shows the sector.
 
+## Custom requirements and approved positions
+- **Built:** the Position dropdowns in Check one CV and Audit a bid > Upload CVs now offer "Custom requirement…", with role name, minimum total years, minimum years in similar roles, similar-role titles, and postgraduate level. If a tender has been approved, its positions are listed under "Approved tender". Each uploaded CV can have its own requirement.
+- **Files:** `app/requirements.py`, `app/server.py`, `app/cli.py`, `static/index.html`, `tests/test_requirements.py`, `README.md`, `demo/DEMO_SCRIPT.md`. `app/checker.py` is unchanged.
+- **Test results:** `uv run pytest -q` gives 468 passed. With a mocked profile, an inline position fires `YEARS_SHORTFALL` and `SIMILAR_ROLE_UNPROVEN` correctly, together and separately, and invalid input is refused with a clear message before any paid call. In headless Edge, 27 checks passed on both forms with synthetic lookups, including hostile text shown safely. No Crustdata credits were spent.
+- **Decisions:**
+  1. A custom requirement is validated into the same shape as a `data/tender.json` position: years 0-50, at most 10 titles, and a postgraduate level of none, preferential or required.
+  2. A minimum for similar roles needs at least one title, because otherwise every expert would get a false similar-role question.
+  3. The role name is used as the position label. Two different requirements with the same name become "Name" and "Name (2)".
+  4. Custom requirements exist only for that run. Nothing is written to `data/`.
+- **Known gaps:** preferential postgraduate has no marks value in a custom requirement. Saved-bid audits still use the "Use approved tender" switch rather than these dropdowns. Year and similar-role checks need a profile URL, so a custom requirement on a CV with no profile is only checked against the CV itself.
+- **How it works:**
+  1. The page sends the chosen requirement with the CV.
+  2. The server validates it and builds a normal position.
+  3. The existing checker runs on that position with no rule changes.
+
 ## Suggestions (ideas noted but not built)
 - Compare CV names in `test_fallback_claims_still_match` without bracketed notes, so a fresh Claude reading cannot change the result.
 - For custom roles, fetch more pages until enough people meet the same-job check, with a visible credit cap.

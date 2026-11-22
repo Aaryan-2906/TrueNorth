@@ -62,6 +62,7 @@ class UploadedCv:
     profile_url: str | None
     position: str | None
     employment: str
+    inline_position: dict[str, Any] | None = None
 
 
 class InputError(RuntimeError):
@@ -458,6 +459,13 @@ def audit_uploaded(
 ) -> AuditRun:
     """Audit a bid built in memory from uploaded CVs. Nothing is written to data/."""
     tender = _load_tender()
+    inline = {upload.position: upload.inline_position for upload in uploads if upload.inline_position is not None}
+    if inline:
+        tender = {
+            **tender,
+            "positions": {**tender["positions"], **inline},
+            "tender_id": f"{tender.get('tender_id')} with custom or approved requirements",
+        }
     experts = [
         {
             "id": f"C{number}",
@@ -506,10 +514,11 @@ def check_one_cv(
     profile_url: str | None,
     fresh: bool | None,
     progress: Progress = _silent,
+    inline_position: dict[str, Any] | None = None,
 ) -> CvRun:
     """Check one CV's text. With no position this is Career Check mode (SPEC 7b)."""
     tender = _load_tender()
-    if position_key is not None and position_key not in tender["positions"]:
+    if inline_position is None and position_key is not None and position_key not in tender["positions"]:
         known = ", ".join(tender["positions"])
         raise InputError(f"Unknown position '{position_key}'. Known positions: {known}.")
     ledger_start = report.ledger_row_count()
@@ -536,7 +545,7 @@ def check_one_cv(
 
     target = "the record" if lookup.profile is not None else "itself"
     progress("checking", cv_id, f"Checking {_rows_text(len(claims.rows))} against {target}")
-    position = tender["positions"][position_key] if position_key else None
+    position = inline_position or (tender["positions"][position_key] if position_key else None)
     result = checker.check_expert(lookup, claims, position, None, None, today=config.TODAY)
     entry = report.ExpertEntry({"id": cv_id}, claims, lookup, result, origin, position)
     return CvRun(entry, ledger_start, lookup_error)

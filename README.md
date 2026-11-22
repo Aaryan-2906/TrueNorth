@@ -143,6 +143,20 @@ flowchart LR
   class CD,CI,L data
   class AP human
   class FE preview
+
+  subgraph KEY["What the colours mean"]
+    direction TB
+    K1["AI: only reads text<br/>(copies verbatim, never decides)"]
+    K2["Our code: deterministic,<br/>tested rules that decide"]
+    K3[("Data: Crustdata records,<br/>cache and cost ledger")]
+    K4{"A person approves"}
+    K5["Preview feature"]
+  end
+  class K1 ai
+  class K2 ours
+  class K3 data
+  class K4 human
+  class K5 preview
 ```
 
 CVs in the standard NHAI layout are read by rules with no AI; Claude reads only unfamiliar layouts (and tender text), copying text verbatim. Every decision is made by tested, deterministic code.
@@ -183,7 +197,7 @@ irreversible happens anywhere; no message is ever sent.
 audit of the demo bid costs **1.2 credits** (1 person enrich + 0.2 company identify); repeat runs reuse the cache and
 cost 0. The web app shows each real call (live or cached, credits, time) in its Activity panel.
 
-**Tests (437 passing):** 17 hand-built expert cases and 5 firm cases written before the event and never edited;
+**Tests (468 passing):** 17 hand-built expert cases and 5 firm cases written before the event and never edited;
 29 real CV date strings plus extra formats; robustness tests (timeout mid-run resumes without re-billing cached calls,
 401/402/403/429, malformed bids, empty CVs, a recipe instead of a CV, LLM refusal/invalid JSON); parser tests on six
 CVs; tender parsing matched the PDF on all six positions in four fresh readings. A live audit matched the cached audit

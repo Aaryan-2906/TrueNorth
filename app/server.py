@@ -24,7 +24,7 @@ from pydantic import BaseModel, Field, ValidationError
 from starlette.datastructures import UploadFile
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app import cli, config, crustdata, cv_files, finder, parse_cv, parse_tender, report
+from app import cli, config, crustdata, cv_files, finder, parse_cv, parse_tender, report, requirements
 from app.models import FirmResult
 
 STATIC_DIR = config.ROOT_DIR / "static"
@@ -57,6 +57,7 @@ class CheckCvRequest(BaseModel):
     cv_text: str = Field(max_length=MAX_CV_CHARACTERS)
     profile_url: str | None = None
     position: str | None = None
+    custom_position: dict[str, Any] | None = None
     fresh: bool = False
 
 
@@ -287,10 +288,15 @@ async def _read_upload(request: Request) -> CheckCvRequest | Response:
             text = await run_in_threadpool(cv_files.extract_text, upload.filename or "", data)
         except cv_files.CvFileError as exc:
             return JSONResponse({"error": str(exc)}, status_code=422)
+        try:
+            custom = requirements.parse_custom(form.get("custom_position"))
+        except requirements.RequirementError as exc:
+            return JSONResponse({"error": str(exc)}, status_code=422)
         return CheckCvRequest(
             cv_text=text,
             profile_url=str(form.get("profile_url") or "") or None,
             position=str(form.get("position") or "") or None,
+            custom_position=custom,
             fresh=form.get("fresh") == "true",
         )
 
@@ -311,15 +317,23 @@ async def check_cv(http_request: Request) -> Response:
             raise RequestValidationError(exc.errors(include_url=False, include_context=False)) from exc
     else:
         return JSONResponse({"error": "Send JSON with cv_text, or a multipart form with a file."}, status_code=415)
+    try:
+        known = set(cli._load_tender()["positions"])
+        position_key, inline_position = requirements.resolve(request.position or "", request.custom_position, known)
+    except requirements.RequirementError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=422)
+    except cli.InputError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=500)
 
     def job(progress: cli.Progress) -> dict[str, Any]:
         run = cli.check_one_cv(
             request.cv_text,
             PASTED_CV_ID,
-            request.position or None,
+            position_key,
             (request.profile_url or "").strip() or None,
             True if request.fresh else None,
             progress,
+            inline_position,
         )
         progress("writing", PASTED_CV_ID, "Preparing the questions and draft letter")
         return _cv_result(run)
@@ -399,25 +413,38 @@ async def _parse_bid_form(form: Any) -> BidUpload | Response:
     if isinstance(files, Response):
         return files
     count = len(files)
-    urls, positions, employments = (_form_values(form, name, count) for name in ("profile_url", "position", "employment"))
-    if urls is None or positions is None or employments is None:
+    urls, positions, employments, customs = (
+        _form_values(form, name, count) for name in ("profile_url", "position", "employment", "custom_position")
+    )
+    if urls is None or positions is None or employments is None or customs is None:
         return _upload_error("Each file needs its own profile URL, position and employment fields.")
     try:
         known_positions = cli._load_tender()["positions"]
     except cli.InputError as exc:
         return _upload_error(str(exc), 500)
-    for number, (url, position, employment) in enumerate(zip(urls, positions, employments), 1):
+    used = set(known_positions)
+    chosen: list[tuple[str | None, dict[str, Any] | None]] = []
+    for number, (url, position, employment, custom) in enumerate(zip(urls, positions, employments, customs), 1):
         if url and not _LINKEDIN_PROFILE.fullmatch(url):
             return _upload_error(f"File {number}: the profile URL must look like https://www.linkedin.com/in/name.")
-        if position and position not in known_positions:
+        if position == requirements.CUSTOM_KEY or position.startswith(requirements.APPROVED_PREFIX):
+            try:
+                key, inline = requirements.resolve(position, requirements.parse_custom(custom), used)
+            except requirements.RequirementError as exc:
+                return _upload_error(f"File {number}: {exc}")
+            used.add(key)
+            chosen.append((key, inline))
+        elif position and position not in known_positions:
             return _upload_error(f"File {number}: unknown position.")
+        else:
+            chosen.append((position or None, None))
         if employment and employment not in UPLOAD_EMPLOYMENT:
             return _upload_error(f"File {number}: employment must be full-time or associate.")
 
     uploads = []
-    for (filename, data), url, position, employment in zip(files, urls, positions, employments):
+    for (filename, data), url, (position, inline), employment in zip(files, urls, chosen, employments):
         text, problem = await run_in_threadpool(_extract_upload, filename, data)
-        uploads.append(cli.UploadedCv(text, problem, url or None, position or None, employment or "full_time"))
+        uploads.append(cli.UploadedCv(text, problem, url or None, position, employment or "full_time", inline))
     return BidUpload({"name": firm_name, "domain": domain}, uploads, form.get("fresh") == "true")
 
 
@@ -434,7 +461,7 @@ async def audit_upload(http_request: Request) -> Response:
     if int(length) > MAX_BID_FILES * cv_files.MAX_FILE_BYTES + MAX_FORM_OVERHEAD_BYTES:
         return _upload_error(f"This upload is larger than {MAX_BID_FILES} files of 5 MB.", 413)
     try:
-        async with http_request.form(max_files=MAX_BID_FILES, max_fields=4 + 3 * MAX_BID_FILES) as form:
+        async with http_request.form(max_files=MAX_BID_FILES, max_fields=4 + 4 * MAX_BID_FILES) as form:
             parsed = await _parse_bid_form(form)
     except StarletteHTTPException as exc:
         if "files" in str(exc.detail).lower():
@@ -520,7 +547,9 @@ def approve_tender(request: ApproveTenderRequest) -> Response:
         return JSONResponse({"error": "That proposal is no longer available. Please read the tender again."}, status_code=404)
     path = parse_tender.approve(positions, "pasted tender text")
     _proposals.clear()
-    return JSONResponse({"ok": True, "approved": _approved_info(path)})
+    return JSONResponse(
+        {"ok": True, "approved": _approved_info(path), "approved_positions": requirements.approved_options()}
+    )
 
 
 def _approved_info(path: Path) -> dict[str, Any] | None:
@@ -548,6 +577,7 @@ def options() -> Response:
             "positions": positions,
             "bids": bids,
             "approved_tender": _approved_info(parse_tender.APPROVED_PATH),
+            "approved_positions": requirements.approved_options(),
             "finder_credits": round(finder.DEFAULT_LIMIT * finder.CREDITS_PER_RESULT, 2),
         }
     )
