@@ -141,7 +141,7 @@ def _audit_experts(
 
 
 def _audit_firm(bid: dict[str, Any], fresh: bool | None, errors: list[str]) -> tuple[Any, int]:
-    full_time = sum(e.get("employment_with_bidder") == "full_time" for e in bid["experts"])
+    full_time = firm.distinct_full_time_count(bid["experts"])
     try:
         records, note = firm.lookup_firm(bid, fresh=fresh)
     except crustdata.CrustdataError as exc:
@@ -149,6 +149,7 @@ def _audit_firm(bid: dict[str, Any], fresh: bool | None, errors: list[str]) -> t
         errors.append(f"firm: {exc}")
     result = firm.check_firm(records, full_time)
     result.lookup_note = note
+    result.bid_findings = firm.rule_duplicate_experts(bid["experts"])
     return result, full_time
 
 
@@ -164,7 +165,7 @@ def run_audit(fresh: bool | None) -> int:
     timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     text = report.render_report(bid, tender, entries, firm_result, full_time, ledger_start, errors, timestamp)
     path = report.write_report(text)
-    print(report.headline(entries))
+    print(report.headline(entries, firm_result))
     print(f"Report written to {path}")
     for error in errors:
         print(f"Lookup failed: {error}", file=sys.stderr)

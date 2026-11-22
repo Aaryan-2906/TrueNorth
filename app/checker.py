@@ -116,10 +116,10 @@ def rule_cv_date_invalid(claims: Claims) -> list[Finding]:
     for index, row in enumerate(claims.rows):
         if row.date_problem is None:
             continue
-        if row.start is None and row.start_raw:
-            label, raw = "start date", row.start_raw
-        elif row.end is None and row.end_raw:
-            label, raw = "end date", row.end_raw
+        if row.start is None:
+            label, raw = "start date", row.start_raw or "(blank)"
+        elif row.end is None:
+            label, raw = "end date", row.end_raw or "(blank)"
         else:
             label, raw = "dates", f"{row.start_raw} to {row.end_raw}"
         message = f"row {index + 1} {label} '{raw}' is {row.date_problem}"

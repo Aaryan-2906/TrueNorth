@@ -29,6 +29,7 @@ _FIXED_SOURCES = {
 }
 _CV_ROW = re.compile(r"cv\.rows\[(\d+)\]")
 _FIRM_RECORD = re.compile(r"firm\.records\[(\d+)\]")
+_BID_EXPERT = re.compile(r"bid\.experts\[(.+)\]")
 
 
 @dataclass
@@ -78,18 +79,28 @@ def _cell(value: Any) -> str:
     return str(value).replace("|", "\\|").replace("\n", " ")
 
 
-def headline(entries: list[ExpertEntry]) -> str:
+def _firm_questions(result: FirmResult) -> tuple[list[Question], list[Question]]:
+    return build_questions(result.findings + result.bid_findings)
+
+
+def total_questions(entries: list[ExpertEntry], firm_result: FirmResult) -> int:
+    """Every question that needs an answer from the bidder, across experts, firm and bid."""
+    groups = [build_questions(entry.result.findings)[0] for entry in entries]
+    groups.append(_firm_questions(firm_result)[0])
+    return sum(question.action_needed for group in groups for question in group)
+
+
+def headline(entries: list[ExpertEntry], firm_result: FirmResult) -> str:
     counts = {"CONSISTENT": 0, "QUESTIONS": 0, "CANNOT_CHECK": 0}
-    questions = 0
     for entry in entries:
         counts[entry.result.status] += 1
-        if entry.result.status == "QUESTIONS":
-            questions += len(build_questions(entry.result.findings)[0])
+    questions = total_questions(entries, firm_result)
     noun = "question" if questions == 1 else "questions"
     return (
         f"{len(entries)} experts: {counts['CONSISTENT']} consistent, "
-        f"{counts['QUESTIONS']} need clarification ({questions} {noun}), "
-        f"{counts['CANNOT_CHECK']} cannot be checked"
+        f"{counts['QUESTIONS']} need clarification, "
+        f"{counts['CANNOT_CHECK']} cannot be checked; "
+        f"{questions} {noun} in total (including CV-only questions)"
     )
 
 
@@ -122,12 +133,15 @@ def _firm_evidence_text(evidence: list[str], result: FirmResult) -> str:
     parts = []
     for source in evidence:
         match = _FIRM_RECORD.fullmatch(source)
+        expert = _BID_EXPERT.fullmatch(source)
         if match:
             record = result.records[int(match.group(1))]
             parts.append(
                 f"company record {record.get('crustdata_company_id')} "
                 f"({record.get('name')}, {firm.describe_range(record)})"
             )
+        elif expert:
+            parts.append(f"bid entry {expert.group(1)}")
         else:
             parts.append(_FIXED_SOURCES.get(source, source))
     return "; ".join(parts)
@@ -152,17 +166,17 @@ def _summary_lines(entries: list[ExpertEntry]) -> list[str]:
 def _firm_lines(bid: dict[str, Any], result: FirmResult, full_time_count: int) -> list[str]:
     details = bid["firm"]
     lines = [
-        "## Firm",
+        "## Firm and bid",
         "",
         f"- **Bidder:** {details.get('name')} ({details.get('domain') or 'no domain given'})",
-        f"- **Status:** {result.status}",
+        f"- **Firm status:** {result.status}",
         f"- **Records found:** {len(result.records)}",
     ]
     if result.headcount_range is not None:
         lines.append(f"- **Headcount used:** {firm.format_range(result.headcount_range)}")
     else:
         lines.append("- **Headcount used:** not available")
-    lines.append(f"- **Key experts listed as full-time in the bid:** {full_time_count}")
+    lines.append(f"- **Distinct people listed as full-time in the bid:** {full_time_count}")
     if result.lookup_note:
         lines.append(f"- **Lookup note:** {result.lookup_note}")
     if result.records:
@@ -172,7 +186,7 @@ def _firm_lines(bid: dict[str, Any], result: FirmResult, full_time_count: int) -
                 f"| {record.get('crustdata_company_id')} | {_cell(record.get('name'))} | "
                 f"{_cell(record.get('primary_domain') or 'not listed')} | {_cell(firm.describe_range(record))} |"
             )
-    questions, notes = build_questions(result.findings)
+    questions, notes = _firm_questions(result)
     describe = lambda evidence: _firm_evidence_text(evidence, result)
     lines += ["", "**Questions for the committee:**", ""]
     lines += _question_lines(questions, describe) or ["None."]
@@ -250,9 +264,9 @@ def _letter_lines(bid: dict[str, Any], entries: list[ExpertEntry], firm_result: 
         if questions:
             lines += [f"**{entry.expert['id']}: {entry.claims.name}**", ""]
             lines += [f"{index}. {q.text}" for index, q in enumerate(questions, 1)] + [""]
-    firm_questions = [q for q in build_questions(firm_result.findings)[0] if q.action_needed]
+    firm_questions = [q for q in _firm_questions(firm_result)[0] if q.action_needed]
     if firm_questions:
-        lines += ["**The firm**", ""]
+        lines += ["**The firm and bid**", ""]
         lines += [f"{index}. {q.text}" for index, q in enumerate(firm_questions, 1)] + [""]
     return lines + ["Yours faithfully,", "", "[Name], Tender Committee", ""]
 
@@ -289,7 +303,7 @@ def render_report(
     errors: list[str],
     timestamp: str,
 ) -> str:
-    lines = ["# Tender Bid Audit", "", f"**{headline(entries)}**", ""]
+    lines = ["# Tender Bid Audit", "", f"**{headline(entries, firm_result)}**", ""]
     lines.append(f"Tender: {tender.get('tender_id')}. Bidder: {bid['firm'].get('name')}.")
     if bid.get("_note"):
         lines.append(f"Bid note: {bid['_note']}")

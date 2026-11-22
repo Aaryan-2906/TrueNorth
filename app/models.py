@@ -127,3 +127,4 @@ class FirmResult(BaseModel):
     headcount_range: tuple[int, float] | None  # (low, high); high may be infinity
     findings: list[Finding]
     lookup_note: str | None = None  # e.g. that a second name form was used
+    bid_findings: list[Finding] = []  # bid-level findings; these do not change the firm's status

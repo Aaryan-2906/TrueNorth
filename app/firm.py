@@ -135,6 +135,59 @@ def check_firm(records: list[dict[str, Any]], full_time_count: int) -> FirmResul
     return FirmResult(status=_status(findings), records=unique, headcount_range=best, findings=findings)
 
 
+def _normal_url(url: str) -> str:
+    text = url.strip().lower().split("?")[0].split("#")[0]
+    text = re.sub(r"^https?://", "", text)
+    text = re.sub(r"^(?:www|[a-z]{2})\.linkedin\.com", "linkedin.com", text)
+    return re.sub(r"^www\.", "", text).rstrip("/")
+
+
+def _normal_name(name: str | None) -> str:
+    text = re.sub(r"[(\[{][^)\]}]*[)\]}]", " ", name or "")
+    return " ".join(re.sub(r"[^\w\s]", " ", text.casefold()).split())
+
+
+def person_key(expert: dict[str, Any]) -> str:
+    """Identify a person by profile URL, or by normalised name when there is no URL."""
+    url = expert.get("profile_url")
+    if url:
+        return f"url:{_normal_url(url)}"
+    name = _normal_name(expert.get("name"))
+    return f"name:{name}" if name else f"id:{expert.get('id')}"
+
+
+def distinct_full_time_count(experts: list[dict[str, Any]]) -> int:
+    """Experts the bid lists as full-time, counting each distinct person once."""
+    return len({person_key(e) for e in experts if e.get("employment_with_bidder") == "full_time"})
+
+
+def _join_ids(ids: list[str]) -> str:
+    return f"{', '.join(ids[:-1])} and {ids[-1]}"
+
+
+def rule_duplicate_experts(experts: list[dict[str, Any]]) -> list[Finding]:
+    groups: dict[str, list[str]] = {}
+    for expert in experts:
+        groups.setdefault(person_key(expert), []).append(expert["id"])
+    findings = []
+    for key, ids in groups.items():
+        if len(ids) < 2:
+            continue
+        relation = "point to the same person" if key.startswith("url:") else "have the same name and may be the same person"
+        joined = _join_ids(ids)
+        findings.append(
+            _finding(
+                "DUPLICATE_EXPERT",
+                "question",
+                f"{joined} {relation}",
+                [f"bid.experts[{expert_id}]" for expert_id in ids],
+                ids=joined,
+                relation=relation,
+            )
+        )
+    return findings
+
+
 def _records_from_reply(reply: list[dict[str, Any]]) -> list[dict[str, Any]]:
     records = []
     for item in reply:

@@ -80,5 +80,23 @@
   2. Each finding carries its values, and a fixed template turns it into a numbered committee question. No LLM writes this wording.
   3. The report combines the headline, firm, per-expert tables, cited questions, a draft letter that is never sent, and a footer with credits and data freshness.
 
+## Step 06a: date parser + bid duplicate check
+- **Built:** `parse_cv_date` and `fill_row_dates`, a bid-level `DUPLICATE_EXPERT` question, a full-time count of distinct people, and a headline that totals questions across the whole bid.
+- **Files:** `app/dates.py`, `app/firm.py`, `app/report.py`, `app/questions.py`, `app/models.py`, `app/cli.py`, `app/checker.py`, `tests/test_dates.py`, `tests/test_bid.py`, `tests/test_questions.py`.
+- **Test results:** date tests failed first (no module), then all 29 golden date strings passed without editing the golden file. `fill_row_dates` also reproduces the dates in all 6 hand-written claims files. `uv run pytest -q` gives 108 passed. `audit` made no paid call.
+- **Headline:** 4 experts: 0 consistent, 2 need clarification, 2 cannot be checked; 11 questions in total (including CV-only questions).
+- **Decisions:**
+  1. The total counts every question needing a bidder answer: 10 across experts and 1 bid-level. "No profile was available" statements are not counted.
+  2. `DUPLICATE_EXPERT` sits in the "Firm and bid" section and does not change the firm's own status, because the firm's record is not what is in question.
+  3. The same URL reads "point to the same person". The same name with no URL reads "may be the same person", because two people can share a name.
+  4. `tests/test_questions.py` lists every reason code, so `DUPLICATE_EXPERT` was added to that list. No expected value changed.
+  5. A blank date cell now reads `(blank)` in `CV_DATE_INVALID`, and golden results are unchanged.
+- **Known gaps:** the parser accepts only the formats in SPEC §5c. Anything else is reported as unreadable rather than guessed. The CV parser (Part B) is not built yet.
+- **How it works:**
+  1. Each raw CV date is matched against a fixed list of formats, with day-first numeric dates and two-digit years resolved by the SPEC rule.
+  2. A date that cannot be read, has no year, or falls after today becomes a named problem, so the row leaves all totals and raises a question.
+  3. The bid check groups experts by profile URL, or by name when there is no URL, and counts each distinct person once.
+
 ## Suggestions (ideas noted but not built)
+- SPEC §5c does not accept "12 March 2019", "12-03-2019" or "12.03.2019", so they are reported as unreadable. Real CVs may use them. Consider adding them before Part B.
 - SPEC §4 collapses same-employer, same-date jobs even when titles differ, which could hide a title a CV row should match. Consider keeping both titles.
