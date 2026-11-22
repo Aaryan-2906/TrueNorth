@@ -43,6 +43,9 @@ committee decides); and acting on the questions. It never contacts anyone.
 - Name search for experts without a profile URL. Not built: same-name strangers make it risky; today we report only counts.
 - Conflict check: an expert who recently worked at the procuring agency.
 - Scanned-PDF CVs (OCR).
+- **Reverse mode:** from a tender's key-personnel rules, find people whose employment record actually meets them
+  (Crustdata person search + the same checker), already checked against the tender. Not built: it needs careful ranking,
+  raises privacy questions about listing people, and must never contact anyone.
 
 ## The future of this service
 Bidders self-audit every bid automatically before submission, and committees receive a clarification pack the day
