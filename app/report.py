@@ -72,6 +72,20 @@ def _ledger_rows() -> list[dict[str, str]]:
         return list(csv.DictReader(handle))
 
 
+def ledger_credits(path: str, sha1: str) -> float | None:
+    """Credits on the newest credits.csv line for this request, or None if it has no figure."""
+    for row in reversed(_ledger_rows()):
+        if row["path"] == path and row["sha1"] == sha1:
+            return float(row["credits_used"]) if row["credits_used"] else None
+    return None
+
+
+def credits_since(ledger_start: int) -> float:
+    """Total credits recorded in credits.csv since the given line count."""
+    known = [float(row["credits_used"]) for row in _ledger_rows()[ledger_start:] if row["credits_used"]]
+    return round(sum(known), 4)
+
+
 def _credits_line(ledger_start: int) -> str:
     all_rows = _ledger_rows()[ledger_start:]
     rows = [row for row in all_rows if row["status"] not in _REJECTED_STATUSES or row["credits_used"]]
@@ -109,8 +123,9 @@ def headline(entries: list[ExpertEntry], firm_result: FirmResult) -> str:
     noun = "question" if questions == 1 else "questions"
     if not entries:
         return f"0 experts: this bid lists no experts; {questions} {noun} in total"
+    people = "expert" if len(entries) == 1 else "experts"
     return (
-        f"{len(entries)} experts: {counts['CONSISTENT']} consistent, "
+        f"{len(entries)} {people}: {counts['CONSISTENT']} consistent, "
         f"{counts['QUESTIONS']} need clarification, "
         f"{counts['CANNOT_CHECK']} cannot be checked; "
         f"{questions} {noun} in total (including CV-only questions)"
@@ -122,6 +137,10 @@ def _jobs_by_source(lookup: Lookup) -> dict[str, Job]:
 
 
 def _evidence_text(evidence: list[str], entry: ExpertEntry) -> str:
+    return "; ".join(_evidence_parts(evidence, entry))
+
+
+def _evidence_parts(evidence: list[str], entry: ExpertEntry) -> list[str]:
     jobs = _jobs_by_source(entry.lookup)
     cv_numbers = [int(m.group(1)) for m in map(_CV_ROW.fullmatch, evidence) if m]
     parts = []
@@ -139,10 +158,14 @@ def _evidence_text(evidence: list[str], entry: ExpertEntry) -> str:
             parts.append(f"profile entry {source} ({cite_job(jobs[source])})")
         else:
             parts.append(_FIXED_SOURCES.get(source, source))
-    return "; ".join(parts)
+    return parts
 
 
 def _firm_evidence_text(evidence: list[str], result: FirmResult) -> str:
+    return "; ".join(_firm_evidence_parts(evidence, result))
+
+
+def _firm_evidence_parts(evidence: list[str], result: FirmResult) -> list[str]:
     parts = []
     for source in evidence:
         match = _FIRM_RECORD.fullmatch(source)
@@ -157,7 +180,7 @@ def _firm_evidence_text(evidence: list[str], result: FirmResult) -> str:
             parts.append(f"bid entry {expert.group(1)}")
         else:
             parts.append(_FIXED_SOURCES.get(source, source))
-    return "; ".join(parts)
+    return parts
 
 
 def _question_lines(questions: list[Question], describe: Any) -> list[str]:
@@ -229,6 +252,16 @@ def _row_table(entry: ExpertEntry) -> list[str]:
     return lines
 
 
+def _expert_notes(entry: ExpertEntry) -> list[str]:
+    claims = entry.claims
+    notes = []
+    if claims.cv_date is None and any(row.end == "present" for row in claims.rows):
+        notes.append(UNDATED_NOTE)
+    if claims.cv_date is not None and entry.lookup.profile is not None:
+        notes.append(f"the profile was read as it stood at the CV date, {claims.cv_date}")
+    return notes
+
+
 def _expert_lines(entry: ExpertEntry) -> list[str]:
     claims, result = entry.claims, entry.result
     position = claims.proposed_position or "none (Career Check mode)"
@@ -246,10 +279,7 @@ def _expert_lines(entry: ExpertEntry) -> list[str]:
             f"- **Similar role:** documented {_years_text(result.documented_similar_months)} vs claimed {similar_claimed}"
         )
     lines.append(f"- **Lookup:** {entry.origin}")
-    if claims.cv_date is None and any(row.end == "present" for row in claims.rows):
-        lines.append(f"- **Note:** {UNDATED_NOTE}")
-    if claims.cv_date is not None and entry.lookup.profile is not None:
-        lines.append(f"- **Note:** the profile was read as it stood at the CV date, {claims.cv_date}")
+    lines += [f"- **Note:** {note}" for note in _expert_notes(entry)]
     lines += ["", *_row_table(entry), "", "**Questions for the committee:**", ""]
     questions, notes = build_questions(result.findings)
     describe = lambda evidence: _evidence_text(evidence, entry)
@@ -338,6 +368,97 @@ def render_report(
     lines += _letter_lines(bid, entries, firm_result)
     lines += _footer_lines(ledger_start, errors, timestamp)
     return "\n".join(lines)
+
+
+# --- JSON views for the web UI: the same questions, evidence and wording as the report ---
+
+
+def _question_view(question: Question, parts: list[str]) -> dict[str, Any]:
+    return {
+        "number": question.number,
+        "text": question.text,
+        "codes": question.codes,
+        "evidence": parts,
+        "action_needed": question.action_needed,
+    }
+
+
+def _months_to_years(months: int | None) -> float | None:
+    return None if months is None else round(months / 12, 1)
+
+
+def expert_view(entry: ExpertEntry) -> dict[str, Any]:
+    claims, result = entry.claims, entry.result
+    jobs = _jobs_by_source(entry.lookup)
+    rows = []
+    for index, row in enumerate(claims.rows):
+        source = result.row_results[index].matched_source
+        rows.append(
+            {
+                "number": index + 1,
+                "employer": row.employer or "(employer unclear)",
+                "title": row.title,
+                "dates": row_dates(row),
+                "outcome": row_outcome(index, result),
+                "profile_entry": f"{cite_job(jobs[source])} ({source})" if source in jobs else None,
+            }
+        )
+    questions, notes = build_questions(result.findings)
+    return {
+        "id": entry.expert["id"],
+        "name": claims.name,
+        "status": result.status,
+        "position": claims.proposed_position,
+        "documented_years": _months_to_years(result.documented_total_months),
+        "claimed_years": claims.claimed_total_years if claims.claimed_total_stated else None,
+        "documented_similar_years": _months_to_years(result.documented_similar_months),
+        "claimed_similar_years": claims.claimed_similar_years,
+        "lookup": entry.origin,
+        "notes": _expert_notes(entry),
+        "rows": rows,
+        "questions": [_question_view(q, _evidence_parts(q.evidence, entry)) for q in questions],
+        "info": [_question_view(n, _evidence_parts(n.evidence, entry)) for n in notes],
+        "why": [
+            {"code": f.code, "severity": f.severity, "message": f.message, "evidence": f.evidence}
+            for f in result.findings
+        ],
+    }
+
+
+def firm_view(bid: dict[str, Any], result: FirmResult, full_time_count: int) -> dict[str, Any]:
+    questions, notes = _firm_questions(result)
+    return {
+        "name": bid["firm"].get("name"),
+        "domain": bid["firm"].get("domain"),
+        "status": result.status,
+        "headcount": firm.format_range(result.headcount_range) if result.headcount_range is not None else None,
+        "full_time_people": full_time_count,
+        "lookup_note": result.lookup_note,
+        "records": [
+            {
+                "id": record.get("crustdata_company_id"),
+                "name": record.get("name"),
+                "domain": record.get("primary_domain"),
+                "range": firm.describe_range(record),
+            }
+            for record in result.records
+        ],
+        "questions": [_question_view(q, _firm_evidence_parts(q.evidence, result)) for q in questions],
+        "info": [_question_view(n, _firm_evidence_parts(n.evidence, result)) for n in notes],
+    }
+
+
+def status_counts(entries: list[ExpertEntry]) -> dict[str, int]:
+    counts = {"CONSISTENT": 0, "QUESTIONS": 0, "CANNOT_CHECK": 0}
+    for entry in entries:
+        counts[entry.result.status] += 1
+    return counts
+
+
+def draft_letter(bid: dict[str, Any], entries: list[ExpertEntry], firm_result: FirmResult) -> str:
+    """The report's draft letter as plain text. It is only ever copied by a person."""
+    lines = _letter_lines(bid, entries, firm_result)[2:]
+    return "\n".join(line.replace("**", "").strip("*") for line in lines).strip() + "\n"
 
 
 # --- HTML: rendered from the Markdown report, so both files always hold the same content ---

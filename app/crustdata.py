@@ -7,7 +7,7 @@ import os
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import httpx
 
@@ -24,7 +24,7 @@ RETRY_WAIT_SECONDS = 5
 TIMEOUT_SECONDS = 60.0
 HTTP_ERROR_MESSAGES = {
     401: "Crustdata rejected the API key (HTTP 401). Check CRUSTDATA_API_KEY in .env.",
-    402: "Crustdata reports a payment or credit problem (HTTP 402). Check the balance with GET /account/credits or ask an organiser.",
+    402: "Crustdata credits have run out (HTTP 402). Check the balance with GET /account/credits or ask an organiser.",
     403: "This API key is not allowed to use this endpoint (HTTP 403). Ask an organiser which endpoints it allows (GET /account/endpoints).",
     429: "Crustdata rate limit reached (HTTP 429) after 3 retries. Wait a minute and run again; results already fetched are reused.",
 }
@@ -34,6 +34,9 @@ _NEVER_SENT = (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout)
 
 # Lookups made during this run, for the report's cache-vs-live statement.
 _lookups: list[dict[str, str]] = []
+
+# Optional observer told about each paid lookup, live or cached. Used by the web UI's activity strip.
+call_listener: Callable[[dict[str, Any]], None] | None = None
 
 
 class CrustdataError(RuntimeError):
@@ -70,6 +73,25 @@ def _append_ledger(path: str, sha1: str, credits_used: str, status: str) -> None
         writer.writerow([_now(), path, sha1, credits_used, status])
 
 
+def _notify(path: str, sha1: str, source: str, started: float, fetched_at: str | None, status: str) -> None:
+    if call_listener is not None:
+        call_listener(
+            {
+                "path": path,
+                "sha1": sha1,
+                "source": source,
+                "fetched_at": fetched_at,
+                "ms": round((time.perf_counter() - started) * 1000),
+                "status": status,
+            }
+        )
+
+
+def reset_run() -> None:
+    """Forget the previous run's lookup counts (for a long-running server)."""
+    _lookups.clear()
+
+
 def _not_retried(path: str, billed: bool, detail: str) -> str:
     if billed:
         return f"{path}: lookup failed: may have been billed, not retried ({detail})."
@@ -87,11 +109,14 @@ def _send(method: str, path: str, body: Any, sha1: str, billed: bool) -> httpx.R
     }
 
     for attempt in range(MAX_RETRIES + 1):
+        started = time.perf_counter()
         try:
             response = httpx.request(
                 method, BASE_URL + path, headers=headers, json=body, timeout=TIMEOUT_SECONDS
             )
         except _NEVER_SENT as exc:
+            if billed:
+                _notify(path, sha1, "live", started, None, type(exc).__name__)
             if attempt < MAX_RETRIES:
                 time.sleep(RETRY_WAIT_SECONDS)
                 continue
@@ -99,12 +124,14 @@ def _send(method: str, path: str, body: Any, sha1: str, billed: bool) -> httpx.R
         except httpx.TransportError as exc:
             if billed:
                 _append_ledger(path, sha1, "", type(exc).__name__)
+                _notify(path, sha1, "live", started, None, type(exc).__name__)
             raise CrustdataError(_not_retried(path, billed, type(exc).__name__)) from exc
 
         if billed:
             _append_ledger(
                 path, sha1, response.headers.get("x-credits-used", ""), str(response.status_code)
             )
+            _notify(path, sha1, "live", started, _now(), str(response.status_code))
         if response.status_code == 429 and attempt < MAX_RETRIES:
             time.sleep(RETRY_WAIT_SECONDS)
             continue
@@ -136,6 +163,7 @@ def post(path: str, body: Any, billed: bool, fresh: bool | None = None) -> Any:
     file = _cache_file(path, sha1)
 
     if not use_fresh and file.exists():
+        started = time.perf_counter()
         try:
             cached = json.loads(file.read_text(encoding="utf-8"))
         except (OSError, ValueError) as exc:
@@ -152,6 +180,7 @@ def post(path: str, body: Any, billed: bool, fresh: bool | None = None) -> Any:
                 "fetched_at": fetched_at.isoformat(timespec="seconds"),
             }
         )
+        _notify(path, sha1, "cache", started, fetched_at.isoformat(timespec="seconds"), "cached")
         return cached
 
     response = _send("POST", path, body, sha1, billed)

@@ -3,9 +3,10 @@
 import argparse
 import json
 import sys
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from pydantic import ValidationError
 
@@ -18,6 +19,36 @@ REQUIRED_EXPERT_FIELDS = ("id", "name", "proposed_position", "employment_with_bi
 EMPLOYMENT_TYPES = {"full_time", "associate", "intermittent"}
 REQUIRED_POSITION_FIELDS = ("min_total_years", "min_similar_years", "similar_title_keywords")
 CV_READ_ERRORS = (parse_cv.CvParseError, OSError, UnicodeDecodeError)
+
+# progress(stage, expert id or None, detail): how a caller such as the web UI follows a run.
+Progress = Callable[[str, str | None, str], None]
+
+
+def _silent(_stage: str, _expert: str | None, _detail: str) -> None:
+    return None
+
+
+def _rows_text(count: int) -> str:
+    return f"{count} CV row" if count == 1 else f"{count} CV rows"
+
+
+@dataclass
+class AuditRun:
+    bid: dict[str, Any]
+    entries: list[report.ExpertEntry]
+    firm_result: Any
+    full_time: int
+    ledger_start: int
+    report_path: Path
+    errors: list[str] = field(default_factory=list)
+    cv_problems: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass
+class CvRun:
+    entry: report.ExpertEntry
+    ledger_start: int
+    lookup_error: str | None = None
 
 
 class InputError(RuntimeError):
@@ -81,8 +112,8 @@ def _check_expert_entry(expert: Any, index: int, tender: dict[str, Any], file: s
         raise InputError(f"{file}: {label} field 'cv' points outside the bid folder.") from exc
 
 
-def _load_bid(tender: dict[str, Any]) -> dict[str, Any]:
-    path = BID_DIR / "bid.json"
+def _load_bid(tender: dict[str, Any], bid_path: Path | None = None) -> dict[str, Any]:
+    path = bid_path or BID_DIR / "bid.json"
     file = _display(path)
     bid = _load_json(path)
     if not isinstance(bid, dict):
@@ -148,10 +179,18 @@ def _position(expert: dict[str, Any], tender: dict[str, Any]) -> dict[str, Any] 
     return tender["positions"][key] if key is not None else None
 
 
-def _read_cv(expert: dict[str, Any], fresh: bool | None) -> Claims:
+def _read_cv(expert: dict[str, Any], fresh: bool | None, progress: Progress = _silent) -> Claims:
     """Read the expert's CV text through the parser. The bid's name is the one displayed."""
+    expert_id = expert["id"]
+    progress("reading_cv", expert_id, f"Reading {expert_id}'s CV ({_display(BID_DIR / expert['cv'])})")
     text = (BID_DIR / expert["cv"]).read_text(encoding="utf-8")
-    claims = parse_cv.parse_cv(text, expert["id"], expert.get("proposed_position"), fresh=fresh)
+    claims = parse_cv.parse_cv(
+        text,
+        expert_id,
+        expert.get("proposed_position"),
+        fresh=fresh,
+        on_dates=lambda count: progress("reading_dates", expert_id, f"Converting the dates on {_rows_text(count)}"),
+    )
     return claims.model_copy(update={"name": expert.get("name") or claims.name})
 
 
@@ -265,21 +304,27 @@ def _audit_experts(
     cv_problems: dict[str, str],
     fresh: bool | None,
     errors: list[str],
+    progress: Progress = _silent,
 ) -> list[report.ExpertEntry]:
     entries = []
     seen: dict[str, tuple[Lookup, str, str]] = {}
     for expert in bid["experts"]:
-        if expert["id"] in cv_problems:
-            entries.append(_unread_entry(expert, cv_problems[expert["id"]]))
+        expert_id = expert["id"]
+        if expert_id in cv_problems:
+            progress("checking", expert_id, f"{expert_id}: the CV could not be read, so it was not checked")
+            entries.append(_unread_entry(expert, cv_problems[expert_id]))
             continue
         url = expert.get("profile_url")
         if not url:
+            progress("looking_up", expert_id, f"No profile URL supplied for {expert_id}, so no lookup is made")
             lookup, origin = _no_url_lookup()
         elif url in seen:
             # Same URL in one run: reuse the reply so --fresh never pays for it twice.
             lookup, first_origin, first_id = seen[url]
+            progress("looking_up", expert_id, f"{expert_id} has the same profile URL as {first_id}, so that lookup is reused")
             origin = f"{first_origin}, same lookup as {first_id}"
         else:
+            progress("looking_up", expert_id, f"Looking up {expert_id} in Crustdata")
             try:
                 lookup, origin = _lookup_url(url, fresh)
             except crustdata.CrustdataError as exc:
@@ -287,28 +332,40 @@ def _audit_experts(
                 origin = str(exc)
                 errors.append(f"{expert['id']}: {exc}")
             seen[url] = (lookup, origin, expert["id"])
-        claims = claims_by_id[expert["id"]]
+        claims = claims_by_id[expert_id]
+        progress("checking", expert_id, _checking_detail(expert_id, claims, lookup))
         result = _check(expert, claims, lookup, tender, bid)
         entries.append(report.ExpertEntry(expert, claims, lookup, result, origin))
     return entries
 
 
-def _audit_firm(bid: dict[str, Any], fresh: bool | None, errors: list[str]) -> tuple[Any, int]:
+def _checking_detail(expert_id: str, claims: Claims, lookup: Lookup) -> str:
+    target = "the record" if lookup.profile is not None else "itself"
+    return f"Checking {expert_id}'s {_rows_text(len(claims.rows))} against {target}"
+
+
+def _audit_firm(
+    bid: dict[str, Any], fresh: bool | None, errors: list[str], progress: Progress = _silent
+) -> tuple[Any, int]:
     full_time = firm.distinct_full_time_count(bid["experts"])
+    progress("looking_up", None, f"Looking up the company record for {bid['firm']['name']}")
     try:
         records, note = firm.lookup_firm(bid, fresh=fresh)
     except crustdata.CrustdataError as exc:
         records, note = [], f"The firm was not compared. {exc}"
         errors.append(f"firm: {exc}")
+    people = "1 person" if full_time == 1 else f"{full_time} people"
+    progress("checking", None, f"Checking the firm record against the {people} listed as full-time")
     result = firm.check_firm(records, full_time)
     result.lookup_note = note
     result.bid_findings = firm.rule_duplicate_experts(bid["experts"])
     return result, full_time
 
 
-def run_audit(fresh: bool | None) -> int:
+def audit_bid(fresh: bool | None, progress: Progress = _silent, bid_path: Path | None = None) -> AuditRun:
+    """Run every expert and the firm, and write the report. The CLI and the web UI both call this."""
     tender = _load_tender()
-    bid = _load_bid(tender)
+    bid = _load_bid(tender, bid_path)
     ledger_start = report.ledger_row_count()
     errors: list[str] = []
 
@@ -317,51 +374,89 @@ def run_audit(fresh: bool | None) -> int:
     cv_problems: dict[str, str] = {}
     for expert in bid["experts"]:
         try:
-            claims_by_id[expert["id"]] = _read_cv(expert, fresh)
+            claims_by_id[expert["id"]] = _read_cv(expert, fresh, progress)
         except CV_READ_ERRORS as exc:
             cv_problems[expert["id"]] = _cv_problem(exc)
-            print(
-                f"CV could not be read for {expert['id']} ({_display(BID_DIR / expert['cv'])}): {cv_problems[expert['id']]}.",
-                file=sys.stderr,
-            )
 
-    entries = _audit_experts(bid, tender, claims_by_id, cv_problems, fresh, errors)
-    firm_result, full_time = _audit_firm(bid, fresh, errors)
+    entries = _audit_experts(bid, tender, claims_by_id, cv_problems, fresh, errors, progress)
+    firm_result, full_time = _audit_firm(bid, fresh, errors, progress)
 
+    progress("writing", None, "Writing out/report.md and out/report.html")
     timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     text = report.render_report(bid, tender, entries, firm_result, full_time, ledger_start, errors, timestamp)
     path = report.write_report(text)
-    print(report.headline(entries, firm_result))
-    print(f"Report written to {path} and {path.with_suffix('.html')}")
-    for error in errors:
+    return AuditRun(bid, entries, firm_result, full_time, ledger_start, path, errors, cv_problems)
+
+
+def run_audit(fresh: bool | None) -> int:
+    run = audit_bid(fresh)
+    for expert_id, problem in run.cv_problems.items():
+        expert = next(e for e in run.bid["experts"] if e["id"] == expert_id)
+        print(f"CV could not be read for {expert_id} ({_display(BID_DIR / expert['cv'])}): {problem}.", file=sys.stderr)
+    print(report.headline(run.entries, run.firm_result))
+    print(f"Report written to {run.report_path} and {run.report_path.with_suffix('.html')}")
+    for error in run.errors:
         print(f"Lookup failed: {error}", file=sys.stderr)
     return 0
 
 
-def run_check_cv(path_text: str, position_key: str | None, profile_url: str | None, fresh: bool | None) -> int:
-    """Check one unseen CV. With no position this is Career Check mode (SPEC 7b)."""
-    path = Path(path_text)
+def check_one_cv(
+    text: str,
+    cv_id: str,
+    position_key: str | None,
+    profile_url: str | None,
+    fresh: bool | None,
+    progress: Progress = _silent,
+) -> CvRun:
+    """Check one CV's text. With no position this is Career Check mode (SPEC 7b)."""
     tender = _load_tender()
     if position_key is not None and position_key not in tender["positions"]:
         known = ", ".join(tender["positions"])
-        print(f"Unknown position {position_key!r}. Known positions: {known}", file=sys.stderr)
-        return 2
+        raise InputError(f"Unknown position '{position_key}'. Known positions: {known}.")
+    ledger_start = report.ledger_row_count()
+    progress("reading_cv", cv_id, f"Reading the CV text ({len(text)} characters)")
+    claims = parse_cv.parse_cv(
+        text,
+        cv_id,
+        position_key,
+        fresh=fresh,
+        on_dates=lambda count: progress("reading_dates", cv_id, f"Converting the dates on {_rows_text(count)}"),
+    )
+
+    lookup_error = None
+    if profile_url:
+        progress("looking_up", cv_id, "Looking up the profile in Crustdata")
+        try:
+            lookup, origin = _lookup_url(profile_url, fresh)
+        except crustdata.CrustdataError as exc:
+            lookup, origin = Lookup(status="not_found", reason="lookup_failed"), str(exc)
+            lookup_error = str(exc)
+    else:
+        progress("looking_up", cv_id, "No profile URL supplied, so no lookup is made")
+        lookup, origin = _no_url_lookup()
+
+    target = "the record" if lookup.profile is not None else "itself"
+    progress("checking", cv_id, f"Checking {_rows_text(len(claims.rows))} against {target}")
+    position = tender["positions"][position_key] if position_key else None
+    result = checker.check_expert(lookup, claims, position, None, None, today=config.TODAY)
+    return CvRun(report.ExpertEntry({"id": cv_id}, claims, lookup, result, origin), ledger_start, lookup_error)
+
+
+def run_check_cv(path_text: str, position_key: str | None, profile_url: str | None, fresh: bool | None) -> int:
+    """Check one unseen CV file from the command line."""
+    path = Path(path_text)
     try:
         text = path.read_text(encoding="utf-8-sig", errors="replace")
-        claims = parse_cv.parse_cv(text, path.stem, position_key, fresh=fresh)
+        run = check_one_cv(text, path.stem, position_key, profile_url, fresh)
     except CV_READ_ERRORS as exc:
         print(f"CV could not be read ({path}): {_cv_problem(exc)}.", file=sys.stderr)
         return 1
+    if run.lookup_error:
+        print(f"Crustdata lookup failed: {run.lookup_error}", file=sys.stderr)
 
-    try:
-        lookup, origin = _lookup_url(profile_url, fresh) if profile_url else _no_url_lookup()
-    except crustdata.CrustdataError as exc:
-        lookup, origin = Lookup(status="not_found", reason="lookup_failed"), "failed"
-        print(f"Crustdata lookup failed: {exc}", file=sys.stderr)
-
-    position = tender["positions"][position_key] if position_key else None
-    result = checker.check_expert(lookup, claims, position, None, None, today=config.TODAY)
-    print(format_expert({"id": path.stem}, claims, result, origin))
+    entry = run.entry
+    claims = entry.claims
+    print(format_expert({"id": path.stem}, claims, entry.result, entry.origin))
     if claims.profile_url and not profile_url:
         print("Note: the CV lists a profile URL. It was not looked up; pass --profile-url to compare against it.")
     return 0

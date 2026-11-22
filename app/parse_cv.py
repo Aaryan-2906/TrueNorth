@@ -3,9 +3,10 @@
 import hashlib
 import json
 import os
+import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import anthropic
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -67,6 +68,9 @@ OUTPUT_SCHEMA = {
 
 # Readings made during this run, for the report footer.
 _readings: list[dict[str, str]] = []
+
+# Optional observer told about each CV reading, live or cached. Used by the web UI's activity strip.
+call_listener: Callable[[dict[str, Any]], None] | None = None
 
 
 class CvParseError(RuntimeError):
@@ -136,6 +140,23 @@ def _write_cache(path: Path, raw: str) -> None:
     os.replace(temp, path)
 
 
+def _notify(source: str, started: float, fetched_at: str | None, status: str) -> None:
+    if call_listener is not None:
+        call_listener(
+            {
+                "source": source,
+                "fetched_at": fetched_at,
+                "ms": round((time.perf_counter() - started) * 1000),
+                "status": status,
+            }
+        )
+
+
+def reset_run() -> None:
+    """Forget the previous run's reading counts (for a long-running server)."""
+    _readings.clear()
+
+
 def _call_model(client: anthropic.Anthropic, text: str, correction: str | None) -> str:
     content = f"<cv>\n{text}\n</cv>"
     if correction:
@@ -149,10 +170,13 @@ def _call_model(client: anthropic.Anthropic, text: str, correction: str | None) 
     }
     if config.ANTHROPIC_MODEL in FALLBACK_MODELS:
         request.update(betas=[FALLBACK_BETA], fallbacks="default")
+    started = time.perf_counter()
     try:
         response = client.beta.messages.create(**request)
     except anthropic.AnthropicError as exc:
+        _notify("live", started, None, type(exc).__name__)
         raise CvParseError(f"the Anthropic API call failed ({type(exc).__name__})") from exc
+    _notify("live", started, datetime.now(timezone.utc).isoformat(timespec="seconds"), str(response.stop_reason))
     if response.stop_reason in {"refusal", "max_tokens"}:
         raise CvParseError(f"the model stopped early ({response.stop_reason})")
     answer = next((block.text for block in response.content if block.type == "text"), None)
@@ -216,6 +240,7 @@ def parse_cv(
     proposed_position: str | None,
     fresh: bool | None = None,
     today: tuple[int, int] | None = None,
+    on_dates: Callable[[int], None] | None = None,
 ) -> Claims:
     """Read CV text into validated Claims, reusing a cached reading unless fresh is on."""
     if not text.strip():
@@ -223,6 +248,7 @@ def parse_cv(
     use_fresh = config.FRESH if fresh is None else fresh
     path = cache_path(text)
     extract = None
+    started = time.perf_counter()
     if not use_fresh and path.exists():
         try:
             extract = validate_extract(path.read_text(encoding="utf-8"), text)
@@ -231,6 +257,7 @@ def parse_cv(
     if extract is not None:
         fetched = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc)
         source = "cache"
+        _notify("cache", started, fetched.isoformat(timespec="seconds"), "cached")
     else:
         extract = _extract(text, path)
         fetched = datetime.now(timezone.utc)
@@ -240,6 +267,8 @@ def parse_cv(
     )
     if not extract.rows:
         raise CvParseError("no employment record was found, so this does not look like a CV")
+    if on_dates is not None:
+        on_dates(len(extract.rows))
     return _to_claims(extract, expert_id, proposed_position, today or config.TODAY)
 
 
