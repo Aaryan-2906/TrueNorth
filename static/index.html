@@ -763,10 +763,15 @@ function updateCarousel(idx) {
     const active = i === state.carouselIdx;
     card.style.borderColor = active ? 'var(--accent-text)' : 'var(--border-subtle)';
     card.style.boxShadow = active ? '0 8px 24px -8px rgba(22, 58, 46, 0.16)' : '0 1px 3px rgba(26, 25, 23, 0.04)';
+    card.style.opacity = active ? '1' : '0.5';
+    card.style.transform = active ? 'translateY(-2px)' : 'none';
+    card.style.transition = 'opacity .25s, transform .25s, border-color .25s, box-shadow .25s';
+    card.style.cursor = active ? 'default' : 'pointer';
   });
 }
 $('carouselPrev').addEventListener('click', () => updateCarousel(state.carouselIdx - 1));
 $('carouselNext').addEventListener('click', () => updateCarousel(state.carouselIdx + 1));
+document.querySelectorAll('.struggle-card').forEach((card, i) => card.addEventListener('click', (e) => { if (!e.target.closest('a')) updateCarousel(i); }));
 
 const pill = (status) => `<span class="pill ${STATUS_STYLE[status] || 'pill-slate'}">${esc(status)}</span>`;
 
