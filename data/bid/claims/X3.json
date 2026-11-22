@@ -1,0 +1,24 @@
+{
+  "_note": "Hand-written structured version of cvs/X3.md. Raw dates copied verbatim, DD/MM/YYYY read day first. Last row's end 09/12/2097 is after today, so end is null with date_problem.",
+  "expert_id": "X3",
+  "name": "Expert R",
+  "proposed_position": "team_leader",
+  "claimed_total_years": 29,
+  "claimed_similar_years": null,
+  "rows": [
+    {"employer": "Alpha Consultants International", "title": "Team Leader", "start_raw": "13/01/2022", "end_raw": "03/11/2023", "duration_raw": "13/01/2022 to 03/11/2023", "start": "2022-01", "end": "2023-11", "date_problem": null, "duration_start": "2022-01", "duration_end": "2023-11"},
+    {"employer": "Alpha Consultants International", "title": "Team Leader cum Sr. Highway Engineer", "start_raw": "03/06/2021", "end_raw": "12/01/2022", "duration_raw": "03/06/2019 to 12/01/2022", "start": "2021-06", "end": "2022-01", "date_problem": null, "duration_start": "2019-06", "duration_end": "2022-01"},
+    {"employer": "Alpha Consultants International in association with Beta Civil Solutions", "title": "Acting Team Leader", "start_raw": "03/06/2019", "end_raw": "08/08/2020", "duration_raw": "03/06/2019 to 08/08/2020", "start": "2019-06", "end": "2020-08", "date_problem": null, "duration_start": "2019-06", "duration_end": "2020-08"},
+    {"employer": "Gamma Projects Ltd", "title": "Team Leader cum Sr. Highway Engineer", "start_raw": "28/08/2018", "end_raw": "31/05/2019", "duration_raw": null, "start": "2018-08", "end": "2019-05", "date_problem": null, "duration_start": null, "duration_end": null},
+    {"employer": "Delta Projects Pvt. Ltd.", "title": "Team Leader cum Sr. Highway Engineer", "start_raw": "26/10/2017", "end_raw": "08/08/2018", "duration_raw": null, "start": "2017-10", "end": "2018-08", "date_problem": null, "duration_start": null, "duration_end": null},
+    {"employer": "Epsilon Associates", "title": "Resident Engineer cum Pavement Specialist", "start_raw": "09/07/2015", "end_raw": "25/10/2017", "duration_raw": null, "start": "2015-07", "end": "2017-10", "date_problem": null, "duration_start": null, "duration_end": null},
+    {"employer": "Zeta Associates South Asia Pvt. Ltd.", "title": "Resident Engineer", "start_raw": "01/10/2012", "end_raw": "07/07/2015", "duration_raw": null, "start": "2012-10", "end": "2015-07", "date_problem": null, "duration_start": null, "duration_end": null},
+    {"employer": "Zeta Associates South Asia Pvt. Ltd.", "title": "Resident Engineer", "start_raw": "15/06/2004", "end_raw": "14/09/2012", "duration_raw": null, "start": "2004-06", "end": "2012-09", "date_problem": null, "duration_start": null, "duration_end": null},
+    {"employer": "Eta Construction Limited", "title": "Project Manager", "start_raw": "10/06/2001", "end_raw": "14/06/2004", "duration_raw": "06/2003 to 06/2004", "start": "2001-06", "end": "2004-06", "date_problem": null, "duration_start": "2003-06", "duration_end": "2004-06"},
+    {"employer": "Eta Construction Limited", "title": "Senior Engineer", "start_raw": "10/01/2000", "end_raw": "09/06/2001", "duration_raw": null, "start": "2000-01", "end": "2001-06", "date_problem": null, "duration_start": null, "duration_end": null},
+    {"employer": "Eta Construction Limited", "title": "Deputy Project Manager", "start_raw": "10/12/1997", "end_raw": "09/01/2000", "duration_raw": null, "start": "1997-12", "end": "2000-01", "date_problem": null, "duration_start": null, "duration_end": null},
+    {"employer": "Eta Construction Limited", "title": "Senior Engineer", "start_raw": "01/10/1995", "end_raw": "09/12/2097", "duration_raw": "01/10/1995 to 09/12/2017", "start": "1995-10", "end": null, "date_problem": "after today", "duration_start": "1995-10", "duration_end": "2017-12"}
+  ],
+  "cv_date": null,
+  "profile_url": null
+}

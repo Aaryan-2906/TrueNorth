@@ -1,0 +1,17 @@
+{
+  "_note": "Hand-written structured version of cvs/X2.md. SEEDED TEST: deliberately altered copy of X1 with 3 changes (claimed total 15, Riley title, Riley start).",
+  "expert_id": "X2",
+  "name": "Daniel A. (SEEDED TEST)",
+  "proposed_position": null,
+  "claimed_total_years": 15,
+  "claimed_similar_years": null,
+  "rows": [
+    {"employer": "Crustdata (YC F24)", "title": "Growth - Realtime People and Company Data via APIs", "start_raw": "Jan 2025", "end_raw": "Present", "duration_raw": null, "start": "2025-01", "end": "present", "date_problem": null, "duration_start": null, "duration_end": null},
+    {"employer": "Maslo", "title": "Co-Founder and CEO", "start_raw": "Feb 2021", "end_raw": "Jan 2023", "duration_raw": null, "start": "2021-02", "end": "2023-01", "date_problem": null, "duration_start": null, "duration_end": null},
+    {"employer": "PersistIQ", "title": "Chief Executive Officer", "start_raw": "Sep 2019", "end_raw": "Jan 2021", "duration_raw": null, "start": "2019-09", "end": "2021-01", "date_problem": null, "duration_start": null, "duration_end": null},
+    {"employer": "PersistIQ", "title": "GM", "start_raw": "May 2019", "end_raw": "Sep 2019", "duration_raw": null, "start": "2019-05", "end": "2019-09", "date_problem": null, "duration_start": null, "duration_end": null},
+    {"employer": "Riley Corporation", "title": "Chief Technology Officer", "start_raw": "Nov 2012", "end_raw": "Mar 2019", "duration_raw": null, "start": "2012-11", "end": "2019-03", "date_problem": null, "duration_start": null, "duration_end": null}
+  ],
+  "cv_date": null,
+  "profile_url": null
+}
