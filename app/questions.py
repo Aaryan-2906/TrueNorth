@@ -109,6 +109,7 @@ DATE_PROBLEM_TEXT = {
     "after today": "is after today",
     "after cv_date": "is after the date written on the CV",
     "no year": "has no year",
+    "no month": "has no clear month",
     "end before start": "ends before it starts",
     "unreadable": "could not be read",
 }

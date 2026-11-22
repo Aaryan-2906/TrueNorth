@@ -18,14 +18,16 @@ _MONTHS["sept"] = 9
 _PRESENT_WORDS = {"till date", "till now", "to date", "present", "current", "ongoing"}
 _MONTH_YEAR = re.compile(r"([a-z]+)[\s.,'‘’`\"“”-]*(\d{4}|\d{2})")
 _MONTH_ONLY = re.compile(r"([a-z]+)[\s.,]*")
-_DAY_MONTH_YEAR = re.compile(r"(\d{1,2})/(\d{1,2})/(\d{4})")
+_DAY_MONTH_YEAR = re.compile(r"(\d{1,2})([/.-])(\d{1,2})\2(\d{4})")
+_DAY_MONTH_NAME_YEAR = re.compile(r"(\d{1,2})(?:st|nd|rd|th)?[\s-]+([a-z]+)[\s.,-]*(\d{4})")
 _MONTH_SLASH_YEAR = re.compile(r"(\d{1,2})/(\d{4})")
+_NO_MONTH = re.compile(r"(?:\d{1,2}-)?\d{4}")
 _EARLIEST_YEAR = 1900
 
 
 @dataclass(frozen=True)
 class Problem:
-    kind: str  # "no year", "after today", "end before start", "after cv_date", "unreadable"
+    kind: str  # "no year", "no month", "after today", "end before start", "after cv_date", "unreadable"
 
 
 ParsedDate = YearMonth | Literal["present"] | Problem
@@ -43,6 +45,15 @@ def _checked(year: int, month: int, today: tuple[int, int]) -> YearMonth | Probl
     return Problem("after today") if value > tuple(today) else value
 
 
+def _checked_day(day: int, month: int, year: int, today: tuple[int, int]) -> YearMonth | Problem:
+    """Day-first date: the day is only checked for validity, then dropped."""
+    if not 1 <= month <= 12 or year < _EARLIEST_YEAR:
+        return Problem("unreadable")
+    if not 1 <= day <= calendar.monthrange(year, month)[1]:
+        return Problem("unreadable")
+    return _checked(year, month, today)
+
+
 def parse_cv_date(raw: Any, today: tuple[int, int]) -> ParsedDate:
     """Parse one date string from a CV into a month, "present", or a Problem."""
     if not isinstance(raw, str) or not raw.strip():
@@ -54,16 +65,20 @@ def parse_cv_date(raw: Any, today: tuple[int, int]) -> ParsedDate:
 
     match = _DAY_MONTH_YEAR.fullmatch(text)
     if match:
-        day, month, year = (int(part) for part in match.groups())
-        if not 1 <= month <= 12 or year < _EARLIEST_YEAR:
+        return _checked_day(int(match.group(1)), int(match.group(3)), int(match.group(4)), today)
+
+    match = _DAY_MONTH_NAME_YEAR.fullmatch(text)
+    if match:
+        if match.group(2) not in _MONTHS:
             return Problem("unreadable")
-        if not 1 <= day <= calendar.monthrange(year, month)[1]:
-            return Problem("unreadable")
-        return _checked(year, month, today)
+        return _checked_day(int(match.group(1)), _MONTHS[match.group(2)], int(match.group(3)), today)
 
     match = _MONTH_SLASH_YEAR.fullmatch(text)
     if match:
         return _checked(int(match.group(2)), int(match.group(1)), today)
+
+    if _NO_MONTH.fullmatch(text):
+        return Problem("no month")
 
     match = _MONTH_YEAR.fullmatch(text)
     if match and match.group(1) in _MONTHS:

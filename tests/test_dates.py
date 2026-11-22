@@ -26,6 +26,30 @@ def test_golden_date_string(case):
     assert parse_cv_date(case["raw"], TODAY) == expected_value(case["expected"])
 
 
+@pytest.mark.parametrize(
+    "raw, expected",
+    [
+        ("12 March 2019", (2019, 3)),
+        ("12 Mar 2019", (2019, 3)),
+        ("12th March, 2019", (2019, 3)),
+        ("1st Sept. 2018", (2018, 9)),
+        ("12-03-2019", (2019, 3)),
+        ("12.03.2019", (2019, 3)),
+        ("03-2019", Problem("no month")),
+        ("2019", Problem("no month")),
+        ("31 February 2020", Problem("unreadable")),
+        ("31-02-2020", Problem("unreadable")),
+        ("12-13-2019", Problem("unreadable")),
+        ("12.03-2019", Problem("unreadable")),
+        ("12 Smarch 2019", Problem("unreadable")),
+        ("12 December 2097", Problem("after today")),
+        ("12.12.2097", Problem("after today")),
+    ],
+)
+def test_additional_date_formats(raw, expected):
+    assert parse_cv_date(raw, TODAY) == expected
+
+
 def row(start_raw, end_raw):
     return CvRow(employer="A", title="T", start_raw=start_raw, end_raw=end_raw, start=None, end=None)
 
