@@ -470,7 +470,24 @@ def status_counts(entries: list[ExpertEntry]) -> dict[str, int]:
 def draft_letter(bid: dict[str, Any], entries: list[ExpertEntry], firm_result: FirmResult) -> str:
     """The report's draft letter as plain text. It is only ever copied by a person."""
     lines = _letter_lines(bid, entries, firm_result)[4:]  # Without the heading and the note to the committee.
-    return "\n".join(line.replace("**", "").strip("*") for line in lines).strip() + "\n"
+    text = "\n".join(line.replace("**", "").strip("*") for line in lines).strip() + "\n"
+    return _to_bidder(text)
+
+
+# The questions are written for the committee ("Please ask the bidder ..."); the letter speaks to the bidder.
+_BIDDER_PHRASES = (
+    ("Please ask the bidder which", "Please confirm which"),
+    ("Please ask the bidder whether", "Please confirm whether"),
+    ("Please ask the bidder for ", "Please provide "),
+    ("Please ask the bidder to ", "Please "),
+    ("pasted_cv: ", "CV: "),
+)
+
+
+def _to_bidder(text: str) -> str:
+    for old, new in _BIDDER_PHRASES:
+        text = text.replace(old, new)
+    return text
 
 
 # --- HTML: rendered from the Markdown report, so both files always hold the same content ---
