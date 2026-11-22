@@ -3,75 +3,172 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TrueNorth</title>
+<title>TrueNorth — Career Check for Tender Committees</title>
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
 <script>
-tailwind.config = { theme: { extend: { fontFamily: {
-  sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-  mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
-} } } };
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        serif: ['Fraunces', 'Georgia', 'serif'],
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+      },
+      colors: {
+        sand: {
+          50: '#F8F6F0',
+          100: '#F1EDE3',
+          200: '#E2DDD2',
+          300: '#CFC8B8',
+        },
+        forest: {
+          700: '#1F4E3E',
+          800: '#163A2E',
+          900: '#0F2920',
+        },
+        ink: {
+          900: '#1A1917',
+          600: '#5C5850',
+          400: '#8A8479',
+        }
+      }
+    }
+  }
+};
 </script>
 <style>
-:root { color-scheme: dark; }
-body { background: #09090B; color: #E4E4E7; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
-.glow { position: fixed; inset: 0 0 auto 0; height: 520px; pointer-events: none; z-index: 0;
-  background: radial-gradient(560px 300px at 34% -60px, rgba(56,189,248,.16), transparent 72%),
-              radial-gradient(620px 320px at 68% -80px, rgba(139,92,246,.15), transparent 72%); }
-.card { background: #111116; border: 1px solid rgba(255,255,255,.08); border-radius: 12px; }
-.field { width: 100%; background: #09090B; border: 1px solid rgba(255,255,255,.1); border-radius: 8px;
-  padding: 9px 11px; font-size: 13.5px; color: #F4F4F5; outline: none; }
-.field:focus { border-color: rgba(56,189,248,.7); box-shadow: 0 0 0 3px rgba(56,189,248,.14); }
-.field::placeholder { color: #71717A; }
-select.field option { background: #111116; }
-.label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 500; color: #A1A1AA; }
-.tab { flex: 1; padding: 7px 10px; border-radius: 7px; font-size: 13px; font-weight: 500; color: #A1A1AA; }
-.tab[aria-selected="true"] { background: rgba(255,255,255,.09); color: #FAFAFA; }
-.primary { width: 100%; padding: 10px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #09090B;
-  background: linear-gradient(90deg, #7DD3FC, #A78BFA); transition: opacity .15s; }
-.primary:hover { opacity: .9; }
-.primary:disabled { opacity: .45; cursor: not-allowed; }
-.ghost { padding: 7px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 500; color: #E4E4E7;
-  border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.03); }
-.ghost:hover { background: rgba(255,255,255,.08); }
-.ghost:disabled { color: #71717A; cursor: not-allowed; }
-:focus-visible { outline: 2px solid #7DD3FC; outline-offset: 2px; }
-.field:focus-visible { outline: none; }
-.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600;
-  letter-spacing: .02em; white-space: nowrap; font-family: "JetBrains Mono", ui-monospace, monospace; }
-.pill-emerald { color: #6EE7B7; background: rgba(16,185,129,.14); border: 1px solid rgba(16,185,129,.3); }
-.pill-amber { color: #FCD34D; background: rgba(245,158,11,.13); border: 1px solid rgba(245,158,11,.3); }
-.pill-slate { color: #CBD5E1; background: rgba(148,163,184,.13); border: 1px solid rgba(148,163,184,.28); }
-.chip { display: inline-block; margin: 4px 4px 0 0; padding: 2px 7px; border-radius: 5px; font-size: 11px; line-height: 1.5;
-  color: #A1A1AA; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.06); }
-.table-wrap { overflow-x: auto; border: 1px solid rgba(255,255,255,.08); border-radius: 8px; }
+:root { color-scheme: light; }
+body {
+  background: #F8F6F0;
+  color: #1A1917;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.card {
+  background: #FFFFFF;
+  border: 1px solid #E2DDD2;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(26, 25, 23, 0.04);
+}
+
+.field {
+  width: 100%;
+  background: #F8F6F0;
+  border: 1px solid #CFC8B8;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13.5px;
+  color: #1A1917;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+.field:focus {
+  background: #FFFFFF;
+  border-color: #163A2E;
+  box-shadow: 0 0 0 3px rgba(22, 58, 46, 0.12);
+}
+.field::placeholder { color: #8A8479; }
+
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 18px; border-radius: 8px; font-size: 13.5px; font-weight: 600;
+  color: #F8F6F0; background: #163A2E; border: 1px solid #163A2E;
+  transition: background .15s, transform .1s;
+}
+.btn-primary:hover { background: #1F4E3E; }
+.btn-primary:active { transform: translateY(1px); }
+.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.btn-secondary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
+  color: #1A1917; background: #FFFFFF; border: 1px solid #CFC8B8;
+  transition: background .15s, border-color .15s;
+}
+.btn-secondary:hover { background: #F1EDE3; border-color: #B5AD9B; }
+.btn-secondary:disabled { color: #8A8479; background: #F8F6F0; cursor: not-allowed; }
+
+.nav-link {
+  padding: 6px 13px; border-radius: 7px; font-size: 13px; font-weight: 500;
+  color: #5C5850; transition: all .15s;
+}
+.nav-link:hover { color: #1A1917; background: rgba(26, 25, 23, 0.04); }
+.nav-link.active { color: #163A2E; background: #FFFFFF; border: 1px solid #E2DDD2; font-weight: 600; }
+
+.tab {
+  flex: 1; padding: 7px 10px; border-radius: 7px; font-size: 13px; font-weight: 500;
+  color: #5C5850; transition: all .15s;
+}
+.tab[aria-selected="true"] {
+  background: #FFFFFF; color: #163A2E; font-weight: 600;
+  box-shadow: 0 1px 2px rgba(26, 25, 23, 0.08);
+}
+
+.pill {
+  display: inline-block; padding: 2px 9px; border-radius: 999px;
+  font-size: 11px; font-weight: 600; letter-spacing: .02em;
+  white-space: nowrap; font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+.pill-emerald { color: #163A2E; background: #DCFCE7; border: 1px solid #86EFAC; }
+.pill-amber { color: #92400E; background: #FEF3C7; border: 1px solid #FCD34D; }
+.pill-slate { color: #334155; background: #F1F5F9; border: 1px solid #CBD5E1; }
+
+.chip {
+  display: inline-block; margin: 4px 4px 0 0; padding: 2px 8px; border-radius: 5px;
+  font-size: 11px; line-height: 1.5; font-family: "JetBrains Mono", ui-monospace, monospace;
+  color: #5C5850; background: #F8F6F0; border: 1px solid #E2DDD2;
+}
+
+.table-wrap { overflow-x: auto; border: 1px solid #E2DDD2; border-radius: 8px; }
 table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-th { padding: 7px 10px; text-align: left; font-size: 11px; font-weight: 500; color: #A1A1AA; white-space: nowrap;
-  background: rgba(255,255,255,.03); }
-td { padding: 7px 10px; border-top: 1px solid rgba(255,255,255,.06); vertical-align: top; color: #D4D4D8; }
-details > summary { cursor: pointer; font-size: 12.5px; font-weight: 500; color: #A1A1AA; }
-details > summary:hover { color: #E4E4E7; }
+th {
+  padding: 8px 11px; text-align: left; font-size: 11px; font-weight: 600;
+  color: #5C5850; white-space: nowrap; background: #F1EDE3;
+  border-bottom: 1px solid #E2DDD2;
+}
+td { padding: 8px 11px; border-top: 1px solid #EDE9DF; vertical-align: top; color: #1A1917; }
+tr:hover td { background: #FAF8F4; }
+
+details > summary { cursor: pointer; font-size: 12.5px; font-weight: 500; color: #5C5850; }
+details > summary:hover { color: #1A1917; }
 #activity { scrollbar-width: thin; }
 
-/* Pip */
-.node { flex: none; padding: 5px 10px; border-radius: 7px; font-size: 11px; font-weight: 500; color: #D4D4D8;
-  font-family: "JetBrains Mono", ui-monospace, monospace; background: #09090B; border: 1px solid rgba(255,255,255,.14); }
-.track { position: relative; flex: 1; height: 76px; margin: 0 30px; }
-.track::before { content: ""; position: absolute; left: -30px; right: -30px; bottom: 15px;
-  border-top: 1px dashed rgba(255,255,255,.2); }
-#pip { position: absolute; bottom: 16px; left: 0; width: 48px; height: 48px; margin-left: -24px;
-  transition: left .75s cubic-bezier(.45,.05,.3,1); }
-.pip-body { width: 48px; height: 48px; transform-origin: 50% 100%; }
+/* Pip Runway */
+.node {
+  flex: none; padding: 6px 11px; border-radius: 7px; font-size: 11px; font-weight: 600;
+  color: #1A1917; font-family: "JetBrains Mono", ui-monospace, monospace;
+  background: #F8F6F0; border: 1px solid #CFC8B8; transition: border-color .2s, background .2s;
+}
+.node.is-active {
+  border-color: #163A2E;
+  background: #FFFFFF;
+}
+.track { position: relative; flex: 1; height: 74px; margin: 0 28px; }
+.track::before {
+  content: ""; position: absolute; left: -28px; right: -28px; bottom: 15px;
+  border-top: 1px dashed #B5AD9B;
+}
+#pip {
+  position: absolute; bottom: 16px; left: 0; width: 46px; height: 46px; margin-left: -23px;
+  transition: left .75s cubic-bezier(.45,.05,.3,1);
+}
+.pip-body { width: 46px; height: 46px; transform-origin: 50% 100%; }
 .pip-body svg { display: block; width: 100%; height: 100%; }
 .pip-wing { transform-box: fill-box; }
 .pip-wing-l { transform-origin: 100% 0; }
 .pip-wing-r { transform-origin: 0 0; }
-.pip-pupil { fill: #18181B; transition: fill .2s; }
-#pipMark { position: absolute; left: 50%; top: -19px; transform: translateX(-50%); font-size: 15px; font-weight: 700;
-  line-height: 1; font-family: "JetBrains Mono", ui-monospace, monospace; }
+.pip-pupil { fill: #1A1917; transition: fill .2s; }
+
+#pipMark {
+  position: absolute; left: 50%; top: -19px; transform: translateX(-50%);
+  font-size: 14px; font-weight: 700; line-height: 1;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+
 #pip[data-state="idle"] .pip-body { animation: pip-float 3.2s ease-in-out infinite; }
 #pip[data-state="reading"] .pip-pupil { animation: pip-scan 1s steps(2, jump-none) infinite; }
 #pip[data-state="flying"] .pip-body { animation: pip-glide .8s ease-in-out infinite; }
@@ -80,12 +177,29 @@ details > summary:hover { color: #E4E4E7; }
 #pip[data-state="thinking"] .pip-body { animation: pip-ponder 1.6s ease-in-out infinite; }
 #pip[data-state="thinking"] .pip-pupil { transform: translateY(-1px); }
 #pip[data-state="consistent"] .pip-body { animation: pip-hop .6s ease-out 2; }
-#pip[data-state="consistent"] .pip-pupil { fill: #10B981; }
+#pip[data-state="consistent"] .pip-pupil { fill: #163A2E; }
 #pip[data-state="questions"] .pip-body { transform: rotate(-11deg); transition: transform .3s; }
 #pip[data-state="questions"] .pip-pupil { fill: #B45309; }
-#pip[data-state="questions"] #pipMark { color: #FBBF24; }
-#pip[data-state="cannot"] #pipMark { color: #94A3B8; }
-#pip[data-state="resting"] .pip-body { transform: translateY(5px) scaleY(.84); filter: grayscale(1) brightness(.72); transition: transform .35s, filter .35s; }
+#pip[data-state="questions"] #pipMark { color: #D97706; }
+#pip[data-state="cannot"] #pipMark { color: #64748B; }
+#pip[data-state="resting"] .pip-body { transform: translateY(5px) scaleY(.84); filter: grayscale(1) opacity(.65); transition: transform .35s, filter .35s; }
+
+/* Hero Pip Entrance */
+.hero-pip-entrance {
+  animation: hero-fly-in 1.25s cubic-bezier(0.22, 1, 0.36, 1) 1 forwards;
+}
+.hero-pip-entrance .pip-wing-l {
+  animation: pip-flap-l .18s ease-in-out 6 alternate;
+}
+.hero-pip-entrance .pip-wing-r {
+  animation: pip-flap-r .18s ease-in-out 6 alternate;
+}
+@keyframes hero-fly-in {
+  0% { opacity: 0; transform: translate(-48px, -18px) rotate(-8deg); }
+  70% { opacity: 1; transform: translate(4px, -3px) rotate(2deg); }
+  100% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+}
+
 @keyframes pip-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 @keyframes pip-scan { from { transform: translateX(-1px); } to { transform: translateX(0); } }
 @keyframes pip-glide { 0%, 100% { transform: translateY(-5px); } 50% { transform: translateY(-9px); } }
@@ -93,103 +207,326 @@ details > summary:hover { color: #E4E4E7; }
 @keyframes pip-flap-r { from { transform: rotate(0); } to { transform: rotate(-48deg); } }
 @keyframes pip-ponder { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
 @keyframes pip-hop { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-11px); } }
+
 @media (prefers-reduced-motion: reduce) {
   #pip { transition: none; }
-  #pip .pip-body, #pip .pip-pupil, #pip .pip-wing { animation: none !important; transition: none !important; }
+  #pip .pip-body, #pip .pip-pupil, #pip .pip-wing,
+  .hero-pip-entrance, .hero-pip-entrance .pip-wing-l, .hero-pip-entrance .pip-wing-r {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 </style>
 </head>
-<body class="min-h-screen pb-40 antialiased">
-<div class="glow" aria-hidden="true"></div>
+<body class="min-h-screen pb-36 antialiased">
 
-<header class="relative z-10 mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-3 px-5 pb-5 pt-8">
-  <div>
-    <h1 class="text-2xl font-bold tracking-tight text-white">TrueNorth</h1>
-    <p class="mt-1 text-sm text-zinc-400">Every line of a CV, checked against the record.</p>
+<!-- Top Navigation -->
+<header class="sticky top-0 z-30 border-b border-sand-200 bg-sand-50/95 backdrop-blur">
+  <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-5 py-3.5">
+    <a href="#/" class="flex items-center gap-2.5">
+      <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-forest-800 font-mono text-xs font-semibold text-sand-50">TN</span>
+      <span class="font-serif text-xl font-semibold tracking-tight text-ink-900">TrueNorth</span>
+    </a>
+
+    <nav class="flex items-center gap-1 rounded-lg bg-sand-100 p-1" aria-label="Primary">
+      <a href="#/" data-route="/" class="nav-link">Overview</a>
+      <a href="#/studio" data-route="/studio" class="nav-link">Audit Studio</a>
+      <a href="#/methodology" data-route="/methodology" class="nav-link">How It Works</a>
+    </nav>
+
+    <div class="flex items-center gap-2.5">
+      <a href="https://github.com/Aaryan-2906/TrueNorth" target="_blank" rel="noopener" class="btn-secondary text-xs">GitHub ↗</a>
+      <a href="#/studio" class="btn-primary !py-2 !px-3.5 !text-xs">Open Audit Studio →</a>
+    </div>
   </div>
-  <span class="rounded-md border border-white/10 bg-white/5 px-2 py-1 font-mono text-[11px] text-zinc-300">Career Check · Crustdata</span>
 </header>
 
-<main class="relative z-10 mx-auto grid max-w-7xl grid-cols-1 gap-5 px-5 lg:grid-cols-[370px_minmax(0,1fr)]">
-  <section class="card self-start p-4 lg:sticky lg:top-5" aria-label="Start a check">
-    <div class="mb-4 flex gap-1 rounded-lg bg-black/40 p-1" role="tablist">
-      <button id="tabCv" class="tab" role="tab" aria-selected="true" aria-controls="panelCv">Check one CV</button>
-      <button id="tabBid" class="tab" role="tab" aria-selected="false" aria-controls="panelBid">Audit a bid</button>
+<!-- ===================================================================== -->
+<!-- PAGE 1: OVERVIEW (#/)                                                 -->
+<!-- ===================================================================== -->
+<main id="page-home" class="mx-auto max-w-6xl px-5 pt-12">
+  <!-- Editorial Hero -->
+  <section class="mx-auto max-w-3xl text-center">
+    <div class="mb-5 inline-flex items-center gap-3 rounded-full border border-sand-200 bg-white px-4 py-1.5 shadow-sm">
+      <div id="heroPip" class="hero-pip-entrance h-7 w-7" aria-hidden="true"></div>
+      <span class="font-mono text-[11px] font-medium text-forest-800">Career Check for Tender Committees</span>
     </div>
 
-    <form id="panelCv" class="space-y-3" role="tabpanel" aria-labelledby="tabCv">
-      <div>
-        <label class="label" for="cvText">CV text</label>
-        <textarea id="cvText" class="field h-52 resize-y font-mono text-xs leading-relaxed" placeholder="Paste the full CV here"></textarea>
-      </div>
-      <div>
-        <label class="label" for="profileUrl">LinkedIn URL (optional)</label>
-        <input id="profileUrl" class="field" type="url" placeholder="https://www.linkedin.com/in/…" autocomplete="off">
-      </div>
-      <div>
-        <label class="label" for="position">Position</label>
-        <select id="position" class="field"><option value="">None: Career Check</option></select>
-      </div>
-      <label class="flex cursor-pointer items-center justify-between gap-3 text-sm text-zinc-300">
-        <span>Fresh<span class="block text-xs text-zinc-500">Skip the cache and make new paid calls</span></span>
-        <input id="freshCv" type="checkbox" class="h-4 w-4 accent-sky-400">
-      </label>
-      <p id="cvHint" class="hidden text-xs text-amber-300" role="alert"></p>
-      <button id="runCv" class="primary" type="submit">Check this CV</button>
-    </form>
+    <h1 class="font-serif text-4xl font-semibold leading-[1.1] tracking-tight text-ink-900 sm:text-6xl">
+      Every line of a CV,<br>checked against the record.
+    </h1>
 
-    <form id="panelBid" class="hidden space-y-3" role="tabpanel" aria-labelledby="tabBid">
-      <div>
-        <label class="label" for="bidSelect">Bid</label>
-        <select id="bidSelect" class="field"></select>
-      </div>
-      <label class="flex cursor-pointer items-center justify-between gap-3 text-sm text-zinc-300">
-        <span>Fresh<span class="block text-xs text-zinc-500">Skip the cache and make new paid calls</span></span>
-        <input id="freshBid" type="checkbox" class="h-4 w-4 accent-sky-400">
-      </label>
-      <details id="tenderBox" class="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
-        <summary>Read a tender (optional)</summary>
-        <div class="mt-2 space-y-2">
-          <label class="label" for="tenderText">Tender text</label>
-          <textarea id="tenderText" class="field h-32 resize-y font-mono text-xs leading-relaxed" placeholder="Paste the key-personnel section"></textarea>
-          <p class="text-xs text-zinc-500">Proposed positions appear with their source sentences. Nothing is used until you approve.</p>
-          <p id="tenderHint" class="hidden text-xs text-amber-300" role="alert"></p>
-          <button id="readTender" class="ghost w-full" type="button">Read tender</button>
-        </div>
-      </details>
-      <label id="useTenderRow" class="hidden cursor-pointer items-center justify-between gap-3 text-sm text-zinc-300">
-        <span>Use approved tender<span id="useTenderInfo" class="block text-xs text-zinc-500"></span></span>
-        <input id="useTender" type="checkbox" class="h-4 w-4 accent-sky-400">
-      </label>
-      <button id="runBid" class="primary" type="submit">Audit this bid</button>
-    </form>
+    <p class="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-ink-600">
+      TrueNorth cross-checks key personnel CVs and firm headcount claims against live career-graph records—surfacing timeline overlaps, tenure gaps, and source-cited clarification questions for evaluation committees.
+    </p>
+
+    <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+      <a href="#/studio" class="btn-primary !px-6 !py-3">Check a CV or Audit a Bid →</a>
+      <a href="#/methodology" class="btn-secondary !px-5 !py-3">Read the rules</a>
+    </div>
   </section>
 
-  <section class="min-w-0 space-y-4" aria-label="Results">
-    <div id="runway" class="card px-4 pb-3 pt-2">
-      <div class="flex items-end">
-        <span class="node mb-[5px]">CV</span>
-        <div class="track">
-          <div id="pip" data-state="idle" style="left: 0%" role="img" aria-label="Pip the owl inspector">
-            <span id="pipMark" aria-hidden="true"></span>
-            <div class="pip-body" id="pipBody"></div>
-          </div>
-        </div>
-        <span class="node mb-[5px]">Crustdata record</span>
+  <!-- Documented Real-World Procurement Struggles Carousel -->
+  <section class="mt-16" aria-labelledby="casesHeading">
+    <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <p class="font-mono text-[11px] font-semibold uppercase tracking-wider text-amber-700">Documented Procurement Risks</p>
+        <h2 id="casesHeading" class="mt-1 font-serif text-2xl font-semibold text-ink-900 sm:text-3xl">
+          Why tender committees verify key personnel records
+        </h2>
       </div>
-      <p id="pipCaption" class="mt-1 min-h-[20px] text-center text-[13px] text-zinc-300" role="status" aria-live="polite"></p>
+      <div class="flex items-center gap-2">
+        <button id="carouselPrev" type="button" class="btn-secondary !px-3 !py-1.5 font-mono text-xs" aria-label="Previous case">← Prev</button>
+        <span id="carouselCounter" class="font-mono text-xs text-ink-600">1 / 3</span>
+        <button id="carouselNext" type="button" class="btn-secondary !px-3 !py-1.5 font-mono text-xs" aria-label="Next case">Next →</button>
+      </div>
     </div>
-    <div id="results"></div>
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3" id="strugglesGrid">
+      <!-- Card 1: World Bank March 2026 -->
+      <article class="struggle-card card flex flex-col justify-between p-6 transition" data-index="0">
+        <div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="pill pill-amber">WORLD BANK · MAR 2026</span>
+            <span class="font-mono text-[11px] text-ink-400">Sanctions</span>
+          </div>
+          <h3 class="mt-4 font-serif text-xl font-semibold text-ink-900">
+            21-Month Debarment Over Misrepresented Key Experts
+          </h3>
+          <p class="mt-2.5 text-sm leading-relaxed text-ink-600">
+            The World Bank debarred Mauritius-based PricewaterhouseCoopers Associates Africa Ltd. and two sister firms for 21 months with conditional release after findings that they misrepresented the availability, qualifications, and employment status of key experts.
+          </p>
+        </div>
+        <div class="mt-5 border-t border-sand-200 pt-3.5">
+          <a href="https://www.worldbank.org/en/news/press-release/2026/03/18/world-bank-group-debars-pricewaterhousecoopers-associates-africa-ltd-pricewaterhousecoopers-limited-kenya-and-pricewate" target="_blank" rel="noopener" class="font-mono text-xs font-medium text-forest-800 hover:underline">
+            Source: World Bank Press Release (Mar 2026) ↗
+          </a>
+        </div>
+      </article>
+
+      <!-- Card 2: NHAI Consultancy RFP -->
+      <article class="struggle-card card flex flex-col justify-between p-6 transition" data-index="1">
+        <div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="pill pill-emerald">NHAI RFP MANDATE</span>
+            <span class="font-mono text-[11px] text-ink-400">Debarment Clause</span>
+          </div>
+          <h3 class="mt-4 font-serif text-xl font-semibold text-ink-900">
+            Up to 2-Year Debarment for False CV Information
+          </h3>
+          <p class="mt-2.5 text-sm leading-relaxed text-ink-600">
+            Under NHAI's consultancy RFP terms, submitting false information in key personnel CVs carries strict contractual penalties: "action including termination and debarment from future projects upto 2 years may be taken."
+          </p>
+        </div>
+        <div class="mt-5 border-t border-sand-200 pt-3.5">
+          <a href="https://infracon.nic.in/WriteReadData/consultantprojectsAE/586_File1163110934.pdf" target="_blank" rel="noopener" class="font-mono text-xs font-medium text-forest-800 hover:underline">
+            Source: NHAI Consultancy RFP (Infracon PDF) ↗
+          </a>
+        </div>
+      </article>
+
+      <!-- Card 3: MoRTH 2022 -->
+      <article class="struggle-card card flex flex-col justify-between p-6 transition" data-index="2">
+        <div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="pill pill-slate">MORTH · 2022</span>
+            <span class="font-mono text-[11px] text-ink-400">Availability</span>
+          </div>
+          <h3 class="mt-4 font-serif text-xl font-semibold text-ink-900">
+            Team Leader Denied Project Availability During Interaction
+          </h3>
+          <p class="mt-2.5 text-sm leading-relaxed text-ink-600">
+            In a 2022 Ministry of Road Transport &amp; Highways case, during committee interaction with proposed key personnel, the proposed Team Leader denied availability for the project site, leading the Competent Authority to approve debarment.
+          </p>
+        </div>
+        <div class="mt-5 border-t border-sand-200 pt-3.5">
+          <a href="https://morth.gov.in/sites/default/files/comprehensive_compendium_circular/7490.87-8.03.2022%20woiuqbjvdskbuhijpopoksakpocsaom.pdf" target="_blank" rel="noopener" class="font-mono text-xs font-medium text-forest-800 hover:underline">
+            Source: MoRTH Comprehensive Compendium (2022 PDF) ↗
+          </a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Factual Engineering & Trust Bar -->
+  <section class="mt-14 border-t border-sand-200 pt-8 pb-6">
+    <div class="card flex flex-col items-start justify-between gap-4 bg-sand-100/70 px-6 py-5 sm:flex-row sm:items-center">
+      <p class="font-mono text-xs leading-relaxed text-ink-600">
+        <strong class="font-semibold text-ink-900">238 tests</strong> ·
+        <strong class="font-semibold text-ink-900">17 golden cases</strong> written before the build ·
+        tender rules checked against the <a href="https://infracon.nic.in/WriteReadData/consultantprojectsAE/586_File1163110934.pdf" target="_blank" rel="noopener" class="underline hover:text-forest-800">NHAI PDF</a> ·
+        built with Crustdata + Claude ·
+        <a href="#/methodology" class="underline hover:text-forest-800">sources</a>
+      </p>
+      <a href="#/studio" class="btn-secondary shrink-0 text-xs">Launch Audit Studio →</a>
+    </div>
   </section>
 </main>
 
-<footer class="fixed inset-x-0 bottom-0 z-20 border-t border-white/10 bg-[#0C0C10]/95 backdrop-blur" aria-label="Activity">
+<!-- ===================================================================== -->
+<!-- PAGE 2: AUDIT STUDIO (#/studio) — 100% REAL BACKEND API WIRING        -->
+<!-- ===================================================================== -->
+<main id="page-studio" class="mx-auto hidden max-w-7xl px-5 pt-7">
+  <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="font-serif text-2xl font-semibold text-ink-900">Audit Studio</h1>
+      <p class="mt-0.5 text-sm text-ink-600">Every line of a CV, checked against the record.</p>
+    </div>
+    <span class="rounded-md border border-sand-200 bg-white px-2.5 py-1 font-mono text-[11px] text-ink-600">Career Check · Crustdata</span>
+  </div>
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-[370px_minmax(0,1fr)]">
+    <!-- Left Input Form -->
+    <section class="card self-start p-4 lg:sticky lg:top-20" aria-label="Start a check">
+      <div class="mb-4 flex gap-1 rounded-lg bg-sand-100 p-1" role="tablist">
+        <button id="tabCv" class="tab" role="tab" aria-selected="true" aria-controls="panelCv">Check one CV</button>
+        <button id="tabBid" class="tab" role="tab" aria-selected="false" aria-controls="panelBid">Audit a bid</button>
+      </div>
+
+      <form id="panelCv" class="space-y-3" role="tabpanel" aria-labelledby="tabCv">
+        <div>
+          <label class="mb-1.5 block text-xs font-medium text-ink-600" for="cvText">CV text</label>
+          <textarea id="cvText" class="field h-52 resize-y font-mono text-xs leading-relaxed" placeholder="Paste the full CV here"></textarea>
+        </div>
+        <div>
+          <label class="mb-1.5 block text-xs font-medium text-ink-600" for="profileUrl">LinkedIn URL (optional)</label>
+          <input id="profileUrl" class="field" type="url" value="" placeholder="https://www.linkedin.com/in/…" autocomplete="off">
+        </div>
+        <div>
+          <label class="mb-1.5 block text-xs font-medium text-ink-600" for="position">Position</label>
+          <select id="position" class="field"><option value="">None: Career Check</option></select>
+        </div>
+        <label class="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-sand-200 bg-sand-50 px-3 py-2 text-xs text-ink-900">
+          <span>Fresh<span class="block text-[11px] text-ink-600">Skip the cache and make new paid calls</span></span>
+          <input id="freshCv" type="checkbox" class="h-4 w-4 accent-forest-800">
+        </label>
+        <p id="cvHint" class="hidden text-xs font-medium text-amber-800" role="alert"></p>
+        <button id="runCv" class="btn-primary w-full" type="submit">Check this CV</button>
+      </form>
+
+      <form id="panelBid" class="hidden space-y-3" role="tabpanel" aria-labelledby="tabBid">
+        <div>
+          <label class="mb-1.5 block text-xs font-medium text-ink-600" for="bidSelect">Bid</label>
+          <select id="bidSelect" class="field"></select>
+        </div>
+        <label class="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-sand-200 bg-sand-50 px-3 py-2 text-xs text-ink-900">
+          <span>Fresh<span class="block text-[11px] text-ink-600">Skip the cache and make new paid calls</span></span>
+          <input id="freshBid" type="checkbox" class="h-4 w-4 accent-forest-800">
+        </label>
+
+        <!-- Tender Box -->
+        <details id="tenderBox" class="rounded-lg border border-sand-200 bg-sand-50/60 px-3 py-2">
+          <summary>Read a tender (optional)</summary>
+          <div class="mt-2 space-y-2">
+            <label class="mb-1.5 block text-xs font-medium text-ink-600" for="tenderText">Tender text</label>
+            <textarea id="tenderText" class="field h-32 resize-y font-mono text-xs leading-relaxed" placeholder="Paste the key-personnel section"></textarea>
+            <p class="text-xs text-ink-600">Proposed positions appear with their source sentences. Nothing is used until you approve.</p>
+            <p id="tenderHint" class="hidden text-xs font-medium text-amber-800" role="alert"></p>
+            <button id="readTender" class="btn-secondary w-full" type="button">Read tender</button>
+          </div>
+        </details>
+        <label id="useTenderRow" class="hidden cursor-pointer items-center justify-between gap-3 rounded-lg border border-sand-200 bg-sand-50 px-3 py-2 text-xs text-ink-900">
+          <span>Use approved tender<span id="useTenderInfo" class="block text-[11px] text-ink-600"></span></span>
+          <input id="useTender" type="checkbox" class="h-4 w-4 accent-forest-800">
+        </label>
+
+        <button id="runBid" class="btn-primary w-full" type="submit">Audit this bid</button>
+      </form>
+    </section>
+
+    <!-- Right Runway & Results -->
+    <section class="min-w-0 space-y-4" aria-label="Results">
+      <div id="runway" class="card px-4 pb-3 pt-2.5">
+        <div class="flex items-end">
+          <span id="nodeCv" class="node mb-[5px]">CV</span>
+          <div class="track">
+            <div id="pip" data-state="idle" style="left: 0%" role="img" aria-label="Pip the owl inspector">
+              <span id="pipMark" aria-hidden="true"></span>
+              <div class="pip-body" id="pipBody"></div>
+            </div>
+          </div>
+          <span id="nodeRecord" class="node mb-[5px]">Crustdata record</span>
+        </div>
+        <p id="pipCaption" class="mt-1 min-h-[20px] text-center text-[13px] text-ink-600" role="status" aria-live="polite"></p>
+      </div>
+      <div id="results"></div>
+    </section>
+  </div>
+</main>
+
+<!-- ===================================================================== -->
+<!-- PAGE 3: METHODOLOGY & RULES (#/methodology)                           -->
+<!-- ===================================================================== -->
+<main id="page-methodology" class="mx-auto hidden max-w-5xl px-5 pt-10">
+  <div class="max-w-2xl">
+    <p class="font-mono text-[11px] font-semibold uppercase tracking-wider text-forest-800">Architecture &amp; Governance</p>
+    <h1 class="mt-1.5 font-serif text-3xl font-semibold text-ink-900 sm:text-4xl">AI reads, code decides.</h1>
+    <p class="mt-3 text-sm leading-relaxed text-ink-600">
+      Large language models extract structured employment intervals from unstructured CV text, while deterministic Python rules compute tenure sums, date overlaps, and profile diffs. Every output is framed as an evidentiary question for the tender committee—never an automated black-box rejection.
+    </p>
+  </div>
+
+  <div class="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div class="card p-5">
+      <div class="flex items-center justify-between">
+        <span class="font-mono text-xs font-semibold text-forest-800">1. Structured Extraction</span>
+        <span class="pill pill-slate">AI READS</span>
+      </div>
+      <p class="mt-2.5 text-sm leading-relaxed text-ink-600">
+        Parses bidder CV text into employer names, titles and dates copied word for word (anything not in the CV is rejected), start/end dates, and headline claimed years—preserving exact row citations for every extracted field.
+      </p>
+    </div>
+
+    <div class="card p-5">
+      <div class="flex items-center justify-between">
+        <span class="font-mono text-xs font-semibold text-forest-800">2. Deterministic Date &amp; Overlap Math</span>
+        <span class="pill pill-emerald">CODE DECIDES</span>
+      </div>
+      <p class="mt-2.5 text-sm leading-relaxed text-ink-600">
+        Computes non-overlapping experience durations, flags intersecting employment dates across separate firms, and checks whether total claimed years exceed the listed CV rows.
+      </p>
+    </div>
+
+    <div class="card p-5">
+      <div class="flex items-center justify-between">
+        <span class="font-mono text-xs font-semibold text-forest-800">3. Career-Graph Cross-Check</span>
+        <span class="pill pill-emerald">CRUSTDATA API</span>
+      </div>
+      <p class="mt-2.5 text-sm leading-relaxed text-ink-600">
+        When a profile URL or bid lookup is supplied, queries career-graph records via the server to compare employer histories, dates, and firm headcount against the bid submission.
+      </p>
+    </div>
+
+    <div class="card p-5">
+      <div class="flex items-center justify-between">
+        <span class="font-mono text-xs font-semibold text-amber-800">4. Committee Clarification Output</span>
+        <span class="pill pill-amber">HUMAN IN LOOP</span>
+      </div>
+      <p class="mt-2.5 text-sm leading-relaxed text-ink-600">
+        Outputs numbered, neutral clarification questions linked to exact CV rows and profile entries, along with a ready-to-copy clarification letter and printable <code class="font-mono text-xs">report.html</code>.
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-8 card p-5">
+    <h2 class="font-serif text-lg font-semibold text-ink-900">Primary Reference Sources</h2>
+    <ul class="mt-3 space-y-2 font-mono text-xs text-forest-800">
+      <li>• <a href="https://www.worldbank.org/en/news/press-release/2026/03/18/world-bank-group-debars-pricewaterhousecoopers-associates-africa-ltd-pricewaterhousecoopers-limited-kenya-and-pricewate" target="_blank" rel="noopener" class="underline">World Bank Press Release (March 2026) — Key Expert Misrepresentation Debarment</a></li>
+      <li>• <a href="https://infracon.nic.in/WriteReadData/consultantprojectsAE/586_File1163110934.pdf" target="_blank" rel="noopener" class="underline">NHAI Consultancy RFP (Infracon PDF) — Debarment Clause for False CV Information</a></li>
+      <li>• <a href="https://morth.gov.in/sites/default/files/comprehensive_compendium_circular/7490.87-8.03.2022%20woiuqbjvdskbuhijpopoksakpocsaom.pdf" target="_blank" rel="noopener" class="underline">MoRTH Comprehensive Compendium (2022 PDF) — Key Personnel Availability Interaction</a></li>
+      <li>• <a href="https://github.com/Aaryan-2906/TrueNorth" target="_blank" rel="noopener" class="underline">TrueNorth Source Repository (GitHub)</a></li>
+    </ul>
+  </div>
+</main>
+
+<!-- Bottom Activity Bar (Real API Telemetry from SSE `call` events) — hidden unless on #/studio -->
+<footer class="fixed inset-x-0 bottom-0 z-20 border-t border-sand-200 bg-sand-50/95 backdrop-blur hidden" aria-label="Activity">
   <div class="mx-auto max-w-7xl px-5 py-2.5">
     <div class="mb-1.5 flex items-center justify-between">
-      <h2 class="text-xs font-semibold text-zinc-300">Activity</h2>
-      <p class="font-mono text-[11px] text-zinc-400">Crustdata credits this run: <span id="creditsTotal" class="text-zinc-100">0</span></p>
+      <h2 class="text-xs font-semibold text-ink-900">Activity</h2>
+      <p class="font-mono text-[11px] text-ink-600">Crustdata credits this run: <span id="creditsTotal" class="font-semibold text-ink-900">0</span></p>
     </div>
-    <div id="activity" class="flex min-h-[58px] gap-2 overflow-x-auto pb-1"></div>
+    <div id="activity" class="flex min-h-[54px] gap-2 overflow-x-auto pb-1"></div>
   </div>
 </footer>
 
@@ -199,7 +536,42 @@ const esc = (value) => String(value ?? '').replace(/[&<>"']/g,
   (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const STATUS_STYLE = { CONSISTENT: 'pill-emerald', QUESTIONS: 'pill-amber', CANNOT_CHECK: 'pill-slate' };
-const state = { running: false, credits: 0, callCount: 0, letter: '' };
+const state = { running: false, credits: 0, callCount: 0, letter: '', carouselIdx: 0, runStart: 0 };
+
+// Multi-Page Router (#/, #/studio, #/methodology)
+function navigateTo(route) {
+  const clean = (route || '').replace(/^#/, '') || '/';
+  const pages = { '/': 'page-home', '/studio': 'page-studio', '/methodology': 'page-methodology' };
+  const activeRoute = pages[clean] ? clean : '/';
+
+  Object.entries(pages).forEach(([path, id]) => {
+    $(id).classList.toggle('hidden', path !== activeRoute);
+  });
+
+  document.querySelectorAll('.nav-link').forEach((link) => {
+    link.classList.toggle('active', link.getAttribute('data-route') === activeRoute);
+  });
+
+  // Fix 4: show/hide activity footer only on /studio
+  const footer = document.querySelector('footer[aria-label="Activity"]');
+  if (footer) footer.classList.toggle('hidden', activeRoute !== '/studio');
+}
+window.addEventListener('hashchange', () => navigateTo(location.hash));
+
+// Carousel highlight controls on Overview page
+function updateCarousel(idx) {
+  const cards = document.querySelectorAll('.struggle-card');
+  if (!cards.length) return;
+  state.carouselIdx = (idx + cards.length) % cards.length;
+  $('carouselCounter').textContent = `${state.carouselIdx + 1} / ${cards.length}`;
+  cards.forEach((card, i) => {
+    const active = i === state.carouselIdx;
+    card.style.borderColor = active ? '#163A2E' : '#E2DDD2';
+    card.style.boxShadow = active ? '0 8px 24px -8px rgba(22, 58, 46, 0.16)' : '0 1px 3px rgba(26, 25, 23, 0.04)';
+  });
+}
+$('carouselPrev').addEventListener('click', () => updateCarousel(state.carouselIdx - 1));
+$('carouselNext').addEventListener('click', () => updateCarousel(state.carouselIdx + 1));
 
 const pill = (status) => `<span class="pill ${STATUS_STYLE[status] || 'pill-slate'}">${esc(status)}</span>`;
 
@@ -214,60 +586,91 @@ const chips = (items) => (items || []).map((item) => `<span class="chip">${esc(i
 
 function questionsHtml(questions, info) {
   const list = (questions || []).map((q) => `
-    <li class="flex gap-2.5">
-      <span class="mt-0.5 font-mono text-xs text-zinc-500">${q.number}.</span>
-      <div class="min-w-0"><p class="text-[13.5px] leading-relaxed text-zinc-200">${esc(q.text)}</p><div>${chips(q.evidence)}</div></div>
+    <li class="flex gap-2.5 rounded-lg border border-sand-200 bg-sand-50/70 p-3">
+      <span class="mt-0.5 font-mono text-xs font-semibold text-forest-800">${q.number}.</span>
+      <div class="min-w-0">
+        <p class="text-[13.5px] leading-relaxed text-ink-900">${esc(q.text)}</p>
+        <div>${chips(q.evidence)}</div>
+      </div>
     </li>`).join('');
   const notes = (info || []).map((n) => `
-    <li><p class="text-[13px] leading-relaxed text-zinc-400">${esc(n.text)}</p><div>${chips(n.evidence)}</div></li>`).join('');
+    <li><p class="text-[13px] leading-relaxed text-ink-600">${esc(n.text)}</p><div>${chips(n.evidence)}</div></li>`).join('');
   return `
-    <h4 class="mb-2 mt-4 text-xs font-semibold text-zinc-400">Questions for the committee</h4>
-    ${list ? `<ol class="space-y-3">${list}</ol>` : '<p class="text-[13px] text-zinc-500">None.</p>'}
-    ${notes ? `<h4 class="mb-2 mt-4 text-xs font-semibold text-zinc-400">Notes</h4><ul class="space-y-2">${notes}</ul>` : ''}`;
+    <h4 class="mb-2 mt-4 text-xs font-semibold uppercase tracking-wider text-ink-600">Questions for the committee</h4>
+    ${list ? `<ol class="space-y-2.5">${list}</ol>` : '<p class="text-[13px] text-ink-400">None.</p>'}
+    ${notes ? `<h4 class="mb-2 mt-4 text-xs font-semibold uppercase tracking-wider text-ink-600">Notes</h4><ul class="space-y-2">${notes}</ul>` : ''}`;
 }
 
 function yearsLine(documented, claimed) {
   const left = documented === null || documented === undefined ? 'Documented: not available' : `Documented ${documented.toFixed(1)} yrs`;
   const right = claimed === null || claimed === undefined ? 'Claimed: not stated' : `Claimed ${claimed} yrs`;
-  return `${left} <span class="text-zinc-500">vs</span> ${right}`;
+  return `${left} <span class="text-ink-400">vs</span> ${right}`;
+}
+
+// Fix 2: Updated tenureBar with new labels and null-bar behavior
+function tenureBar(documented, claimed) {
+  const c = typeof claimed === 'number' ? claimed : null;
+  const d = typeof documented === 'number' ? documented : null;
+  if (c === null && d === null) return '';
+  const max = Math.max(c || 0, d || 0, 1);
+  return `
+    <div class="mt-3 grid grid-cols-1 gap-2.5 rounded-lg border border-sand-200 bg-sand-50 p-3 sm:grid-cols-2">
+      <div>
+        <div class="mb-1 flex justify-between font-mono text-[10.5px] text-ink-600">
+          <span>CLAIMED ON CV</span><span class="font-semibold text-ink-900">${c !== null ? c.toFixed(1) + ' yrs' : 'not stated'}</span>
+        </div>
+        <div class="h-1.5 w-full overflow-hidden rounded-full bg-sand-200">
+          <div class="h-full rounded-full bg-ink-900" style="width:${c !== null ? Math.min(100, (c / max) * 100) : 0}%"></div>
+        </div>
+      </div>
+      <div>
+        <div class="mb-1 flex justify-between font-mono text-[10.5px] text-ink-600">
+          <span>DOCUMENTED ON PROFILE</span><span class="font-semibold ${d !== null ? 'text-forest-800' : 'text-ink-400'}">${d !== null ? d.toFixed(1) + ' yrs' : 'no profile'}</span>
+        </div>
+        <div class="h-1.5 w-full overflow-hidden rounded-full bg-sand-200">
+          <div class="h-full rounded-full ${d !== null ? 'bg-forest-800' : 'bg-sand-300'}" style="width:${d !== null ? Math.min(100, (d / max) * 100) : 0}%"></div>
+        </div>
+      </div>
+    </div>`;
 }
 
 function expertCard(expert) {
   const rows = expert.rows.map((row) => `
     <tr>
-      <td class="font-mono text-zinc-500">${row.number}</td>
-      <td class="min-w-[130px]">${esc(row.employer)}</td>
+      <td class="font-mono text-ink-400">${row.number}</td>
+      <td class="min-w-[130px] font-medium">${esc(row.employer)}</td>
       <td class="min-w-[130px]">${esc(row.title)}</td>
       <td class="whitespace-nowrap font-mono text-[11.5px]">${esc(row.dates)}</td>
       <td>${outcomePills(row.outcome)}</td>
-      <td class="min-w-[190px] text-zinc-400">${esc(row.profile_entry || 'none')}</td>
+      <td class="min-w-[190px] text-ink-600">${esc(row.profile_entry || 'none')}</td>
     </tr>`).join('');
   const table = rows ? `
     <div class="table-wrap mt-3"><table>
-      <thead><tr><th>#</th><th>Employer</th><th>Title</th><th>CV dates</th><th>Outcome</th><th>Profile entry</th></tr></thead>
+      <thead><tr><th>#</th><th>Employer (Listed on CV)</th><th>Title</th><th>CV dates</th><th>Outcome</th><th>Profile entry</th></tr></thead>
       <tbody>${rows}</tbody>
-    </table></div>` : '<p class="mt-3 text-[13px] text-zinc-500">No CV rows could be read.</p>';
-  const notes = expert.notes.map((note) => `<p class="mt-1 text-xs text-zinc-500">Note: ${esc(note)}</p>`).join('');
+    </table></div>` : '<p class="mt-3 text-[13px] text-ink-400">No CV rows could be read.</p>';
+  const notes = expert.notes.map((note) => `<p class="mt-1 text-xs text-ink-600">Note: ${esc(note)}</p>`).join('');
   const similar = expert.documented_similar_years !== null
-    ? `<p class="mt-0.5 text-[13px] text-zinc-400">Similar role: ${yearsLine(expert.documented_similar_years, expert.claimed_similar_years)}</p>` : '';
+    ? `<p class="mt-0.5 text-[13px] text-ink-600">Similar role: ${yearsLine(expert.documented_similar_years, expert.claimed_similar_years)}</p>` : '';
   const why = expert.why.map((item) => `
-    <li class="rounded-md bg-black/25 p-2.5">
-      <p class="font-mono text-[11px] text-zinc-400">${esc(item.code)} · ${esc(item.severity)}</p>
-      <p class="mt-0.5 text-[13px] text-zinc-300">${esc(item.message)}</p>
+    <li class="rounded-md border border-sand-200 bg-sand-50 p-2.5">
+      <p class="font-mono text-[11px] text-ink-600">${esc(item.code)} · ${esc(item.severity)}</p>
+      <p class="mt-0.5 text-[13px] text-ink-900">${esc(item.message)}</p>
       <div>${chips(item.evidence)}</div>
     </li>`).join('');
   return `
-    <article class="card p-4">
+    <article class="card p-5">
       <div class="flex flex-wrap items-start justify-between gap-2">
         <div class="min-w-0">
-          <h3 class="text-[15px] font-semibold text-white"><span class="mr-1 font-mono text-xs text-zinc-500">${esc(expert.id)}</span>${esc(expert.name)}</h3>
-          <p class="mt-1 text-sm font-medium text-zinc-200">${yearsLine(expert.documented_years, expert.claimed_years)}</p>
+          <h3 class="font-serif text-lg font-semibold text-ink-900"><span class="mr-1.5 font-mono text-xs font-normal text-ink-400">${esc(expert.id)}</span>${esc(expert.name)}</h3>
+          <p class="mt-1 text-sm font-medium text-ink-900">${yearsLine(expert.documented_years, expert.claimed_years)}</p>
           ${similar}
         </div>
         ${pill(expert.status)}
       </div>
-      <p class="mt-2 text-xs text-zinc-500">Position: ${esc(expert.position || 'none (Career Check)')}</p>
-      <p class="mt-0.5 break-words font-mono text-[11px] text-zinc-500">Lookup: ${esc(expert.lookup)}</p>
+      ${tenureBar(expert.documented_years, expert.claimed_years)}
+      <p class="mt-3 text-xs text-ink-600">Position: ${esc(expert.position || 'none (Career Check)')}</p>
+      <p class="mt-0.5 break-words font-mono text-[11px] text-ink-600">Lookup: ${esc(expert.lookup)}</p>
       ${notes}
       ${table}
       ${questionsHtml(expert.questions, expert.info)}
@@ -278,11 +681,11 @@ function expertCard(expert) {
 function firmCard(firm) {
   const records = firm.records.map((r) => `
     <tr><td class="font-mono">${esc(r.id)}</td><td>${esc(r.name)}</td><td>${esc(r.domain || 'not listed')}</td><td class="font-mono">${esc(r.range)}</td></tr>`).join('');
-  const fact = (name, value) => `<div><dt class="text-xs text-zinc-500">${name}</dt><dd class="mt-0.5 text-[13.5px] text-zinc-200">${esc(value)}</dd></div>`;
+  const fact = (name, value) => `<div><dt class="text-xs text-ink-600">${name}</dt><dd class="mt-0.5 text-[13.5px] font-medium text-ink-900">${esc(value)}</dd></div>`;
   return `
-    <article class="card p-4">
+    <article class="card p-5">
       <div class="flex flex-wrap items-start justify-between gap-2">
-        <h3 class="text-[15px] font-semibold text-white">Firm &amp; bid: ${esc(firm.name)}</h3>
+        <h3 class="font-serif text-lg font-semibold text-ink-900">Firm &amp; bid: ${esc(firm.name)}</h3>
         ${pill(firm.status)}
       </div>
       <dl class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -291,36 +694,37 @@ function firmCard(firm) {
         ${fact('Headcount used', firm.headcount || 'not available')}
         ${fact('Full-time people in bid', firm.full_time_people)}
       </dl>
-      ${firm.lookup_note ? `<p class="mt-3 text-xs text-zinc-400">${esc(firm.lookup_note)}</p>` : ''}
+      ${firm.lookup_note ? `<p class="mt-3 text-xs text-ink-600">${esc(firm.lookup_note)}</p>` : ''}
       ${records ? `<div class="table-wrap mt-3"><table><thead><tr><th>Company id</th><th>Name</th><th>Domain</th><th>Employee range</th></tr></thead><tbody>${records}</tbody></table></div>` : ''}
       ${questionsHtml(firm.questions, firm.info)}
     </article>`;
 }
 
 function metric(name, value, tone) {
-  return `<div class="card px-3 py-2.5"><p class="text-[11px] text-zinc-500">${name}</p><p class="mt-0.5 text-xl font-semibold ${tone || 'text-white'}">${esc(value)}</p></div>`;
+  return `<div class="card px-3.5 py-2.5"><p class="text-[11px] font-medium text-ink-600">${name}</p><p class="mt-0.5 font-mono text-xl font-semibold ${tone || 'text-ink-900'}">${esc(value)}</p></div>`;
 }
+
+// Tender helpers
+const shownNumber = (value) => (value === null || value === undefined ? 'not stated' : value);
 
 function sourceChip(label, source) {
-  return source ? `<div class="mt-1"><span class="text-[11px] text-zinc-500">${esc(label)}</span><br><span class="chip">${esc(source.text)}</span></div>` : '';
+  return source ? `<div class="mt-1"><span class="text-[11px] text-ink-600">${esc(label)}</span><br><span class="chip">${esc(source.text)}</span></div>` : '';
 }
-
-const shownNumber = (value) => (value === null || value === undefined ? 'not stated' : value);
 
 function tenderCard(key, position) {
   const s = position._source_sentences;
-  const fact = (name, value) => `<div><dt class="text-xs text-zinc-500">${esc(name)}</dt><dd class="mt-0.5 text-[13.5px] text-zinc-200">${esc(value)}</dd></div>`;
+  const fact = (name, value) => `<div><dt class="text-xs text-ink-600">${esc(name)}</dt><dd class="mt-0.5 text-[13.5px] font-medium text-ink-900">${esc(value)}</dd></div>`;
   return `
-    <article class="card p-4">
-      <h3 class="text-[15px] font-semibold text-white">${esc(position.name)}</h3>
-      <p class="mt-0.5 font-mono text-[11px] text-zinc-500">${esc(key)}</p>
+    <article class="card p-5">
+      <h3 class="font-serif text-lg font-semibold text-ink-900">${esc(position.name)}</h3>
+      <p class="mt-0.5 font-mono text-[11px] text-ink-600">${esc(key)}</p>
       <dl class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         ${fact('Minimum total years', shownNumber(position.min_total_years))}
         ${fact('Minimum similar years', shownNumber(position.min_similar_years))}
         ${fact('Postgraduate', position.postgraduate)}
         ${fact('Postgraduate marks', shownNumber(position.postgraduate_marks))}
       </dl>
-      <p class="mt-3 text-xs text-zinc-500">Similar-role titles (proposed)</p>
+      <p class="mt-3 text-xs text-ink-600">Similar-role titles (proposed)</p>
       <div>${chips(position.similar_title_keywords)}</div>
       <details class="mt-3" open><summary>Source sentences</summary>
         ${sourceChip('Total years', s.min_total_years)}
@@ -336,8 +740,8 @@ function renderTender(result) {
   $('results').innerHTML = `
     <div class="space-y-4">
       <div class="card flex flex-wrap items-center justify-between gap-3 p-4">
-        <p class="text-sm text-zinc-300">Check each number against its source sentence before approving.</p>
-        <button id="approveTender" class="ghost" type="button">Approve these positions</button>
+        <p class="text-sm text-ink-600">Check each number against its source sentence before approving.</p>
+        <button id="approveTender" class="btn-secondary" type="button">Approve these positions</button>
       </div>
       ${Object.entries(result.positions).map(([key, position]) => tenderCard(key, position)).join('')}
     </div>`;
@@ -366,35 +770,41 @@ async function approveTender(token) {
   }
 }
 
+// Fix 5: renderResult with run summary line
 function renderResult(result) {
+  // Dispatch on result.kind === 'tender'
   if (result.kind === 'tender') {
     renderTender(result);
     return;
   }
   state.letter = result.letter || '';
   const problems = result.errors.map((e) => `<li class="break-words">${esc(e)}</li>`).join('');
+  const elapsed = ((Date.now() - state.runStart) / 1000).toFixed(1);
+  const totalRows = result.experts.reduce((s, e) => s + e.rows.length, 0);
+  const summaryLine = `<p class="mt-2 font-mono text-[11px] text-ink-600">Checked ${result.experts.length} expert(s) and ${totalRows} CV rows in ${elapsed} s · ${formatCredits(result.credits)} credits</p>`;
   $('results').innerHTML = `
     <div class="space-y-4">
       <div>
         <h2 class="sr-only">${esc(result.headline)}</h2>
-        ${result.tender_id ? `<p class="mb-2 font-mono text-[11px] text-zinc-500">Tender: ${esc(result.tender_id)}</p>` : ''}
-        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+        ${result.tender_id ? `<p class="mb-2 font-mono text-[11px] text-ink-600">Tender: ${esc(result.tender_id)}</p>` : ''}
+        <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-6">
           ${metric('Experts', result.experts.length)}
-          ${metric('Consistent', result.counts.CONSISTENT, 'text-emerald-300')}
-          ${metric('Need clarification', result.counts.QUESTIONS, 'text-amber-300')}
-          ${metric('Cannot be checked', result.counts.CANNOT_CHECK, 'text-slate-300')}
+          ${metric('Consistent', result.counts.CONSISTENT, 'text-forest-800')}
+          ${metric('Need clarification', result.counts.QUESTIONS, 'text-amber-700')}
+          ${metric('Cannot be checked', result.counts.CANNOT_CHECK, 'text-slate-600')}
           ${metric('Questions', result.questions_total)}
           ${metric('Credits', result.credits)}
         </div>
+        ${summaryLine}
         <div class="mt-3 flex flex-wrap gap-2">
-          ${result.report_url ? `<a class="ghost" href="${esc(result.report_url)}" target="_blank" rel="noopener">Open report.html</a>` : ''}
-          <button id="copyLetter" class="ghost" type="button" ${result.questions_total ? '' : 'disabled'}>${result.questions_total ? 'Copy draft clarification letter' : 'No questions to draft'}</button>
+          ${result.report_url ? `<a class="btn-secondary" href="${esc(result.report_url)}" target="_blank" rel="noopener">Open report.html ↗</a>` : ''}
+          <button id="copyLetter" class="btn-secondary" type="button" ${result.questions_total ? '' : 'disabled'}>${result.questions_total ? 'Copy draft clarification letter' : 'No questions to draft'}</button>
         </div>
       </div>
-      ${problems ? `<div class="card border-amber-400/30 p-3 text-[13px] text-amber-200"><p class="mb-1 font-medium">Some lookups did not complete</p><ul class="space-y-1">${problems}</ul></div>` : ''}
+      ${problems ? `<div class="card border-amber-300 bg-amber-50 p-3.5 text-[13px] text-amber-900"><p class="mb-1 font-semibold">Some lookups did not complete</p><ul class="space-y-1">${problems}</ul></div>` : ''}
       ${result.firm ? firmCard(result.firm) : ''}
-      ${result.experts.length ? result.experts.map(expertCard).join('') : '<div class="card p-4 text-sm text-zinc-400">This bid lists no experts.</div>'}
-      <p class="pb-2 text-center text-xs text-zinc-500">These are questions for the committee, not findings.</p>
+      ${result.experts.length ? result.experts.map(expertCard).join('') : '<div class="card p-4 text-sm text-ink-600">This bid lists no experts.</div>'}
+      <p class="pb-2 text-center text-xs text-ink-600">These are questions for the committee, not findings.</p>
     </div>`;
   const copy = $('copyLetter');
   if (copy && result.questions_total) copy.addEventListener('click', copyLetter);
@@ -414,23 +824,23 @@ async function copyLetter() {
 function showEmpty() {
   $('results').innerHTML = `
     <div class="card flex min-h-[300px] flex-col items-center justify-center p-8 text-center">
-      <h2 class="text-base font-semibold text-zinc-200">Nothing checked yet</h2>
-      <p class="mt-1.5 max-w-sm text-sm leading-relaxed text-zinc-500">Paste a CV or choose a bid. Each result links back to the CV row or profile entry it came from.</p>
+      <h2 class="font-serif text-lg font-semibold text-ink-900">Nothing checked yet</h2>
+      <p class="mt-1.5 max-w-sm text-sm leading-relaxed text-ink-600">Paste a CV or choose a bid. Each result links back to the CV row or profile entry it came from.</p>
     </div>`;
 }
 
 function showProblem(message) {
   $('results').innerHTML = `
     <div class="card flex min-h-[220px] flex-col items-center justify-center p-8 text-center">
-      <h2 class="text-base font-semibold text-zinc-200">This run could not finish</h2>
-      <p class="mt-1.5 max-w-lg break-words text-sm leading-relaxed text-zinc-400">${esc(message)}</p>
+      <h2 class="font-serif text-lg font-semibold text-ink-900">This run could not finish</h2>
+      <p class="mt-1.5 max-w-lg break-words text-sm leading-relaxed text-ink-600">${esc(message)}</p>
     </div>`;
 }
 
 function showRunning() {
   $('results').innerHTML = `
     <div class="card flex min-h-[220px] items-center justify-center p-8 text-center">
-      <p class="text-sm text-zinc-500">Working. Results appear here when the run finishes.</p>
+      <p class="text-sm text-ink-600">Working. Results appear here when the run finishes.</p>
     </div>`;
 }
 
@@ -438,7 +848,9 @@ function setRunning(running) {
   state.running = running;
   $('runCv').disabled = running;
   $('runBid').disabled = running;
-  $('readTender').disabled = running;
+  // Also disable readTender when running
+  const rt = $('readTender');
+  if (rt) rt.disabled = running;
 }
 
 function resetActivity() {
@@ -463,16 +875,16 @@ function addCall(call) {
     ? (isCrustdata ? 'credits not reported' : 'no Crustdata credits')
     : `${formatCredits(call.credits)} ${creditWord}`;
   const item = document.createElement('div');
-  item.className = 'shrink-0 rounded-md border border-white/10 bg-white/[.03] px-2.5 py-1.5 font-mono text-[10.5px] leading-[1.45]';
+  item.className = 'shrink-0 rounded-md border border-sand-200 bg-white px-2.5 py-1.5 font-mono text-[10.5px] leading-[1.45]';
   item.innerHTML = `
-    <p class="text-zinc-200">${esc(call.service)}${call.expert ? ` <span class="text-zinc-500">${esc(call.expert)}</span>` : ''}</p>
-    <p class="${isLive ? 'text-sky-300' : 'text-zinc-400'}">${esc(call.source)}</p>
-    <p class="text-zinc-500">${esc(credits)} · ${esc(call.ms)} ms</p>`;
+    <p class="font-medium text-ink-900">${esc(call.service)}${call.expert ? ` <span class="font-normal text-ink-400">${esc(call.expert)}</span>` : ''}</p>
+    <p class="${isLive ? 'font-semibold text-forest-800' : 'text-ink-600'}">${esc(call.source)}</p>
+    <p class="text-ink-400">${esc(credits)} · ${esc(call.ms)} ms</p>`;
   $('activity').appendChild(item);
   item.scrollIntoView({ block: 'nearest', inline: 'end' });
 }
 
-// Pip: an original 16x16 owl. D dark, B body, L belly, S spectacles, W lens, K beak, F feet.
+// Pip: 16x16 Owl Inspector
 const PIP_PIXELS = [
   '..D..........D..',
   '..DD........DD..',
@@ -491,19 +903,26 @@ const PIP_PIXELS = [
   '....FF....FF....',
   '...FFF....FFF...',
 ];
-const PIP_COLORS = { D: '#6D4C33', B: '#A9835F', L: '#EADFCF', S: '#E2E8F0', W: '#FFFFFF', K: '#F59E0B', F: '#D97706' };
+const PIP_COLORS = { D: '#5C402B', B: '#9A7452', L: '#F3ECE0', S: '#163A2E', W: '#FFFFFF', K: '#D97706', F: '#B45309' };
 const PIP_WING = [[0, 9], [1, 9], [0, 10], [1, 10], [0, 11], [1, 11], [1, 12]];
 
-function buildPip() {
+function renderPipSvg() {
   const px = (x, y, fill, extra = '') => `<rect x="${x}" y="${y}" width="1" height="1" fill="${fill}" ${extra}/>`;
   let body = '';
   PIP_PIXELS.forEach((row, y) => [...row].forEach((c, x) => { if (PIP_COLORS[c]) body += px(x, y, PIP_COLORS[c]); }));
-  const wing = (mirror) => PIP_WING.map(([x, y]) => px(mirror ? 15 - x : x, y, '#7F5B3F')).join('');
+  const wing = (mirror) => PIP_WING.map(([x, y]) => px(mirror ? 15 - x : x, y, '#6D4C33')).join('');
   const pupils = [[5, 6], [5, 7], [11, 6], [11, 7]].map(([x, y]) => `<rect class="pip-pupil" x="${x}" y="${y}" width="1" height="1"/>`).join('');
-  $('pipBody').innerHTML = `<svg viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">${body}
+  return `<svg viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">${body}
     <g class="pip-wing pip-wing-l">${wing(false)}</g><g class="pip-wing pip-wing-r">${wing(true)}</g>${pupils}</svg>`;
 }
 
+function buildPip() {
+  const svg = renderPipSvg();
+  $('pipBody').innerHTML = svg;
+  if ($('heroPip')) $('heroPip').innerHTML = svg;
+}
+
+// Fix: STAGE_POSE includes reading_tender
 const STAGE_POSE = {
   reading_cv: ['reading', 0],
   reading_dates: ['reading', 0],
@@ -520,22 +939,22 @@ function setPip(pose, at) {
   pip.dataset.state = pose;
   if (at !== undefined) pip.style.left = `${at}%`;
   $('pipMark').textContent = PIP_MARK[pose] || '';
+  $('nodeCv').classList.toggle('is-active', at === 0 && pose !== 'idle');
+  $('nodeRecord').classList.toggle('is-active', at === 100);
 }
 
 function onStage(event) {
   $('pipCaption').textContent = event.detail;
   if (event.stage === 'looking_up' && event.external === false) return;
-  if (event.stage === 'done') setPip(DONE_POSE[event.status] || 'idle', 50);
+  if (event.stage === 'done') setPip(DONE_POSE[event.status] || 'cannot', 50);
   else if (event.stage === 'error') setPip('resting');
   else if (STAGE_POSE[event.stage]) setPip(...STAGE_POSE[event.stage]);
 }
 
 function onResult(result) {
   if (result.ok) {
-    if (typeof result.credits === 'number') {
-      state.credits = result.credits;
-      $('creditsTotal').textContent = formatCredits(result.credits);
-    }
+    state.credits = result.credits;
+    $('creditsTotal').textContent = formatCredits(result.credits);
     renderResult(result);
   } else {
     showProblem(result.error);
@@ -557,8 +976,10 @@ function handleEvent(block) {
   return name;
 }
 
+// Fix 5: record runStart at the beginning of startRun
 async function startRun(url, body) {
   if (state.running) return;
+  state.runStart = Date.now();
   setRunning(true);
   resetActivity();
   showRunning();
@@ -629,6 +1050,7 @@ async function loadOptions() {
       option.textContent = bid;
       $('bidSelect').appendChild(option);
     }
+    // Show approved tender row if one exists
     showApprovedTender(data.approved_tender);
     if (!data.bids.length) {
       $('bidSelect').innerHTML = '<option value="">No bid files found in data/bid</option>';
@@ -676,6 +1098,8 @@ $('readTender').addEventListener('click', () => {
 buildPip();
 showEmpty();
 loadOptions();
+updateCarousel(0);
+navigateTo(location.hash || '#/');
 </script>
 </body>
 </html>
