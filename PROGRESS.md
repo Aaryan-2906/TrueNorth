@@ -24,4 +24,16 @@
   2. Every live paid call is logged to `credits.csv`, and its raw reply is saved to `cache/` before anything reads it.
   3. Only 429s and connections that never opened are retried. A timeout or 5xx stops with a warning that the call may have been billed.
 
+## Step 02: models + normaliser
+- **Built:** the SPEC §3 pydantic models plus `RowResult`, with `proposed_position` optional, and company-name normalisation, month arithmetic and raw profile parsing.
+- **Files:** `app/models.py`, `app/normalise.py`, `tests/test_normalise.py`.
+- **Test results:** `uv run pytest -q` gives 14 passed. The real cached profile parses to 18 jobs (6 current, 12 past), no duplicates, 196 documented months.
+- **Known gaps:** no checker rules yet, by design. The real-profile test skips on a clean clone because `cache/` is not committed. `DUPLICATE_ENTRY` is only recorded as `duplicates_collapsed` until the checker exists.
+- **How it works:**
+  1. Company names are lowercased and stripped of brackets, punctuation and legal words, so "U Projects Pvt. Ltd." and "U Projects" compare equal, and "(formerly X)" is remembered as an alias.
+  2. Experience is the union of job months, so overlapping jobs count once, ongoing jobs end at TODAY, and jobs that cannot be placed are left out.
+  3. Each raw Crustdata job becomes a `Job` that keeps its source, such as `profile.past[2]`. Missing or unreadable dates stay empty, so they are reported as "cannot check".
+
 ## Suggestions (ideas noted but not built)
+- SPEC §4's "starts with" employer rule compares characters, so "Meta" and "Metalworks" count as the same employer. Comparing whole words would fix it, but "W Infra" vs "W Infrastructure" would then rely on its "(formerly ...)" alias. Check against the golden cases before changing.
+- SPEC §4 collapses same-employer, same-date jobs even when titles differ, which could hide a title a CV row should match. Consider keeping both titles.
