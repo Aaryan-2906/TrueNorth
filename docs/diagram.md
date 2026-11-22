@@ -38,6 +38,20 @@ flowchart LR
   class CD,CI,L data
   class AP human
   class FE preview
+
+  subgraph KEY["What the colours mean"]
+    direction TB
+    K1["AI: only reads text<br/>(copies verbatim, never decides)"]
+    K2["Our code: deterministic,<br/>tested rules that decide"]
+    K3[("Data: Crustdata records,<br/>cache and cost ledger")]
+    K4{"A person approves"}
+    K5["Preview feature"]
+  end
+  class K1 ai
+  class K2 ours
+  class K3 data
+  class K4 human
+  class K5 preview
 ```
 
 Amber = AI (reads text only) · Green = our deterministic code (decides) · Blue = data · Grey = a person approves · Dashed = preview.
