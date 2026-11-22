@@ -186,7 +186,7 @@ def run_audit(fresh: bool | None) -> int:
     text = report.render_report(bid, tender, entries, firm_result, full_time, ledger_start, errors, timestamp)
     path = report.write_report(text)
     print(report.headline(entries, firm_result))
-    print(f"Report written to {path}")
+    print(f"Report written to {path} and {path.with_suffix('.html')}")
     for error in errors:
         print(f"Lookup failed: {error}", file=sys.stderr)
     return 0

@@ -1,6 +1,7 @@
-"""Builds out/report.md. Text only: nothing here sends anything to anyone."""
+"""Builds out/report.md and out/report.html. Files only: nothing here sends anything to anyone."""
 
 import csv
+import html
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -327,8 +328,240 @@ def render_report(
     return "\n".join(lines)
 
 
+# --- HTML: rendered from the Markdown report, so both files always hold the same content ---
+
+_STATUS_WORD = re.compile(r"\b(CONSISTENT|QUESTIONS|CANNOT_CHECK)\b")
+_BOLD = re.compile(r"\*\*(.+?)\*\*")
+_ORDERED_ITEM = re.compile(r"(\d+)\. (.*)")
+_NOTE_EVIDENCE = re.compile(r"(.*) \(Evidence: (.*)\)")
+_UNESCAPED_PIPE = re.compile(r"(?<!\\)\|")
+_EVIDENCE_PREFIX = "   - Evidence: "
+
+_CSS = """
+*{box-sizing:border-box}
+body{margin:0;background:#F8FAFC;color:#0F172A;font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{background:#1E3A8A;color:#fff;padding:36px 24px 40px}
+.wrap{max-width:1112px;margin:0 auto}
+header h1{margin:0 0 10px;font-size:28px;line-height:1.2;letter-spacing:-.01em}
+.headline{margin:0 0 14px;font-size:18px;font-weight:600}
+.meta{margin:2px 0;color:#DBEAFE;font-size:13.5px}
+main{max-width:1160px;margin:0 auto;padding:24px 24px 48px}
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(15,23,42,.08),0 6px 18px rgba(15,23,42,.06);padding:24px;margin:0 0 20px}
+h2{margin:0 0 14px;font-size:20px;line-height:1.3;color:#1E3A8A}
+.section-title{margin:30px 0 14px}
+.card-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;margin:0 0 14px}
+h3{margin:0;font-size:17px;line-height:1.35}
+p{margin:0 0 10px}
+.note{color:#64748B;font-size:13.5px;font-style:italic}
+.closing{margin:16px 0 0;padding:12px 16px;border-radius:8px;background:#EFF6FF;color:#1E3A8A;font-weight:600}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.02em;white-space:nowrap}
+.pill-consistent{color:#15803D;background:#DCFCE7}
+.pill-questions{color:#B45309;background:#FEF3C7}
+.pill-cannot-check{color:#475569;background:#E2E8F0}
+.chip{display:inline-block;margin:3px 4px 0 0;padding:2px 8px;border-radius:6px;background:#F1F5F9;color:#64748B;font-size:12px;line-height:1.5}
+.chips{margin-top:3px}
+ul{margin:0 0 14px;padding-left:20px}
+ul.facts{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:4px 24px}
+ul ul{margin:2px 0 4px}
+ol{margin:0 0 14px;padding-left:24px}
+ol li{margin:0 0 10px}
+.table-wrap{overflow-x:auto;margin:0 0 16px;border:1px solid #E2E8F0;border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{background:#F1F5F9;color:#334155;text-align:left;font-weight:600;white-space:nowrap}
+th,td{padding:8px 10px;border-bottom:1px solid #E2E8F0;vertical-align:top}
+tr:last-child td{border-bottom:0}
+.subhead{margin:16px 0 8px;font-weight:600}
+.letter{border-left:4px solid #1E3A8A}
+@media (max-width:640px){header{padding:24px 16px}main{padding:16px}.card{padding:16px}header h1{font-size:23px}}
+@media print{body{background:#fff}.card{box-shadow:none;border:1px solid #E2E8F0;break-inside:avoid-page}header{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+""".strip()
+
+
+def _inline(text: str) -> str:
+    """Escape first: CV text is untrusted and must never become markup."""
+    return _BOLD.sub(r"<strong>\1</strong>", html.escape(text))
+
+
+def _pill(status: str) -> str:
+    return f'<span class="pill pill-{status.lower().replace("_", "-")}">{status}</span>'
+
+
+def _chips(text: str, separator: str = "; ") -> str:
+    items = "".join(f'<span class="chip">{html.escape(item)}</span>' for item in text.split(separator))
+    return f'<div class="chips">{items}</div>'
+
+
+def _outcome_html(text: str) -> str:
+    parts = []
+    for code in text.split(", "):
+        if code == "MATCHED":
+            status = "consistent"
+        elif code.startswith("NOT_COMPARED"):
+            status = "cannot-check"
+        else:
+            status = "questions"
+        parts.append(f'<span class="pill pill-{status}">{html.escape(code)}</span>')
+    return " ".join(parts)
+
+
+def _cell_html(header: str, value: str) -> str:
+    if header == "Status" and _STATUS_WORD.fullmatch(value):
+        return _pill(value)
+    if header == "Outcome":
+        return _outcome_html(value)
+    if header == "Codes" and value != "none":
+        return _chips(value, ", ")
+    return _inline(value)
+
+
+def _split_row(line: str) -> list[str]:
+    cells = _UNESCAPED_PIPE.split(line.strip().strip("|"))
+    return [cell.strip().replace("\\|", "|") for cell in cells]
+
+
+def _table_html(rows: list[str]) -> str:
+    headers = _split_row(rows[0])
+    head = "".join(f"<th>{html.escape(name)}</th>" for name in headers)
+    body = ""
+    for row in rows[2:]:
+        cells = "".join(f"<td>{_cell_html(h, v)}</td>" for h, v in zip(headers, _split_row(row)))
+        body += f"<tr>{cells}</tr>"
+    return f'<div class="table-wrap"><table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>'
+
+
+def _ordered_html(lines: list[str]) -> str:
+    first = _ORDERED_ITEM.fullmatch(lines[0]).group(1)
+    items: list[str] = []
+    for line in lines:
+        if line.startswith(_EVIDENCE_PREFIX):
+            items[-1] += _chips(line[len(_EVIDENCE_PREFIX):])
+        else:
+            items.append(_inline(_ORDERED_ITEM.fullmatch(line).group(2)))
+    return f'<ol start="{first}">' + "".join(f"<li>{item}</li>" for item in items) + "</ol>"
+
+
+def _bullet_text(text: str) -> str:
+    note = _NOTE_EVIDENCE.fullmatch(text)
+    if note:
+        return _inline(note.group(1)) + _chips(note.group(2))
+    rendered = _inline(text)
+    if "status:</strong>" in rendered.lower():
+        rendered = _STATUS_WORD.sub(lambda match: _pill(match.group(1)), rendered)
+    return rendered
+
+
+def _bullets_html(lines: list[str]) -> str:
+    items: list[tuple[str, list[str]]] = []
+    for line in lines:
+        if line.startswith("  - "):
+            items[-1][1].append(_inline(line[4:]))
+        else:
+            items.append((_bullet_text(line[2:]), []))
+    facts = all(line.startswith("- **") for line in lines)
+    opening = '<ul class="facts">' if facts else "<ul>"
+    body = ""
+    for text, children in items:
+        nested = "<ul>" + "".join(f"<li>{child}</li>" for child in children) + "</ul>" if children else ""
+        body += f"<li>{text}{nested}</li>"
+    return f"{opening}{body}</ul>"
+
+
+def _paragraph_html(line: str) -> str:
+    if line == f"**{CLOSING_LINE}**":
+        return f'<p class="closing">{html.escape(CLOSING_LINE)}</p>'
+    if line.startswith("*") and not line.startswith("**") and line.endswith("*"):
+        return f'<p class="note">{html.escape(line.strip("*"))}</p>'
+    if line.startswith("**") and line.endswith("**") and line.count("**") == 2:
+        return f'<p class="subhead">{html.escape(line[2:-2])}</p>'
+    return f"<p>{_inline(line)}</p>"
+
+
+def _take_while(lines: list[str], start: int, keep: Any) -> int:
+    end = start
+    while end < len(lines) and keep(lines[end]):
+        end += 1
+    return end
+
+
+def _blocks_html(lines: list[str]) -> str:
+    out: list[str] = []
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        if not line.strip():
+            index += 1
+        elif line.startswith("|"):
+            end = _take_while(lines, index, lambda item: item.startswith("|"))
+            out.append(_table_html(lines[index:end]))
+            index = end
+        elif _ORDERED_ITEM.fullmatch(line):
+            end = _take_while(
+                lines, index, lambda item: bool(_ORDERED_ITEM.fullmatch(item)) or item.startswith(_EVIDENCE_PREFIX)
+            )
+            out.append(_ordered_html(lines[index:end]))
+            index = end
+        elif line.startswith("- "):
+            end = _take_while(lines, index, lambda item: item.startswith(("- ", "  - ")))
+            out.append(_bullets_html(lines[index:end]))
+            index = end
+        else:
+            out.append(_paragraph_html(line))
+            index += 1
+    return "".join(out)
+
+
+def _split_on(lines: list[str], prefix: str) -> list[tuple[str, list[str]]]:
+    sections: list[tuple[str, list[str]]] = []
+    for line in lines:
+        if line.startswith(prefix):
+            sections.append((line[len(prefix):], []))
+        elif sections:
+            sections[-1][1].append(line)
+    return sections
+
+
+def _expert_card(title: str, body: list[str]) -> str:
+    status_prefix = "- **Status:** "
+    status = next((line[len(status_prefix):] for line in body if line.startswith(status_prefix)), None)
+    rest = [line for line in body if not line.startswith(status_prefix)]
+    pill = _pill(status) if status else ""
+    return (
+        f'<section class="card"><div class="card-head"><h3>{html.escape(title)}</h3>{pill}</div>'
+        f"{_blocks_html(rest)}</section>"
+    )
+
+
+def _section_html(title: str, body: list[str]) -> str:
+    if any(line.startswith("### ") for line in body):
+        cards = "".join(_expert_card(name, part) for name, part in _split_on(body, "### "))
+        return f'<h2 class="section-title">{html.escape(title)}</h2>{cards}'
+    kind = "card letter" if title.startswith("Draft clarification letter") else "card"
+    return f'<section class="{kind}"><h2>{html.escape(title)}</h2>{_blocks_html(body)}</section>'
+
+
+def render_html(markdown: str) -> str:
+    """One static page with inline CSS and no scripts, holding the same content as the Markdown."""
+    lines = markdown.splitlines()
+    first_section = next(index for index, line in enumerate(lines) if line.startswith("## "))
+    intro = [line for line in lines[:first_section] if line.strip()]
+    title = intro[0].removeprefix("# ")
+    lead = intro[1].strip("*")
+    meta = "".join(f'<p class="meta">{html.escape(line)}</p>' for line in intro[2:])
+    sections = "".join(_section_html(name, body) for name, body in _split_on(lines[first_section:], "## "))
+    return (
+        '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        f"<title>{html.escape(title)}</title><style>{_CSS}</style></head><body>"
+        f'<header><div class="wrap"><h1>{html.escape(title)}</h1>'
+        f'<p class="headline">{html.escape(lead)}</p>{meta}</div></header>'
+        f"<main>{sections}</main></body></html>\n"
+    )
+
+
 def write_report(text: str, path: Path | None = None) -> Path:
+    """Write the Markdown report and its HTML twin. Returns the Markdown path."""
     target = path or OUT_PATH
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(text, encoding="utf-8")
+    target.with_suffix(".html").write_text(render_html(text), encoding="utf-8")
     return target

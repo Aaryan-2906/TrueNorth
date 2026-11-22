@@ -117,6 +117,16 @@
   2. Python rejects anything not written in the CV, then `dates.py` converts every date, so the LLM never produces a date value.
   3. The same deterministic checker then runs on those claims, and each reading is cached so a repeat run costs nothing.
 
+## Step 07: HTML report, README, live run
+- **Built:** `out/report.html` (one static file, inline CSS, no scripts), `README.md` from the template, and clearer date-problem messages in `checker.py` (wording only, no rule changes).
+- **Files:** `app/report.py`, `app/checker.py`, `app/cli.py`, `README.md`, `credits.csv` (2 new ledger lines from the live run).
+- **Live run:** `audit --fresh` made real Crustdata calls and 4 real CV readings. Headline: 4 experts: 0 consistent, 2 need clarification, 2 cannot be checked; 11 questions in total. It cost 1.2 credits (1 enrich + 0.2 identify), and the balance went from 15168.28 to 15167.08. All 180 report lines outside run metadata matched the cached run.
+- **Test results:** `uv run pytest -q` gives 142 passed. The HTML was checked for well-formed tags, no scripts, escaped CV text and the same content as the Markdown, and was viewed at desktop and phone widths in headless Edge.
+- **Known gaps:** README sections other than "How to run it" and "How it's built" are marked TODO. The diagram link is TODO. `read-tender` from the template does not exist, so it is not in the README. LLM token cost is not in `credits.csv`.
+- **How it works:**
+  1. The HTML is generated from the finished Markdown report, so the two files cannot disagree.
+  2. All text is escaped before it becomes HTML, so anything written in a CV stays plain text.
+  3. Statuses become coloured pills and evidence becomes grey chips, with nothing loaded from outside the file.
+
 ## Suggestions (ideas noted but not built)
-- `CV_DATE_INVALID` finding messages read awkwardly in the `expert` and `check-cv` output ("'2013' is no month"). The report's question wording is correct. Fix in `checker.py` when that file may be changed.
 - SPEC §4 collapses same-employer, same-date jobs even when titles differ, which could hide a title a CV row should match. Consider keeping both titles.

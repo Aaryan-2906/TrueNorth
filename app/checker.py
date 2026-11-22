@@ -25,6 +25,14 @@ EXPERT_LEVEL_CANNOT_CHECK = {"NO_PROFILE_FOUND", "AMBIGUOUS_IDENTITY", "PROFILE_
 NOT_COMPARED = "NOT_COMPARED (no profile)"
 NOT_COMPARED_AMBIGUOUS = "NOT_COMPARED (ambiguous identity)"
 
+_DATE_PROBLEM_WORDING = {
+    "no year": "has no year",
+    "no month": "has no month",
+    "after today": "is after today",
+    "after cv_date": "is after the date written on the CV",
+    "end before start": "end before they start",
+    "unreadable": "could not be read",
+}
 _TITLE_STOPWORDS = {"cum", "and", "of", "the", "sr", "senior", "jr", "junior"}
 _TOP_ROLE = re.compile(r"\b(?:ceo|coo|cfo|cto|chief|president|board)\b", re.IGNORECASE)
 _FOUNDER_OR_OWNER = re.compile(r"founder|owner", re.IGNORECASE)
@@ -122,7 +130,8 @@ def rule_cv_date_invalid(claims: Claims) -> list[Finding]:
             label, raw = "end date", row.end_raw or "(blank)"
         else:
             label, raw = "dates", f"{row.start_raw} to {row.end_raw}"
-        message = f"row {index + 1} {label} '{raw}' is {row.date_problem}"
+        problem_text = _DATE_PROBLEM_WORDING.get(row.date_problem, "could not be used")
+        message = f"row {index + 1} {label} '{raw}' {problem_text}"
         findings.append(
             _finding(
                 "CV_DATE_INVALID",
