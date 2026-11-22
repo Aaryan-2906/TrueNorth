@@ -53,6 +53,15 @@
   2. Each valid CV row is matched to the closest profile job at the same employer, then its dates and title are compared.
   3. Expert rules compare documented months with the claims and tender, and the status comes only from which findings fired.
 
+## Step 04: one expert end to end
+- **Built:** `uv run python -m app.cli expert <ID> [--fresh]`, which loads the bid, claims and position, looks up the profile, runs the checker and prints a plain-text block. `Lookup` gained a `reason` field, so an expert with no URL reads "No profile URL was supplied, so no lookup was made" and keeps the code `NO_PROFILE_FOUND`.
+- **Files:** `app/cli.py`, `app/models.py`, `app/checker.py`.
+- **Test results:** runs for X1 (`QUESTIONS`), X2 (`QUESTIONS`), X3 (`CANNOT_CHECK`) and X4 (`CANNOT_CHECK`). A second X1 run came from cache and `credits.csv` did not change. `uv run pytest -q` gives 33 passed, with the golden helper and golden files unchanged.
+- **Known gaps:** `--fresh` was tested offline with a fake API reply, not with a real paid call. No report file, firm check or CV parser yet, by design.
+- **How it works:**
+  1. The CLI finds the expert in `bid.json` and loads the hand-written claims and the tender position, or runs Career Check mode when the position is null.
+  2. If there is a profile URL it calls Crustdata through the cache; if not, it records that no lookup was made instead of implying a search failed.
+  3. It prints the status, documented vs claimed years, each CV row's outcome, each finding with its evidence, and whether the lookup was live or from cache.
+
 ## Suggestions (ideas noted but not built)
-- Experts with no profile URL (X3, X4) get `NO_PROFILE_FOUND`, whose message says "not found in Crustdata", but no lookup was made for them. The CLI or report should say "no profile URL supplied; not looked up".
 - SPEC §4 collapses same-employer, same-date jobs even when titles differ, which could hide a title a CV row should match. Consider keeping both titles.

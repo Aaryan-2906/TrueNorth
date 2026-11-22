@@ -95,6 +95,7 @@ class Lookup(BaseModel):
     status: Literal["found", "not_found", "ambiguous"]
     candidate_count: int = 0
     profile: Profile | None = None
+    reason: Literal["no_profile_url"] | None = None  # why no lookup was made, if none was
 
 
 class Finding(BaseModel):

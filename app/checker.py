@@ -258,7 +258,10 @@ def _check_rows(claims: Claims, jobs: list[Job] | None, skip: str) -> tuple[list
 # --- SPEC 6: per-expert rules ---
 
 
-def rule_no_profile_found() -> Finding:
+def rule_no_profile_found(reason: str | None = None) -> Finding:
+    if reason == "no_profile_url":
+        message = "No profile URL was supplied, so no lookup was made; this is not evidence against the expert"
+        return _finding("NO_PROFILE_FOUND", "cannot_check", message, ["bid.profile_url"])
     message = "not found in Crustdata; this is not evidence against the expert"
     return _finding("NO_PROFILE_FOUND", "cannot_check", message, ["crustdata.lookup"])
 
@@ -446,7 +449,7 @@ def check_expert(
         if lookup.status == "ambiguous":
             stop = rule_ambiguous_identity(lookup.candidate_count)
         else:
-            stop = rule_no_profile_found()
+            stop = rule_no_profile_found(lookup.reason)
         row_results, _ = _check_rows(claims, None, stop.code)
         return ExpertResult(
             expert_id=claims.expert_id,
