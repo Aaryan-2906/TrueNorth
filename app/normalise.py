@@ -37,11 +37,16 @@ def same_employer(a: str, b: str) -> bool:
         return False
     if core_a == core_b:
         return True
-    if min(len(core_a), len(core_b)) >= _MIN_PREFIX_LENGTH and (
-        core_a.startswith(core_b) or core_b.startswith(core_a)
-    ):
+    if min(len(core_a), len(core_b)) >= _MIN_PREFIX_LENGTH and _is_word_prefix(core_a, core_b):
         return True
     return core_b in aliases_a or core_a in aliases_b
+
+
+def _is_word_prefix(a: str, b: str) -> bool:
+    """True if the shorter name's whole words are the first words of the longer name."""
+    words_a, words_b = a.split(), b.split()
+    shorter, longer = sorted((words_a, words_b), key=len)
+    return longer[: len(shorter)] == shorter
 
 
 def months(start: tuple[int, int], end: tuple[int, int]) -> int:
@@ -91,25 +96,33 @@ def _is_duplicate(a: Job, b: Job) -> bool:
     )
 
 
-def _build_jobs(details: dict[str, Any]) -> tuple[list[Job], list[tuple[str, str]]]:
+def collapse_duplicates(jobs: Iterable[Job]) -> tuple[list[Job], list[tuple[str, str]]]:
+    """Keep one of each duplicate job; return (kept jobs, (kept source, dropped source) pairs)."""
     kept: list[Job] = []
     collapsed: list[tuple[str, str]] = []
-    for group, is_current in (("current", True), ("past", False)):
-        for index, raw in enumerate(details.get(group) or []):
-            job = Job(
-                employer=raw.get("name") or "",
-                title=raw.get("title") or "",
-                start=_parse_date(raw.get("start_date")),
-                end=_parse_date(raw.get("end_date")),
-                is_current=is_current,
-                source=f"profile.{group}[{index}]",
-            )
-            original = next((item for item in kept if _is_duplicate(item, job)), None)
-            if original is None:
-                kept.append(job)
-            else:
-                collapsed.append((original.source, job.source))
+    for job in jobs:
+        original = next((item for item in kept if _is_duplicate(item, job)), None)
+        if original is None:
+            kept.append(job)
+        else:
+            collapsed.append((original.source, job.source))
     return kept, collapsed
+
+
+def _build_jobs(details: dict[str, Any]) -> tuple[list[Job], list[tuple[str, str]]]:
+    jobs = [
+        Job(
+            employer=raw.get("name") or "",
+            title=raw.get("title") or "",
+            start=_parse_date(raw.get("start_date")),
+            end=_parse_date(raw.get("end_date")),
+            is_current=is_current,
+            source=f"profile.{group}[{index}]",
+        )
+        for group, is_current in (("current", True), ("past", False))
+        for index, raw in enumerate(details.get(group) or [])
+    ]
+    return collapse_duplicates(jobs)
 
 
 def profile_from_enrich(raw_item: dict[str, Any]) -> Lookup:

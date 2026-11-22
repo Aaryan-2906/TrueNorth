@@ -107,8 +107,8 @@ class ExpertResult(BaseModel):
   (`min_years * 12`) to avoid rounding errors.
 - **Company-name normalisation:** lowercase; remove bracketed text but remember it; remove
   punctuation; remove tokens `pvt private ltd limited llp india co company group`; collapse spaces.
-- **Same employer** if normalised names are equal, OR one normalised name starts with the other
-  (both ≥ 4 characters), OR one's bracketed text (after "formerly"/"presently"/"now") normalises to
+- **Same employer** if normalised names are equal, OR one normalised name is a **word prefix** of the
+  other, comparing whole words so "meta" is not a prefix of "metalworks" (both ≥ 4 characters), OR one's bracketed text (after "formerly"/"presently"/"now") normalises to
   the other.
 - **Duplicate jobs:** same employer (rule above) AND same start AND same end → keep one, record the
   pair in `duplicates_collapsed`, add `DUPLICATE_ENTRY` (info). Never double count.

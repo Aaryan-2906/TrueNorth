@@ -35,6 +35,20 @@ def test_different_firms_are_not_same_employer():
     assert same_employer("V Consult", "Bidder Consult Pvt Ltd") is False
 
 
+def test_prefix_compares_whole_words():
+    assert same_employer("Meta", "Metalworks") is False
+
+
+def test_word_prefix_is_same_employer():
+    assert (
+        same_employer(
+            "Alpha Consultants International",
+            "Alpha Consultants International in association with Beta Civil Solutions",
+        )
+        is True
+    )
+
+
 def test_months_is_inclusive():
     assert months((2009, 7), (2013, 5)) == 47
     assert months((2022, 3), (2026, 11)) == 57
