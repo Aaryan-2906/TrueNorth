@@ -372,7 +372,11 @@ function addCall(call) {
   if (typeof call.credits === 'number') state.credits += call.credits;
   $('creditsTotal').textContent = formatCredits(state.credits);
   const isLive = call.source === 'live';
-  const credits = call.credits === null ? 'no Crustdata credit figure' : `${formatCredits(call.credits)} credits`;
+  const isCrustdata = call.service.startsWith('Crustdata');
+  const creditWord = call.credits === 1 ? 'credit' : 'credits';
+  const credits = call.credits === null
+    ? (isCrustdata ? 'credits not reported' : 'no Crustdata credits')
+    : `${formatCredits(call.credits)} ${creditWord}`;
   const item = document.createElement('div');
   item.className = 'shrink-0 rounded-md border border-white/10 bg-white/[.03] px-2.5 py-1.5 font-mono text-[10.5px] leading-[1.45]';
   item.innerHTML = `

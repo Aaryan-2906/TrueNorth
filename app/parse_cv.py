@@ -15,7 +15,7 @@ from app import config, dates
 from app.models import Claims, CvRow, YearMonth
 
 CACHE_DIR = config.ROOT_DIR / "cache" / "llm"
-PROMPT_VERSION = "1"
+PROMPT_VERSION = "2"
 MAX_TOKENS = 16000
 TIMEOUT_SECONDS = 180.0
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
@@ -31,7 +31,7 @@ Rules:
 - start_raw and end_raw are the row's own heading dates.
 - duration_raw is the text after "Duration:" in that row's description, or null if the row has none.
 - claimed_total_years is the total professional experience the CV states: "about 12 years" -> 12, "over 29 years" -> 29. Null if not stated. Do not add up the rows.
-- claimed_similar_years is only a stated figure for experience in a similar capacity to the proposed role. Null if not stated.
+- claimed_similar_years is only a figure the CV explicitly labels as experience in a similar capacity or in the proposed position itself (for example "Experience in similar capacity: 7 years"). A figure for some other named role (for example "5 years as Superintending Engineer") does not count: use null. Null if not stated.
 - cv_date is the date the CV was signed or written, as raw text. Look in the signature block (for example "Place: ... Date: 14/03/2021") or a dated header or footer. Null if blank or absent.
 - profile_url is a professional profile link written in the CV, or null.
 - Anything not in the CV is null."""

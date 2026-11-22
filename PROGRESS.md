@@ -144,5 +144,24 @@
   2. Each CV and lookup failure is recorded against that expert as "could not be read" or "lookup failed", and the run carries on.
   3. Every paid result is cached as soon as it arrives, so a re-run pays only for what is still missing.
 
+## UI: web app and Pip
+- **Built:** a FastAPI server that streams real run events, a one-file dark results page, and Pip, an original 16x16 pixel owl driven only by those events. Run it with `uv run uvicorn app.server:app --port 8000`.
+- **Files:** `app/server.py`, `static/index.html`, `tests/test_server.py`, `app/cli.py`, `app/crustdata.py`, `app/parse_cv.py` (hooks and a tighter prompt), `app/report.py`, `docs/CRUSTDATA.md`, `credits.csv`, `pyproject.toml`, `uv.lock`.
+- **Test results:** `uv run pytest -q` gives 197 passed. In headless Edge, a live "Check one CV" took 16.2s (1 real Claude reading, 0 credits). A live "Audit a bid" took 30.9s (4 real Claude readings, 2 Crustdata calls, 1.2 credits; balance 15167.08 to 15165.88). The audit matched the earlier live report on all 180 lines. The recipe error state, phone width, report link, letter copy and reduced motion were also checked.
+- **Decisions:**
+  1. The CLI and server call the same `audit_bid` and `check_one_cv`, with small progress and call hooks. No checking logic was added.
+  2. Only one run happens at a time, and a second gets a clear "in progress" message, because run counters and the report file are shared.
+  3. Pip glides to the Crustdata node only when a real call is made. No-URL experts and reused lookups show the caption but Pip does not move there.
+  4. "Check one CV" does not overwrite `out/report.html`, so its report button appears only after a bid audit.
+  5. A cached Crustdata lookup shows 0 credits. A Claude reading shows no Crustdata credits, since its cost is not in `credits.csv`.
+  6. HTTP 402 is now documented as credits run out, confirmed by the event handbook.
+  7. The live run exposed a parser variation: the model once read X3's "5.10 years as Superintending Engineer" as similar-role experience. The prompt now counts only figures labelled as similar capacity or the proposed position. After the fix, 20 of 20 fresh readings of the 5 distinct test CVs matched the hand-written answers. The test was not changed.
+- **Known gaps:** LLM readings can still vary between `--fresh` runs, since `claude-sonnet-5-5` does not accept `temperature=0`. The full UI audit ran live before the prompt fix; afterwards the CV readings were re-run live and the audit used cached Crustdata replies. The page needs internet for the Tailwind and font CDNs. On cached runs the stages finish within milliseconds, so Pip jumps almost directly to the result rather than being slowed down artificially. The app's built-in browser pane could not reach the local server, so the page was tested in headless Edge.
+- **How it works:**
+  1. The server runs the normal audit in a background thread and streams each real stage and external call to the browser as it happens.
+  2. The page only displays those events and the final result, escaping all CV text so it can never become markup.
+  3. Pip's position, pose and caption come directly from the stage events, so it cannot show progress that did not happen.
+
 ## Suggestions (ideas noted but not built)
+- Add the web UI command to the README's "How to run it" and "How it's built", and credit FastAPI, uvicorn, Tailwind, Inter and JetBrains Mono under "Open-source and tools".
 - SPEC §4 collapses same-employer, same-date jobs even when titles differ, which could hide a title a CV row should match. Consider keeping both titles.
