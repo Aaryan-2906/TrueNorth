@@ -140,9 +140,12 @@ def _run_job(job: Callable[[cli.Progress], dict[str, Any]], events: "queue.Queue
     def stage(name: str, expert: str | None, detail: str, **extra: Any) -> None:
         events.put(_sse("stage", {"stage": name, "expert": expert, "detail": detail, **extra}))
 
-    def progress(name: str, expert: str | None, detail: str) -> None:
+    def progress(name: str, expert: str | None, detail: str, external: bool = True) -> None:
         current["expert"] = expert
-        stage(name, expert, detail)
+        if name == "looking_up":
+            stage(name, expert, detail, external=external)
+        else:
+            stage(name, expert, detail)
 
     crustdata.reset_run()
     parse_cv.reset_run()

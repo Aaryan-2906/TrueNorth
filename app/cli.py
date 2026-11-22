@@ -20,11 +20,11 @@ EMPLOYMENT_TYPES = {"full_time", "associate", "intermittent"}
 REQUIRED_POSITION_FIELDS = ("min_total_years", "min_similar_years", "similar_title_keywords")
 CV_READ_ERRORS = (parse_cv.CvParseError, OSError, UnicodeDecodeError)
 
-# progress(stage, expert id or None, detail): how a caller such as the web UI follows a run.
-Progress = Callable[[str, str | None, str], None]
+# progress(stage, expert id or None, detail, external=False when no outside service is contacted).
+Progress = Callable[..., None]
 
 
-def _silent(_stage: str, _expert: str | None, _detail: str) -> None:
+def _silent(_stage: str, _expert: str | None, _detail: str, external: bool = True) -> None:
     return None
 
 
@@ -316,12 +316,19 @@ def _audit_experts(
             continue
         url = expert.get("profile_url")
         if not url:
-            progress("looking_up", expert_id, f"No profile URL supplied for {expert_id}, so no lookup is made")
+            progress(
+                "looking_up", expert_id, f"No profile URL supplied for {expert_id}, so no lookup is made", external=False
+            )
             lookup, origin = _no_url_lookup()
         elif url in seen:
             # Same URL in one run: reuse the reply so --fresh never pays for it twice.
             lookup, first_origin, first_id = seen[url]
-            progress("looking_up", expert_id, f"{expert_id} has the same profile URL as {first_id}, so that lookup is reused")
+            progress(
+                "looking_up",
+                expert_id,
+                f"{expert_id} has the same profile URL as {first_id}, so that lookup is reused",
+                external=False,
+            )
             origin = f"{first_origin}, same lookup as {first_id}"
         else:
             progress("looking_up", expert_id, f"Looking up {expert_id} in Crustdata")
@@ -432,7 +439,7 @@ def check_one_cv(
             lookup, origin = Lookup(status="not_found", reason="lookup_failed"), str(exc)
             lookup_error = str(exc)
     else:
-        progress("looking_up", cv_id, "No profile URL supplied, so no lookup is made")
+        progress("looking_up", cv_id, "No profile URL supplied, so no lookup is made", external=False)
         lookup, origin = _no_url_lookup()
 
     target = "the record" if lookup.profile is not None else "itself"

@@ -177,6 +177,27 @@ def test_lock_is_released_after_an_error(world, client):
     assert client.post("/api/check-cv", json={"cv_text": CV}).status_code == 200
 
 
+def test_looking_up_says_whether_a_service_is_contacted(world, client):
+    world.add_expert("E1", url(1))
+    world.add_expert("E2", url(1))
+    world.add_expert("E3")
+    world.write_bid()
+
+    events = read_events(client.post("/api/audit", json={"bid": str(world.bid_dir / "bid.json")}))
+
+    flags = {s["expert"]: s["external"] for s in of_kind(events, "stage") if s["stage"] == "looking_up"}
+    assert flags == {"E1": True, "E2": False, "E3": False, None: True}
+
+
+def test_page_has_pip_driven_by_stages(client):
+    page = client.get("/").text
+
+    assert 'id="pip"' in page and 'id="pipCaption"' in page
+    assert "prefers-reduced-motion" in page
+    assert "$('pipCaption').textContent = event.detail" in page
+    assert "setInterval" not in page
+
+
 def test_page_is_served_and_avoids_banned_words_and_red(client):
     response = client.get("/")
 
