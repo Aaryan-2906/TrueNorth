@@ -280,6 +280,8 @@ def format_expert(
         claimed_text = "not stated" if claimed is None else f"{claimed:.1f} years"
         lines.append(f"Similar role: documented {_years(result.documented_similar_months)} vs claimed: {claimed_text}")
     lines.append(f"lookup: {lookup_origin}")
+    if report.reader_label(claims):
+        lines.append(f"Read by: {report.reader_label(claims)}")
     lines.append("CV rows:")
     lines += [_row_line(index, row, result) for index, row in enumerate(claims.rows)]
     lines.append("Findings (questions for the committee, not conclusions):" if result.findings else "Findings: none")

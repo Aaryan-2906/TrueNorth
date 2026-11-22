@@ -211,6 +211,21 @@
   2. That text goes through the same `check_one_cv` function as pasted text.
   3. The page sends the chosen file instead of the textarea, and shows the server's message if the file cannot be read.
 
+## Deterministic CV reader
+- **Built:** `parse_cv_rules` reads the standard NHAI key-personnel layout with regexes and `app/dates.py`. `parse_cv` tries it first and uses Claude only if it returns None. Each expert records `read_by`, shown as "Read by: rules" or "Read by: Claude" in the report, CLI and web card. New env flag `LLM_ENABLED` (default true).
+- **Files:** `app/parse_rules.py`, `app/parse_cv.py`, `app/models.py`, `app/config.py`, `app/parse_tender.py`, `app/report.py`, `app/cli.py`, `static/index.html`, `.env.example`, `tests/test_parse_rules.py`, `README.md`, `demo/DEMO_SCRIPT.md`.
+- **Test results:** `uv run pytest -q` gives 330 passed. X3, X4 and SAMPLE_real_format are read by rules and match their hand-written claims exactly. SAMPLE_modern_resume, X1 and X2 fall back to Claude and match, except that the modern resume's name is compared ignoring case because the CV prints "EXPERT M" and the claims file says "Expert M". The demo audit report is unchanged apart from the new Read-by lines and footer count. In headless Edge, X3 shows "Read by: rules" with no Claude call in Activity, and the modern resume shows "Read by: Claude" with its call. No Crustdata credits were spent.
+- **Decisions:**
+  1. The rules are deliberately cautious. They step aside for several claimed totals, a stated similar-capacity figure, an unclear employer cell, a job line they cannot place, or an unreadable date.
+  2. Impossible dates such as 09/12/2097 are still read, so the checker raises them as date questions.
+  3. With `LLM_ENABLED=false`, cached Claude readings are not used either, so "off" means no AI output of any age.
+  4. Reading a new tender needs the AI reader, so with the flag off it gives a clear error.
+- **Known gaps:** with the flag off, X1 and X2 are reported as not recognised, so the demo audit has 4 experts that cannot be checked. The demo `unseen_cv.txt` still goes to Claude because one row's employer cell lists several parties. The rules were built from the few NHAI CVs in this project, so other real CVs may often fall back to Claude.
+- **How it works:**
+  1. The rules look for the NHAI headings and read each employment row, keeping only text written in the CV.
+  2. If anything is unclear, they return nothing and Claude reads the CV, unless `LLM_ENABLED` is false.
+  3. Dates and all checks then run through the same deterministic code, whichever reader was used.
+
 ## Suggestions (ideas noted but not built)
 - Check whether each job's sector matches the tender's wording ("in Highway Projects"), since total years currently count all jobs.
 - SPEC §4 collapses same-employer, same-date jobs even when titles differ, which could hide a title a CV row should match. Consider keeping both titles.

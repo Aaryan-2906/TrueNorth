@@ -90,6 +90,7 @@ class Claims(BaseModel):
     cv_date: YearMonth | None = None  # date written on the CV; "present" means this date
     profile_url: str | None = None  # if the CV includes one (bid.json may override)
     rows: list[CvRow]
+    read_by: Literal["rules", "claude"] | None = None  # which reader produced these claims
 
 
 class Lookup(BaseModel):

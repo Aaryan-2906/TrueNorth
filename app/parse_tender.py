@@ -266,6 +266,8 @@ def parse_tender(text: str, fresh: bool | None = None) -> dict[str, dict[str, An
     """Read tender text into proposed positions. Nothing here approves or applies them."""
     if not text.strip():
         raise TenderParseError("the tender text is empty")
+    if not config.LLM_ENABLED:
+        raise TenderParseError("reading a tender needs the AI reader, and LLM_ENABLED is off")
     use_fresh = config.FRESH if fresh is None else fresh
     path = cache_path(text)
     extract = None

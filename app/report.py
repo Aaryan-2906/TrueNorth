@@ -56,6 +56,10 @@ def claimed_text(claims: Claims) -> str:
     return f"{claims.claimed_total_years:.1f} years" if claims.claimed_total_stated else "not stated"
 
 
+def reader_label(claims: Claims) -> str | None:
+    return {"rules": "rules", "claude": "Claude"}.get(claims.read_by or "")
+
+
 def row_outcome(index: int, result: ExpertResult) -> str:
     """All row-level codes for one row, or its single outcome label."""
     cite = f"cv.rows[{index}]"
@@ -283,6 +287,8 @@ def _expert_lines(entry: ExpertEntry) -> list[str]:
             f"- **Similar role:** documented {_years_text(result.documented_similar_months)} vs claimed {similar_claimed}"
         )
     lines.append(f"- **Lookup:** {entry.origin}")
+    if reader_label(claims):
+        lines.append(f"- **Read by:** {reader_label(claims)}")
     lines += [f"- **Note:** {note}" for note in _expert_notes(entry)]
     lines += ["", *_row_table(entry), "", "**Questions for the committee:**", ""]
     questions, notes = build_questions(result.findings)
@@ -337,8 +343,9 @@ def _footer_lines(ledger_start: int, errors: list[str], timestamp: str) -> list[
         lines.append(f"  - {item['path']}: {source}, fetched {item['fetched_at']}")
     readings = parse_cv.run_stats()
     lines.append(
-        f"- CV readings this run: {readings['live']} by the LLM, {readings['from_cache']} from cache. "
-        "The LLM only copies text from the CV. Dates are converted and all checks are run by deterministic code."
+        f"- CV readings this run: {readings['live']} by the LLM, {readings['from_cache']} from cache"
+        + (f", {readings['rules']} by the rules reader" if readings["rules"] else "")
+        + ". The LLM only copies text from the CV. Dates are converted and all checks are run by deterministic code."
     )
     if errors:
         lines.append("- Lookups that failed in this run, shown as not compared:")
@@ -418,6 +425,7 @@ def expert_view(entry: ExpertEntry) -> dict[str, Any]:
         "documented_similar_years": _months_to_years(result.documented_similar_months),
         "claimed_similar_years": claims.claimed_similar_years,
         "lookup": entry.origin,
+        "read_by": reader_label(claims),
         "notes": _expert_notes(entry),
         "rows": rows,
         "questions": [_question_view(q, _evidence_parts(q.evidence, entry)) for q in questions],

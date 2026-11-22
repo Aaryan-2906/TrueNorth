@@ -31,8 +31,14 @@ def read_fresh() -> bool:
     return os.getenv("FRESH", "").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def read_llm_enabled() -> bool:
+    """The AI reader is on unless env LLM_ENABLED is set to a falsy value."""
+    return os.getenv("LLM_ENABLED", "").strip().lower() not in {"0", "false", "no", "off"}
+
+
 CRUSTDATA_API_KEY = os.getenv("CRUSTDATA_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "").strip() or DEFAULT_ANTHROPIC_MODEL
 FRESH = read_fresh()
+LLM_ENABLED = read_llm_enabled()
 TODAY = read_today()

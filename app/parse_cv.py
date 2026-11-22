@@ -15,7 +15,8 @@ from app import config, dates
 from app.models import Claims, CvRow, YearMonth
 
 CACHE_DIR = config.ROOT_DIR / "cache" / "llm"
-PROMPT_VERSION = "2"
+LAYOUT_NOT_RECOGNISED = "CV layout not recognised without the AI reader"
+PROMPT_VERSION ="2"
 MAX_TOKENS = 16000
 TIMEOUT_SECONDS = 180.0
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
@@ -256,9 +257,27 @@ def parse_cv(
     today: tuple[int, int] | None = None,
     on_dates: Callable[[int], None] | None = None,
 ) -> Claims:
-    """Read CV text into validated Claims, reusing a cached reading unless fresh is on."""
+    """Read CV text into validated Claims: the rules reader first, then Claude if it is enabled."""
+    from app import parse_rules  # Imported here because parse_rules builds on this module.
+
     if not text.strip():
         raise CvParseError("the file is empty")
+    as_of = today or config.TODAY
+    by_rules = parse_rules.read_extract(text, as_of)
+    if by_rules is not None:
+        _readings.append(
+            {
+                "expert_id": expert_id,
+                "source": "rules",
+                "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            }
+        )
+        if on_dates is not None:
+            on_dates(len(by_rules.rows))
+        return _to_claims(by_rules, expert_id, proposed_position, as_of).model_copy(update={"read_by": "rules"})
+    if not config.LLM_ENABLED:
+        raise CvParseError(LAYOUT_NOT_RECOGNISED)
+
     use_fresh = config.FRESH if fresh is None else fresh
     path = cache_path(text)
     extract = None
@@ -283,11 +302,12 @@ def parse_cv(
         raise CvParseError("no employment record was found, so this does not look like a CV")
     if on_dates is not None:
         on_dates(len(extract.rows))
-    return _to_claims(extract, expert_id, proposed_position, today or config.TODAY)
+    return _to_claims(extract, expert_id, proposed_position, as_of).model_copy(update={"read_by": "claude"})
 
 
 def run_stats() -> dict[str, int]:
     return {
         "live": sum(item["source"] == "live" for item in _readings),
         "from_cache": sum(item["source"] == "cache" for item in _readings),
+        "rules": sum(item["source"] == "rules" for item in _readings),
     }

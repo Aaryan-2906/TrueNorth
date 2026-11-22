@@ -19,8 +19,8 @@ procuring agency, which carries the risk of awarding on a misrepresented team.
 End to end, with no one typing results:
 1. Reads a tender's key-personnel section and proposes the rules (minimum years, similar-capacity titles, degree),
    each with its source sentence. **A person approves them** before they are used.
-2. Reads each expert's CV text (any layout) with Claude, copying employer, title and dates verbatim; anything not written
-   in the CV is rejected. Dates are converted by deterministic code (tested on 29 real date strings plus extra formats, including "Sep'14", "January2012",
+2. Reads each expert's CV text, using deterministic rules for the standard NHAI layout and Claude for any other layout.
+   Employer, title and dates are copied verbatim; anything not written in the CV is rejected. Dates are converted by deterministic code (tested on 29 real date strings plus extra formats, including "Sep'14", "January2012",
    "12th March, 2019", DD/MM/YYYY).
 3. Checks the CV against itself (impossible dates, header vs "Duration" mismatches, overlapping full-time jobs, unclear
    employer, claimed years vs listed jobs), with no lookup needed.
@@ -104,7 +104,7 @@ Diagram (also in [docs/diagram.md](docs/diagram.md)):
 ```mermaid
 flowchart LR
   T["Tender text"] --> PT["parse_tender<br/>(Claude reads)"] --> AP{"Person approves<br/>rules"}
-  CV["CV text (any layout)"] --> PC["parse_cv<br/>(Claude copies verbatim)"] --> D["dates.py<br/>(deterministic)"]
+  CV["CV text (any layout)"] --> PC["parse_cv<br/>(rules first, then Claude;<br/>copied verbatim)"] --> D["dates.py<br/>(deterministic)"]
   B["bid.json"] --> F
   D --> CHK
   AP --> CHK
@@ -122,7 +122,8 @@ The only AI steps read text (CVs, tender). Every decision is made by tested, det
 
 ```text
 data/bid/bid.json + data/tender.json + data/bid/cvs/<id>.md
-  -> app/parse_cv.py    the LLM copies CV fields into JSON; values not written in the CV are rejected
+  -> app/parse_rules.py reads the standard NHAI CV layout with no LLM; returns nothing if unsure
+  -> app/parse_cv.py    otherwise the LLM copies CV fields into JSON; values not written in the CV are rejected
   -> app/dates.py       deterministic date conversion
   -> app/crustdata.py   /person/enrich and /company/identify, with cache and credit ledger
   -> app/normalise.py   raw profile to jobs; company-name matching; duplicate jobs collapsed
@@ -139,6 +140,7 @@ static/index.html       the web page and Pip, an owl driven only by those stages
 ```
 
 - **Model:** `claude-sonnet-5-5` (set by `ANTHROPIC_MODEL`) is used for two reading jobs: CV text and a tender's key-personnel text into JSON, copied verbatim. It makes no decisions. Values not found in the source text are rejected. Dates are converted by `app/dates.py`, every check is made by `app/checker.py` and `app/firm.py`, and questions come from fixed templates.
+- **Running without the AI reader:** set `LLM_ENABLED=false`. Standard NHAI CVs are still read by the rules. Other layouts are reported as "CV layout not recognised without the AI reader", and reading a new tender is unavailable.
 - **Crustdata calls:** `/person/enrich` (expert history) and `/company/identify` (firm), both in `app/crustdata.py`. `/account/credits` is used only by `scripts/smoke.py`.
 - **State:** inputs are in `data/`. Raw API and LLM responses are cached in `cache/` so a repeat run does not pay twice. `credits.csv` records every paid Crustdata call. Reports are written to `out/`. It runs on a laptop with Python 3.11.
 - **Tender rules:** `data/tender.json` holds the NHAI RFP's six key positions, each checked against the PDF with its page and exact sentence (excerpt in `data/tender_source_excerpt.txt`). For another tender, `read-tender` or the web app proposes positions, and nothing is used until a person approves them. Tender text must be pasted or supplied as a text file.
@@ -154,7 +156,7 @@ irreversible happens anywhere; no message is ever sent.
 audit of the demo bid costs **1.2 credits** (1 person enrich + 0.2 company identify); repeat runs reuse the cache and
 cost 0. The web app shows each real call (live or cached, credits, time) in its Activity panel.
 
-**Tests (270 passing):** 17 hand-built expert cases and 5 firm cases written before the event and never edited;
+**Tests (330 passing):** 17 hand-built expert cases and 5 firm cases written before the event and never edited;
 29 real CV date strings plus extra formats; robustness tests (timeout mid-run resumes without re-billing cached calls,
 401/402/403/429, malformed bids, empty CVs, a recipe instead of a CV, LLM refusal/invalid JSON); parser tests on six
 CVs; tender parsing matched the PDF on all six positions in four fresh readings. A live audit matched the cached audit
