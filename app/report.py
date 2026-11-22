@@ -457,7 +457,7 @@ def status_counts(entries: list[ExpertEntry]) -> dict[str, int]:
 
 def draft_letter(bid: dict[str, Any], entries: list[ExpertEntry], firm_result: FirmResult) -> str:
     """The report's draft letter as plain text. It is only ever copied by a person."""
-    lines = _letter_lines(bid, entries, firm_result)[2:]
+    lines = _letter_lines(bid, entries, firm_result)[4:]  # Without the heading and the note to the committee.
     return "\n".join(line.replace("**", "").strip("*") for line in lines).strip() + "\n"
 
 

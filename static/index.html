@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrueNorth</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+tailwind.config = { theme: { extend: { fontFamily: {
+  sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+  mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+} } } };
+</script>
+<style>
+:root { color-scheme: dark; }
+body { background: #09090B; color: #E4E4E7; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+.glow { position: fixed; inset: 0 0 auto 0; height: 520px; pointer-events: none; z-index: 0;
+  background: radial-gradient(560px 300px at 34% -60px, rgba(56,189,248,.16), transparent 72%),
+              radial-gradient(620px 320px at 68% -80px, rgba(139,92,246,.15), transparent 72%); }
+.card { background: #111116; border: 1px solid rgba(255,255,255,.08); border-radius: 12px; }
+.field { width: 100%; background: #09090B; border: 1px solid rgba(255,255,255,.1); border-radius: 8px;
+  padding: 9px 11px; font-size: 13.5px; color: #F4F4F5; outline: none; }
+.field:focus { border-color: rgba(56,189,248,.7); box-shadow: 0 0 0 3px rgba(56,189,248,.14); }
+.field::placeholder { color: #71717A; }
+select.field option { background: #111116; }
+.label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 500; color: #A1A1AA; }
+.tab { flex: 1; padding: 7px 10px; border-radius: 7px; font-size: 13px; font-weight: 500; color: #A1A1AA; }
+.tab[aria-selected="true"] { background: rgba(255,255,255,.09); color: #FAFAFA; }
+.primary { width: 100%; padding: 10px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #09090B;
+  background: linear-gradient(90deg, #7DD3FC, #A78BFA); transition: opacity .15s; }
+.primary:hover { opacity: .9; }
+.primary:disabled { opacity: .45; cursor: not-allowed; }
+.ghost { padding: 7px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 500; color: #E4E4E7;
+  border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.03); }
+.ghost:hover { background: rgba(255,255,255,.08); }
+.ghost:disabled { color: #71717A; cursor: not-allowed; }
+:focus-visible { outline: 2px solid #7DD3FC; outline-offset: 2px; }
+.field:focus-visible { outline: none; }
+.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600;
+  letter-spacing: .02em; white-space: nowrap; font-family: "JetBrains Mono", ui-monospace, monospace; }
+.pill-emerald { color: #6EE7B7; background: rgba(16,185,129,.14); border: 1px solid rgba(16,185,129,.3); }
+.pill-amber { color: #FCD34D; background: rgba(245,158,11,.13); border: 1px solid rgba(245,158,11,.3); }
+.pill-slate { color: #CBD5E1; background: rgba(148,163,184,.13); border: 1px solid rgba(148,163,184,.28); }
+.chip { display: inline-block; margin: 4px 4px 0 0; padding: 2px 7px; border-radius: 5px; font-size: 11px; line-height: 1.5;
+  color: #A1A1AA; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.06); }
+.table-wrap { overflow-x: auto; border: 1px solid rgba(255,255,255,.08); border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+th { padding: 7px 10px; text-align: left; font-size: 11px; font-weight: 500; color: #A1A1AA; white-space: nowrap;
+  background: rgba(255,255,255,.03); }
+td { padding: 7px 10px; border-top: 1px solid rgba(255,255,255,.06); vertical-align: top; color: #D4D4D8; }
+details > summary { cursor: pointer; font-size: 12.5px; font-weight: 500; color: #A1A1AA; }
+details > summary:hover { color: #E4E4E7; }
+#activity { scrollbar-width: thin; }
+</style>
+</head>
+<body class="min-h-screen pb-40 antialiased">
+<div class="glow" aria-hidden="true"></div>
+
+<header class="relative z-10 mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-3 px-5 pb-5 pt-8">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight text-white">TrueNorth</h1>
+    <p class="mt-1 text-sm text-zinc-400">Every line of a CV, checked against the record.</p>
+  </div>
+  <span class="rounded-md border border-white/10 bg-white/5 px-2 py-1 font-mono text-[11px] text-zinc-300">Career Check · Crustdata</span>
+</header>
+
+<main class="relative z-10 mx-auto grid max-w-7xl grid-cols-1 gap-5 px-5 lg:grid-cols-[370px_minmax(0,1fr)]">
+  <section class="card self-start p-4 lg:sticky lg:top-5" aria-label="Start a check">
+    <div class="mb-4 flex gap-1 rounded-lg bg-black/40 p-1" role="tablist">
+      <button id="tabCv" class="tab" role="tab" aria-selected="true" aria-controls="panelCv">Check one CV</button>
+      <button id="tabBid" class="tab" role="tab" aria-selected="false" aria-controls="panelBid">Audit a bid</button>
+    </div>
+
+    <form id="panelCv" class="space-y-3" role="tabpanel" aria-labelledby="tabCv">
+      <div>
+        <label class="label" for="cvText">CV text</label>
+        <textarea id="cvText" class="field h-52 resize-y font-mono text-xs leading-relaxed" placeholder="Paste the full CV here"></textarea>
+      </div>
+      <div>
+        <label class="label" for="profileUrl">LinkedIn URL (optional)</label>
+        <input id="profileUrl" class="field" type="url" placeholder="https://www.linkedin.com/in/…" autocomplete="off">
+      </div>
+      <div>
+        <label class="label" for="position">Position</label>
+        <select id="position" class="field"><option value="">None: Career Check</option></select>
+      </div>
+      <label class="flex cursor-pointer items-center justify-between gap-3 text-sm text-zinc-300">
+        <span>Fresh<span class="block text-xs text-zinc-500">Skip the cache and make new paid calls</span></span>
+        <input id="freshCv" type="checkbox" class="h-4 w-4 accent-sky-400">
+      </label>
+      <p id="cvHint" class="hidden text-xs text-amber-300" role="alert"></p>
+      <button id="runCv" class="primary" type="submit">Check this CV</button>
+    </form>
+
+    <form id="panelBid" class="hidden space-y-3" role="tabpanel" aria-labelledby="tabBid">
+      <div>
+        <label class="label" for="bidSelect">Bid</label>
+        <select id="bidSelect" class="field"></select>
+      </div>
+      <label class="flex cursor-pointer items-center justify-between gap-3 text-sm text-zinc-300">
+        <span>Fresh<span class="block text-xs text-zinc-500">Skip the cache and make new paid calls</span></span>
+        <input id="freshBid" type="checkbox" class="h-4 w-4 accent-sky-400">
+      </label>
+      <button id="runBid" class="primary" type="submit">Audit this bid</button>
+    </form>
+  </section>
+
+  <section class="min-w-0 space-y-4" aria-label="Results">
+    <div id="stageLine" class="card hidden px-4 py-3 text-sm text-zinc-300" role="status" aria-live="polite"></div>
+    <div id="results"></div>
+  </section>
+</main>
+
+<footer class="fixed inset-x-0 bottom-0 z-20 border-t border-white/10 bg-[#0C0C10]/95 backdrop-blur" aria-label="Activity">
+  <div class="mx-auto max-w-7xl px-5 py-2.5">
+    <div class="mb-1.5 flex items-center justify-between">
+      <h2 class="text-xs font-semibold text-zinc-300">Activity</h2>
+      <p class="font-mono text-[11px] text-zinc-400">Crustdata credits this run: <span id="creditsTotal" class="text-zinc-100">0</span></p>
+    </div>
+    <div id="activity" class="flex min-h-[58px] gap-2 overflow-x-auto pb-1"></div>
+  </div>
+</footer>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g,
+  (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const STATUS_STYLE = { CONSISTENT: 'pill-emerald', QUESTIONS: 'pill-amber', CANNOT_CHECK: 'pill-slate' };
+const state = { running: false, credits: 0, callCount: 0, letter: '' };
+
+const pill = (status) => `<span class="pill ${STATUS_STYLE[status] || 'pill-slate'}">${esc(status)}</span>`;
+
+function outcomePills(text) {
+  return String(text).split(', ').map((code) => {
+    const style = code === 'MATCHED' ? 'pill-emerald' : code.startsWith('NOT_COMPARED') ? 'pill-slate' : 'pill-amber';
+    return `<span class="pill ${style} mb-0.5">${esc(code)}</span>`;
+  }).join(' ');
+}
+
+const chips = (items) => (items || []).map((item) => `<span class="chip">${esc(item)}</span>`).join('');
+
+function questionsHtml(questions, info) {
+  const list = (questions || []).map((q) => `
+    <li class="flex gap-2.5">
+      <span class="mt-0.5 font-mono text-xs text-zinc-500">${q.number}.</span>
+      <div class="min-w-0"><p class="text-[13.5px] leading-relaxed text-zinc-200">${esc(q.text)}</p><div>${chips(q.evidence)}</div></div>
+    </li>`).join('');
+  const notes = (info || []).map((n) => `
+    <li><p class="text-[13px] leading-relaxed text-zinc-400">${esc(n.text)}</p><div>${chips(n.evidence)}</div></li>`).join('');
+  return `
+    <h4 class="mb-2 mt-4 text-xs font-semibold text-zinc-400">Questions for the committee</h4>
+    ${list ? `<ol class="space-y-3">${list}</ol>` : '<p class="text-[13px] text-zinc-500">None.</p>'}
+    ${notes ? `<h4 class="mb-2 mt-4 text-xs font-semibold text-zinc-400">Notes</h4><ul class="space-y-2">${notes}</ul>` : ''}`;
+}
+
+function yearsLine(documented, claimed) {
+  const left = documented === null || documented === undefined ? 'Documented: not available' : `Documented ${documented.toFixed(1)} yrs`;
+  const right = claimed === null || claimed === undefined ? 'Claimed: not stated' : `Claimed ${claimed} yrs`;
+  return `${left} <span class="text-zinc-500">vs</span> ${right}`;
+}
+
+function expertCard(expert) {
+  const rows = expert.rows.map((row) => `
+    <tr>
+      <td class="font-mono text-zinc-500">${row.number}</td>
+      <td class="min-w-[130px]">${esc(row.employer)}</td>
+      <td class="min-w-[130px]">${esc(row.title)}</td>
+      <td class="whitespace-nowrap font-mono text-[11.5px]">${esc(row.dates)}</td>
+      <td>${outcomePills(row.outcome)}</td>
+      <td class="min-w-[190px] text-zinc-400">${esc(row.profile_entry || 'none')}</td>
+    </tr>`).join('');
+  const table = rows ? `
+    <div class="table-wrap mt-3"><table>
+      <thead><tr><th>#</th><th>Employer</th><th>Title</th><th>CV dates</th><th>Outcome</th><th>Profile entry</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>` : '<p class="mt-3 text-[13px] text-zinc-500">No CV rows could be read.</p>';
+  const notes = expert.notes.map((note) => `<p class="mt-1 text-xs text-zinc-500">Note: ${esc(note)}</p>`).join('');
+  const similar = expert.documented_similar_years !== null
+    ? `<p class="mt-0.5 text-[13px] text-zinc-400">Similar role: ${yearsLine(expert.documented_similar_years, expert.claimed_similar_years)}</p>` : '';
+  const why = expert.why.map((item) => `
+    <li class="rounded-md bg-black/25 p-2.5">
+      <p class="font-mono text-[11px] text-zinc-400">${esc(item.code)} · ${esc(item.severity)}</p>
+      <p class="mt-0.5 text-[13px] text-zinc-300">${esc(item.message)}</p>
+      <div>${chips(item.evidence)}</div>
+    </li>`).join('');
+  return `
+    <article class="card p-4">
+      <div class="flex flex-wrap items-start justify-between gap-2">
+        <div class="min-w-0">
+          <h3 class="text-[15px] font-semibold text-white"><span class="mr-1 font-mono text-xs text-zinc-500">${esc(expert.id)}</span>${esc(expert.name)}</h3>
+          <p class="mt-1 text-sm font-medium text-zinc-200">${yearsLine(expert.documented_years, expert.claimed_years)}</p>
+          ${similar}
+        </div>
+        ${pill(expert.status)}
+      </div>
+      <p class="mt-2 text-xs text-zinc-500">Position: ${esc(expert.position || 'none (Career Check)')}</p>
+      <p class="mt-0.5 break-words font-mono text-[11px] text-zinc-500">Lookup: ${esc(expert.lookup)}</p>
+      ${notes}
+      ${table}
+      ${questionsHtml(expert.questions, expert.info)}
+      ${why ? `<details class="mt-4"><summary>Why</summary><ul class="mt-2 space-y-2">${why}</ul></details>` : ''}
+    </article>`;
+}
+
+function firmCard(firm) {
+  const records = firm.records.map((r) => `
+    <tr><td class="font-mono">${esc(r.id)}</td><td>${esc(r.name)}</td><td>${esc(r.domain || 'not listed')}</td><td class="font-mono">${esc(r.range)}</td></tr>`).join('');
+  const fact = (name, value) => `<div><dt class="text-xs text-zinc-500">${name}</dt><dd class="mt-0.5 text-[13.5px] text-zinc-200">${esc(value)}</dd></div>`;
+  return `
+    <article class="card p-4">
+      <div class="flex flex-wrap items-start justify-between gap-2">
+        <h3 class="text-[15px] font-semibold text-white">Firm &amp; bid: ${esc(firm.name)}</h3>
+        ${pill(firm.status)}
+      </div>
+      <dl class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        ${fact('Domain', firm.domain || 'not given')}
+        ${fact('Records found', firm.records.length)}
+        ${fact('Headcount used', firm.headcount || 'not available')}
+        ${fact('Full-time people in bid', firm.full_time_people)}
+      </dl>
+      ${firm.lookup_note ? `<p class="mt-3 text-xs text-zinc-400">${esc(firm.lookup_note)}</p>` : ''}
+      ${records ? `<div class="table-wrap mt-3"><table><thead><tr><th>Company id</th><th>Name</th><th>Domain</th><th>Employee range</th></tr></thead><tbody>${records}</tbody></table></div>` : ''}
+      ${questionsHtml(firm.questions, firm.info)}
+    </article>`;
+}
+
+function metric(name, value, tone) {
+  return `<div class="card px-3 py-2.5"><p class="text-[11px] text-zinc-500">${name}</p><p class="mt-0.5 text-xl font-semibold ${tone || 'text-white'}">${esc(value)}</p></div>`;
+}
+
+function renderResult(result) {
+  state.letter = result.letter || '';
+  const problems = result.errors.map((e) => `<li class="break-words">${esc(e)}</li>`).join('');
+  $('results').innerHTML = `
+    <div class="space-y-4">
+      <div>
+        <h2 class="text-[15px] font-semibold leading-snug text-white">${esc(result.headline)}</h2>
+        <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+          ${metric('Experts', result.experts.length)}
+          ${metric('Consistent', result.counts.CONSISTENT, 'text-emerald-300')}
+          ${metric('Need clarification', result.counts.QUESTIONS, 'text-amber-300')}
+          ${metric('Cannot be checked', result.counts.CANNOT_CHECK, 'text-slate-300')}
+          ${metric('Questions', result.questions_total)}
+          ${metric('Credits', result.credits)}
+        </div>
+        <div class="mt-3 flex flex-wrap gap-2">
+          ${result.report_url ? `<a class="ghost" href="${esc(result.report_url)}" target="_blank" rel="noopener">Open report.html</a>` : ''}
+          <button id="copyLetter" class="ghost" type="button" ${result.questions_total ? '' : 'disabled'}>${result.questions_total ? 'Copy draft clarification letter' : 'No questions to draft'}</button>
+        </div>
+      </div>
+      ${problems ? `<div class="card border-amber-400/30 p-3 text-[13px] text-amber-200"><p class="mb-1 font-medium">Some lookups did not complete</p><ul class="space-y-1">${problems}</ul></div>` : ''}
+      ${result.firm ? firmCard(result.firm) : ''}
+      ${result.experts.length ? result.experts.map(expertCard).join('') : '<div class="card p-4 text-sm text-zinc-400">This bid lists no experts.</div>'}
+      <p class="pb-2 text-center text-xs text-zinc-500">These are questions for the committee, not findings.</p>
+    </div>`;
+  const copy = $('copyLetter');
+  if (copy && result.questions_total) copy.addEventListener('click', copyLetter);
+}
+
+async function copyLetter() {
+  const button = $('copyLetter');
+  try {
+    await navigator.clipboard.writeText(state.letter);
+    button.textContent = 'Copied. Nothing was sent';
+  } catch {
+    button.textContent = 'Copy blocked by the browser';
+  }
+  setTimeout(() => { if (button.isConnected) button.textContent = 'Copy draft clarification letter'; }, 2600);
+}
+
+function showEmpty() {
+  $('results').innerHTML = `
+    <div class="card flex min-h-[300px] flex-col items-center justify-center p-8 text-center">
+      <h2 class="text-base font-semibold text-zinc-200">Nothing checked yet</h2>
+      <p class="mt-1.5 max-w-sm text-sm leading-relaxed text-zinc-500">Paste a CV or choose a bid. Each result links back to the CV row or profile entry it came from.</p>
+    </div>`;
+}
+
+function showProblem(message) {
+  $('results').innerHTML = `
+    <div class="card flex min-h-[220px] flex-col items-center justify-center p-8 text-center">
+      <h2 class="text-base font-semibold text-zinc-200">This run could not finish</h2>
+      <p class="mt-1.5 max-w-lg break-words text-sm leading-relaxed text-zinc-400">${esc(message)}</p>
+    </div>`;
+}
+
+function showRunning() {
+  $('results').innerHTML = `
+    <div class="card flex min-h-[220px] items-center justify-center p-8 text-center">
+      <p class="text-sm text-zinc-500">Working. Results appear here when the run finishes.</p>
+    </div>`;
+}
+
+function setRunning(running) {
+  state.running = running;
+  $('runCv').disabled = running;
+  $('runBid').disabled = running;
+}
+
+function resetActivity() {
+  state.credits = 0;
+  state.callCount = 0;
+  $('creditsTotal').textContent = '0';
+  $('activity').innerHTML = '';
+}
+
+function formatCredits(value) {
+  return String(Math.round(value * 10000) / 10000);
+}
+
+function addCall(call) {
+  state.callCount += 1;
+  if (typeof call.credits === 'number') state.credits += call.credits;
+  $('creditsTotal').textContent = formatCredits(state.credits);
+  const isLive = call.source === 'live';
+  const credits = call.credits === null ? 'no Crustdata credit figure' : `${formatCredits(call.credits)} credits`;
+  const item = document.createElement('div');
+  item.className = 'shrink-0 rounded-md border border-white/10 bg-white/[.03] px-2.5 py-1.5 font-mono text-[10.5px] leading-[1.45]';
+  item.innerHTML = `
+    <p class="text-zinc-200">${esc(call.service)}${call.expert ? ` <span class="text-zinc-500">${esc(call.expert)}</span>` : ''}</p>
+    <p class="${isLive ? 'text-sky-300' : 'text-zinc-400'}">${esc(call.source)}</p>
+    <p class="text-zinc-500">${esc(credits)} · ${esc(call.ms)} ms</p>`;
+  $('activity').appendChild(item);
+  item.scrollIntoView({ block: 'nearest', inline: 'end' });
+}
+
+function onStage(event) {
+  const line = $('stageLine');
+  line.classList.remove('hidden');
+  line.textContent = event.detail;
+}
+
+function onResult(result) {
+  if (result.ok) {
+    state.credits = result.credits;
+    $('creditsTotal').textContent = formatCredits(result.credits);
+    renderResult(result);
+  } else {
+    showProblem(result.error);
+  }
+}
+
+function handleEvent(block) {
+  let name = 'message';
+  let data = '';
+  for (const line of block.split('\n')) {
+    if (line.startsWith('event: ')) name = line.slice(7);
+    if (line.startsWith('data: ')) data += line.slice(6);
+  }
+  if (!data) return null;
+  const payload = JSON.parse(data);
+  if (name === 'stage') onStage(payload);
+  if (name === 'call') addCall(payload);
+  if (name === 'result') onResult(payload);
+  return name;
+}
+
+async function startRun(url, body) {
+  if (state.running) return;
+  setRunning(true);
+  resetActivity();
+  showRunning();
+  let sawResult = false;
+  try {
+    const response = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    if (!response.ok) {
+      const info = await response.json().catch(() => ({}));
+      const message = typeof info.error === 'string' ? info.error : `The server replied with HTTP ${response.status}.`;
+      onStage({ stage: 'error', expert: null, detail: message });
+      showProblem(message);
+      return;
+    }
+    const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+    let buffer = '';
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer = (buffer + value).replace(/\r\n/g, '\n');
+      let split;
+      while ((split = buffer.indexOf('\n\n')) !== -1) {
+        const name = handleEvent(buffer.slice(0, split));
+        buffer = buffer.slice(split + 2);
+        if (name === 'result') sawResult = true;
+      }
+    }
+    if (!sawResult) {
+      const message = 'The connection closed before the run finished. Paid results already fetched are cached.';
+      onStage({ stage: 'error', expert: null, detail: message });
+      showProblem(message);
+    }
+  } catch {
+    const message = 'Could not reach the server. Check that it is still running, then try again.';
+    onStage({ stage: 'error', expert: null, detail: message });
+    showProblem(message);
+  } finally {
+    setRunning(false);
+  }
+}
+
+function selectTab(showCv) {
+  $('tabCv').setAttribute('aria-selected', String(showCv));
+  $('tabBid').setAttribute('aria-selected', String(!showCv));
+  $('panelCv').classList.toggle('hidden', !showCv);
+  $('panelBid').classList.toggle('hidden', showCv);
+}
+
+async function loadOptions() {
+  try {
+    const response = await fetch('/api/options');
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    for (const position of data.positions) {
+      const option = document.createElement('option');
+      option.value = position.key;
+      option.textContent = position.name;
+      $('position').appendChild(option);
+    }
+    for (const bid of data.bids) {
+      const option = document.createElement('option');
+      option.value = bid;
+      option.textContent = bid;
+      $('bidSelect').appendChild(option);
+    }
+    if (!data.bids.length) {
+      $('bidSelect').innerHTML = '<option value="">No bid files found in data/bid</option>';
+      $('runBid').disabled = true;
+    }
+  } catch (problem) {
+    showProblem(problem.message || 'Could not load the positions and bids from the server.');
+  }
+}
+
+$('tabCv').addEventListener('click', () => selectTab(true));
+$('tabBid').addEventListener('click', () => selectTab(false));
+$('panelCv').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const text = $('cvText').value;
+  const hint = $('cvHint');
+  hint.classList.toggle('hidden', Boolean(text.trim()));
+  hint.textContent = text.trim() ? '' : 'Paste a CV first.';
+  if (!text.trim()) return;
+  startRun('/api/check-cv', {
+    cv_text: text,
+    profile_url: $('profileUrl').value.trim() || null,
+    position: $('position').value || null,
+    fresh: $('freshCv').checked,
+  });
+});
+$('panelBid').addEventListener('submit', (event) => {
+  event.preventDefault();
+  if ($('bidSelect').value) startRun('/api/audit', { bid: $('bidSelect').value, fresh: $('freshBid').checked });
+});
+
+showEmpty();
+loadOptions();
+</script>
+</body>
+</html>

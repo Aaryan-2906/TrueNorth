@@ -1,6 +1,7 @@
 """The web backend, with fake Crustdata and LLM replies: these tests spend no credits."""
 
 import json
+import re
 
 import pytest
 from fastapi.testclient import TestClient
@@ -124,7 +125,7 @@ def test_audit_streams_each_expert_and_the_firm(world, client):
     assert services.count("Crustdata /company/identify") == 1
     assert services.count("Claude CV reading") == 3
     assert result["firm"]["name"] == "Acme"
-    assert "To: Acme" in result["letter"]
+    assert result["letter"].startswith("To: Acme")
 
 
 def test_report_html_is_served_after_an_audit(world, client):
@@ -174,6 +175,22 @@ def test_lock_is_released_after_an_error(world, client):
     client.post("/api/check-cv", json={"cv_text": RECIPE})
 
     assert client.post("/api/check-cv", json={"cv_text": CV}).status_code == 200
+
+
+def test_page_is_served_and_avoids_banned_words_and_red(client):
+    response = client.get("/")
+
+    assert response.status_code == 200 and "TrueNorth" in response.text
+    assert not re.search(r"verified|pass|fail|fraud|fake", response.text, re.IGNORECASE)
+    assert not re.search(r"\b(?:text|bg|border)-(?:red|rose)-", response.text)
+
+
+def test_page_escapes_server_text(client):
+    page = client.get("/").text
+
+    assert "const esc =" in page
+    for field in ("row.employer", "row.title", "q.text", "expert.name", "item.message"):
+        assert f"${{esc({field})}}" in page
 
 
 def test_options_come_from_the_data_files(world, client):
